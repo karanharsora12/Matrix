@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import { db } from "../db/index.js";
-import { users } from "../db/schema.js";
+import type { Request, Response } from "express";
+import { db } from "../db/index";
+import { users } from "../db/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { eq } from "drizzle-orm";
