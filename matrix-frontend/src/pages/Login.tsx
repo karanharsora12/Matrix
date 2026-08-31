@@ -401,6 +401,22 @@ export default function Login() {
                 )}
               </div>
 
+              {/* Remember me */}
+              <div className="flex items-center space-x-2.5">
+                <Checkbox
+                  id="remember"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  className="border-slate-300 dark:border-white/20 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                />
+                <Label
+                  htmlFor="remember"
+                  className="text-sm text-zinc-600 dark:text-zinc-400 cursor-pointer select-none"
+                >
+                  Remember me for 30 days
+                </Label>
+              </div>
+
               {/* Divider */}
               <Separator className="bg-slate-200/60 dark:bg-white/[0.06]" />
 
