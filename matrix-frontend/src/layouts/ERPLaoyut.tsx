@@ -124,7 +124,7 @@ export default function ERPLaoyut() {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50 via-white to-slate-100 p-4 sm:p-6 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+          <main className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
             <Outlet />
           </main>
         </div>

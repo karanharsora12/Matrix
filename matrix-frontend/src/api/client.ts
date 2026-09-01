@@ -7,7 +7,6 @@ const apiClient = axios.create({
   },
 });
 
-// Intercept requests to include the JWT token from localStorage if available
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("matrix_token");
@@ -18,7 +17,7 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;

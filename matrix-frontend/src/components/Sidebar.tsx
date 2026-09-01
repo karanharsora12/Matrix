@@ -9,7 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
 import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import {

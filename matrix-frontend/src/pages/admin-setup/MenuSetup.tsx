@@ -1,0 +1,770 @@
+import apiClient from "@/api/client";
+import { DataGrid } from "@/components/common/DataGrid";
+import { ListingHeader } from "@/components/common/ListingHeader";
+import { SideModal } from "@/components/common/SideModal";
+import { confirmAlert } from "@/components/common/AlertModal";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { ColDef, ICellRendererParams } from "ag-grid-community";
+import * as LucideIcons from "lucide-react";
+import {
+  ArrowUpRight,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  Edit2,
+  Eye,
+  List,
+  MoreHorizontal,
+  Plus,
+  Printer,
+  Trash2,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+
+const iconOptions = [
+  "LayoutDashboard",
+  "TrendingUp",
+  "ShoppingCart",
+  "Package",
+  "Users",
+  "DollarSign",
+  "Briefcase",
+  "BarChart3",
+  "Settings",
+  "FileText",
+  "CreditCard",
+  "Truck",
+  "Warehouse",
+  "Receipt",
+  "UserCog",
+  "Calculator",
+  "ClipboardList",
+  "Building2",
+  "Shield",
+  "Bell",
+  "Database",
+  "Box",
+];
+
+interface MenuForm {
+  id?: number;
+  menuName: string;
+  menuCaption: string;
+  menuIcon: string;
+  menuPath: string;
+  parentMenuId: string;
+  rightList: boolean;
+  rightView: boolean;
+  rightAdd: boolean;
+  rightEdit: boolean;
+  rightShowListingTotal: boolean;
+  rightPrint: boolean;
+  rightExport: boolean;
+}
+
+const emptyForm: MenuForm = {
+  menuName: "",
+  menuCaption: "",
+  menuIcon: "Box",
+  menuPath: "",
+  parentMenuId: "",
+  rightList: false,
+  rightView: false,
+  rightAdd: false,
+  rightEdit: false,
+  rightShowListingTotal: false,
+  rightPrint: false,
+  rightExport: false,
+};
+
+export default function MenuSetup() {
+  const [menus, setMenus] = useState<any[]>([]);
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState<MenuForm>(emptyForm);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const fetchMenus = async () => {
+    try {
+      const response = await apiClient.get("/menus");
+      setMenus(response.data);
+    } catch {
+      setMenus([
+        {
+          id: 1,
+          menuName: "dashboard",
+          menuCaption: "Dashboard",
+          menuIcon: "LayoutDashboard",
+          menuPath: "/dashboard",
+          children: [],
+        },
+        {
+          id: 2,
+          menuName: "sales",
+          menuCaption: "Sales",
+          menuIcon: "TrendingUp",
+          menuPath: "/sales",
+          children: [
+            {
+              id: 21,
+              menuName: "sales_orders",
+              menuCaption: "Sales Orders",
+              menuIcon: "FileText",
+              menuPath: "/sales/orders",
+              children: [],
+            },
+            {
+              id: 22,
+              menuName: "sales_returns",
+              menuCaption: "Sales Returns",
+              menuIcon: "ArrowUpRight",
+              menuPath: "/sales/returns",
+              children: [],
+            },
+          ],
+        },
+        {
+          id: 3,
+          menuName: "purchases",
+          menuCaption: "Purchases",
+          menuIcon: "ShoppingCart",
+          menuPath: "/purchases",
+          children: [
+            {
+              id: 31,
+              menuName: "purchase_orders",
+              menuCaption: "Purchase Orders",
+              menuIcon: "FileText",
+              menuPath: "/purchases/orders",
+              children: [],
+            },
+          ],
+        },
+        {
+          id: 4,
+          menuName: "inventory",
+          menuCaption: "Inventory",
+          menuIcon: "Package",
+          menuPath: "/inventory",
+          children: [
+            {
+              id: 41,
+              menuName: "products",
+              menuCaption: "Products",
+              menuIcon: "Box",
+              menuPath: "/inventory/products",
+              children: [],
+            },
+            {
+              id: 42,
+              menuName: "stock_adjustments",
+              menuCaption: "Stock Adjustments",
+              menuIcon: "ClipboardList",
+              menuPath: "/inventory/adjustments",
+              children: [],
+            },
+            {
+              id: 43,
+              menuName: "warehouses",
+              menuCaption: "Warehouses",
+              menuIcon: "Warehouse",
+              menuPath: "/inventory/warehouses",
+              children: [],
+            },
+          ],
+        },
+        {
+          id: 5,
+          menuName: "customers",
+          menuCaption: "Customers",
+          menuIcon: "Users",
+          menuPath: "/customers",
+          children: [],
+        },
+        {
+          id: 6,
+          menuName: "finance",
+          menuCaption: "Finance",
+          menuIcon: "DollarSign",
+          menuPath: "/finance",
+          children: [
+            {
+              id: 61,
+              menuName: "invoices",
+              menuCaption: "Invoices",
+              menuIcon: "FileText",
+              menuPath: "/finance/invoices",
+              children: [],
+            },
+            {
+              id: 62,
+              menuName: "payments",
+              menuCaption: "Payments",
+              menuIcon: "CreditCard",
+              menuPath: "/finance/payments",
+              children: [],
+            },
+            {
+              id: 63,
+              menuName: "expenses",
+              menuCaption: "Expenses",
+              menuIcon: "Receipt",
+              menuPath: "/finance/expenses",
+              children: [],
+            },
+          ],
+        },
+        {
+          id: 7,
+          menuName: "hr",
+          menuCaption: "HR",
+          menuIcon: "Briefcase",
+          menuPath: "/hr",
+          children: [],
+        },
+        {
+          id: 8,
+          menuName: "reports",
+          menuCaption: "Reports",
+          menuIcon: "BarChart3",
+          menuPath: "/reports",
+          children: [],
+        },
+        {
+          id: 9,
+          menuName: "settings",
+          menuCaption: "Settings",
+          menuIcon: "Settings",
+          menuPath: "/settings",
+          children: [],
+        },
+      ]);
+    }
+  };
+
+  useEffect(() => {
+    fetchMenus();
+  }, []);
+
+  const toggleExpand = (id: number) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const expandAll = () => {
+    const all: Record<number, boolean> = {};
+    const walk = (items: any[]) => {
+      items.forEach((m) => {
+        if (m.children?.length) {
+          all[m.id] = true;
+          walk(m.children);
+        }
+      });
+    };
+    walk(menus);
+    setExpanded(all);
+  };
+
+  const collapseAll = () => setExpanded({});
+
+  const flatMenus = useMemo(() => {
+    const flat: any[] = [];
+    const walk = (items: any[], depth = 0) => {
+      items.forEach((m) => {
+        flat.push({ ...m, depth });
+        if (m.children) walk(m.children, depth + 1);
+      });
+    };
+    walk(menus);
+    return flat;
+  }, [menus]);
+
+  const visibleRows = useMemo(() => {
+    const rows: any[] = [];
+    const searchLower = search.toLowerCase();
+    const walk = (items: any[], depth: number) => {
+      items.forEach((node) => {
+        const matchSearch =
+          !search ||
+          node.menuCaption?.toLowerCase().includes(searchLower) ||
+          node.menuName?.toLowerCase().includes(searchLower);
+
+        let matchFilter = true;
+        if (filter === "root") matchFilter = depth === 0;
+        else if (filter === "parent")
+          matchFilter = node.children && node.children.length > 0;
+        else if (filter === "leaf")
+          matchFilter = !node.children || node.children.length === 0;
+
+        if ((matchSearch && matchFilter) || expanded[node.id]) {
+          rows.push({ ...node, depth });
+        }
+        if (expanded[node.id] && node.children) {
+          walk(node.children, depth + 1);
+        }
+      });
+    };
+    walk(menus, 0);
+    return rows;
+  }, [menus, expanded, search, filter]);
+
+  const handleAdd = () => {
+    setForm(emptyForm);
+    setIsEditing(false);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (menu: any) => {
+    setForm({
+      id: menu.id,
+      menuName: menu.menuName || "",
+      menuCaption: menu.menuCaption || "",
+      menuIcon: menu.menuIcon || "Box",
+      menuPath: menu.menuPath || "",
+      parentMenuId: menu.parentMenuId ? String(menu.parentMenuId) : "",
+      rightList: !!menu.rightList,
+      rightView: !!menu.rightView,
+      rightAdd: !!menu.rightAdd,
+      rightEdit: !!menu.rightEdit,
+      rightShowListingTotal: !!menu.rightShowListingTotal,
+      rightPrint: !!menu.rightPrint,
+      rightExport: !!menu.rightExport,
+    });
+    setIsEditing(true);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    const isConfirmed = await confirmAlert({
+      title: "Delete Menu",
+      description:
+        "Are you sure you want to delete this menu? This action cannot be undone and will remove all associated submenus.",
+      confirmText: "Yes, delete",
+      variant: "danger",
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      await apiClient.delete(`/menus/${id}`);
+      fetchMenus();
+    } catch {
+      setMenus((prev) => {
+        const remove = (items: any[]): any[] =>
+          items
+            .filter((m) => m.id !== id)
+            .map((m) => ({
+              ...m,
+              children: m.children ? remove(m.children) : [],
+            }));
+        return remove(prev);
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const payload = {
+        ...form,
+        parentMenuId: form.parentMenuId ? parseInt(form.parentMenuId) : null,
+      };
+      if (form.id) {
+        await apiClient.put(`/menus/${form.id}`, payload);
+      } else {
+        await apiClient.post("/menus", payload);
+      }
+      setDialogOpen(false);
+      fetchMenus();
+    } catch {
+      if (form.id) {
+        setMenus((prev) =>
+          prev.map((m) =>
+            m.id === form.id ? { ...m, ...payload, children: m.children } : m,
+          ),
+        );
+      } else {
+        const newId = Date.now();
+        const newItem = { ...payload, id: newId, children: [] };
+        if (payload.parentMenuId) {
+          const addToParent = (items: any[]): any[] =>
+            items.map((m) =>
+              m.id === payload.parentMenuId
+                ? { ...m, children: [...(m.children || []), newItem] }
+                : { ...m, children: m.children ? addToParent(m.children) : [] },
+            );
+          setMenus((prev) => addToParent(prev));
+        } else {
+          setMenus((prev) => [...prev, newItem]);
+        }
+      }
+      setDialogOpen(false);
+    }
+  };
+
+  const set = (field: keyof MenuForm, value: any) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const parentMenus = useMemo(
+    () => flatMenus.filter((m) => m.id !== form.id),
+    [flatMenus, form.id],
+  );
+
+  const totalMenus = flatMenus.length;
+  const topLevel = menus.length;
+  const totalChildren = totalMenus - topLevel;
+
+  const CaptionRenderer = (params: ICellRendererParams) => {
+    const { data } = params;
+    if (!data) return null;
+
+    const isExpanded = expanded[data.id];
+    const hasChildren = data.children && data.children.length > 0;
+    const Icon =
+      (LucideIcons as any)[data.menuIcon || "Box"] || LucideIcons.Box;
+
+    return (
+      <div
+        className="flex items-center gap-2 h-full"
+        style={{ paddingLeft: `${data.depth * 20}px` }}
+      >
+        {hasChildren ? (
+          <button
+            onClick={() => toggleExpand(data.id)}
+            className="p-1 hover:bg-zinc-200 rounded dark:hover:bg-zinc-700 cursor-pointer flex items-center justify-center"
+          >
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+        ) : (
+          <div className="w-6" /> // spacer
+        )}
+        <div className="flex items-center justify-center w-6 h-6 rounded-md bg-zinc-100 dark:bg-zinc-800">
+          <Icon className="h-3.5 w-3.5 text-zinc-500 shrink-0 dark:text-zinc-400" />
+        </div>
+        <span className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
+          {data.menuCaption}
+        </span>
+      </div>
+    );
+  };
+
+  const ActionsRenderer = (params: ICellRendererParams) => {
+    if (!params.data) return null;
+    return (
+      <div className="flex items-center justify-end gap-2 h-full pr-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuItem onClick={() => handleEdit(params.data)}>
+              <Edit2 className="mr-2 h-3.5 w-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleDelete(params.data.id)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="mr-2 h-3.5 w-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
+
+  const BooleanRenderer = (params: ICellRendererParams) => {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Checkbox
+          checked={!!params.value}
+          disabled
+          className="pointer-events-none"
+        />
+      </div>
+    );
+  };
+
+  const columnDefs = useMemo<ColDef[]>(
+    () => [
+      {
+        headerName: "Caption",
+        field: "menuCaption",
+        cellRenderer: CaptionRenderer,
+        minWidth: 280,
+        flex: 2,
+      },
+      { headerName: "Name", field: "menuName", flex: 1, minWidth: 150 },
+      { headerName: "Path", field: "menuPath", flex: 1, minWidth: 150 },
+      {
+        headerName: "List",
+        field: "rightList",
+        cellRenderer: BooleanRenderer,
+        width: 80,
+        flex: 0,
+      },
+      {
+        headerName: "View",
+        field: "rightView",
+        cellRenderer: BooleanRenderer,
+        width: 80,
+        flex: 0,
+      },
+      {
+        headerName: "Add",
+        field: "rightAdd",
+        cellRenderer: BooleanRenderer,
+        width: 80,
+        flex: 0,
+      },
+      {
+        headerName: "Edit",
+        field: "rightEdit",
+        cellRenderer: BooleanRenderer,
+        width: 80,
+        flex: 0,
+      },
+      {
+        headerName: "Total",
+        field: "rightShowListingTotal",
+        cellRenderer: BooleanRenderer,
+        width: 80,
+        flex: 0,
+      },
+      {
+        headerName: "Print",
+        field: "rightPrint",
+        cellRenderer: BooleanRenderer,
+        width: 80,
+        flex: 0,
+      },
+      {
+        headerName: "Export",
+        field: "rightExport",
+        cellRenderer: BooleanRenderer,
+        width: 90,
+        flex: 0,
+      },
+      {
+        headerName: "Actions",
+        cellRenderer: ActionsRenderer,
+        width: 100,
+        flex: 0,
+        sortable: false,
+        filter: false,
+      },
+    ],
+    [expanded],
+  );
+
+  return (
+    <div className="p-6 h-full flex flex-col gap-6">
+      <ListingHeader
+        title="Menu Setup"
+        onAdd={handleAdd}
+        addText="Add Menu"
+        searchProps={{
+          value: search,
+          onChange: (e) => setSearch(e.target.value),
+          placeholder: "Search menus...",
+        }}
+        onRefresh={fetchMenus}
+        onExportExcel={() => console.log("Export to Excel")}
+        onExportPdf={() => console.log("Export to PDF")}
+        onPrint={() => window.print()}
+      />
+
+      <DataGrid
+        rowData={visibleRows}
+        columnDefs={columnDefs}
+        gridOptions={{
+          rowHeight: 48,
+          headerHeight: 48,
+          pagination: false,
+        }}
+      />
+
+      <SideModal
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title={isEditing ? "Edit Menu" : "Add New Menu"}
+        description={
+          isEditing
+            ? "Update the menu configuration below."
+            : "Configure the new menu item below."
+        }
+        width="lg"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!form.menuName || !form.menuCaption}
+              className="gap-2"
+            >
+              {isEditing ? "Update Menu" : "Create Menu"}
+            </Button>
+          </>
+        }
+      >
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="menuName" className="text-sm font-medium">
+              Menu Name <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="menuName"
+              value={form.menuName}
+              onChange={(e) => set("menuName", e.target.value)}
+              placeholder="e.g. admin_setup"
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="menuCaption" className="text-sm font-medium">
+              Caption <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="menuCaption"
+              value={form.menuCaption}
+              onChange={(e) => set("menuCaption", e.target.value)}
+              placeholder="e.g. Admin Setup"
+              className="h-9"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Icon</Label>
+            <Select
+              value={form.menuIcon}
+              onValueChange={(v) => set("menuIcon", v)}
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {iconOptions.map((icon) => {
+                  const Ic = (LucideIcons as any)[icon];
+                  return (
+                    <SelectItem key={icon} value={icon}>
+                      <div className="flex items-center gap-2">
+                        {Ic && <Ic className="h-3.5 w-3.5" />}
+                        <span>{icon}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="menuPath" className="text-sm font-medium">
+              Path
+            </Label>
+            <Input
+              id="menuPath"
+              value={form.menuPath}
+              onChange={(e) => set("menuPath", e.target.value)}
+              placeholder="e.g. /admin-setup"
+              className="h-9"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Parent Menu</Label>
+          <Select
+            value={form.parentMenuId || "none"}
+            onValueChange={(v) => set("parentMenuId", v === "none" ? "" : v)}
+          >
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="None (Root level)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None (Root level)</SelectItem>
+              {parentMenus.map((m) => (
+                <SelectItem key={m.id} value={String(m.id)}>
+                  {"\u00A0\u00A0".repeat(m.depth)}
+                  {m.menuCaption}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-semibold mb-3">Access Rights</h4>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { key: "rightList" as const, label: "List", icon: List },
+              { key: "rightView" as const, label: "View", icon: Eye },
+              { key: "rightAdd" as const, label: "Add", icon: Plus },
+              { key: "rightEdit" as const, label: "Edit", icon: Edit2 },
+              {
+                key: "rightShowListingTotal" as const,
+                label: "Show Total",
+                icon: ArrowUpRight,
+              },
+              { key: "rightPrint" as const, label: "Print", icon: Printer },
+              {
+                key: "rightExport" as const,
+                label: "Export",
+                icon: Download,
+              },
+            ].map(({ key, label, icon: Ic }) => (
+              <label
+                key={key}
+                className={cn(
+                  "flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all",
+                  form[key]
+                    ? "border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30"
+                    : "border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800/50",
+                )}
+              >
+                <Checkbox
+                  checked={form[key]}
+                  onChange={(e) => set(key, e.target.checked)}
+                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                />
+                <Ic className="h-3.5 w-3.5 text-zinc-500" />
+                <span className="text-sm">{label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </SideModal>
+    </div>
+  );
+}
+
+function cn(...classes: (string | boolean | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
+}
