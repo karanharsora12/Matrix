@@ -1,4 +1,5 @@
 import apiClient from "@/api/client";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { DataGrid } from "@/components/common/DataGrid";
 import { ListingHeader } from "@/components/common/ListingHeader";
 import { SideModal } from "@/components/common/SideModal";
@@ -60,6 +61,11 @@ const iconOptions = [
   "Bell",
   "Database",
   "Box",
+  "Boxes",
+  "Group",
+  "Tags",
+  "FolderTree",
+  "Layers",
 ];
 
 interface MenuForm {
@@ -69,13 +75,13 @@ interface MenuForm {
   menuIcon: string;
   menuPath: string;
   parentMenuId: string;
-  rightList: boolean;
-  rightView: boolean;
-  rightAdd: boolean;
-  rightEdit: boolean;
-  rightShowListingTotal: boolean;
-  rightPrint: boolean;
-  rightExport: boolean;
+  listRight: boolean;
+  viewRight: boolean;
+  addRight: boolean;
+  editRight: boolean;
+  showListingTotalRight: boolean;
+  printRight: boolean;
+  exportRight: boolean;
 }
 
 const emptyForm: MenuForm = {
@@ -84,13 +90,13 @@ const emptyForm: MenuForm = {
   menuIcon: "Box",
   menuPath: "",
   parentMenuId: "",
-  rightList: false,
-  rightView: false,
-  rightAdd: false,
-  rightEdit: false,
-  rightShowListingTotal: false,
-  rightPrint: false,
-  rightExport: false,
+  listRight: false,
+  viewRight: false,
+  addRight: false,
+  editRight: false,
+  showListingTotalRight: false,
+  printRight: false,
+  exportRight: false,
 };
 
 export default function MenuSetup() {
@@ -104,7 +110,7 @@ export default function MenuSetup() {
 
   const fetchMenus = async () => {
     try {
-      const response = await apiClient.get("/menus");
+      const response = await apiClient.get(API_ENDPOINTS.MENUS.BASE);
       setMenus(response.data);
     } catch {
       setMenus([
@@ -339,13 +345,13 @@ export default function MenuSetup() {
       menuIcon: menu.menuIcon || "Box",
       menuPath: menu.menuPath || "",
       parentMenuId: menu.parentMenuId ? String(menu.parentMenuId) : "",
-      rightList: !!menu.rightList,
-      rightView: !!menu.rightView,
-      rightAdd: !!menu.rightAdd,
-      rightEdit: !!menu.rightEdit,
-      rightShowListingTotal: !!menu.rightShowListingTotal,
-      rightPrint: !!menu.rightPrint,
-      rightExport: !!menu.rightExport,
+      listRight: !!menu.listRight,
+      viewRight: !!menu.viewRight,
+      addRight: !!menu.addRight,
+      editRight: !!menu.editRight,
+      showListingTotalRight: !!menu.showListingTotalRight,
+      printRight: !!menu.printRight,
+      exportRight: !!menu.exportRight,
     });
     setIsEditing(true);
     setDialogOpen(true);
@@ -363,7 +369,7 @@ export default function MenuSetup() {
     if (!isConfirmed) return;
 
     try {
-      await apiClient.delete(`/menus/${id}`);
+      await apiClient.delete(API_ENDPOINTS.MENUS.BY_ID(id));
       fetchMenus();
     } catch {
       setMenus((prev) => {
@@ -386,9 +392,9 @@ export default function MenuSetup() {
         parentMenuId: form.parentMenuId ? parseInt(form.parentMenuId) : null,
       };
       if (form.id) {
-        await apiClient.put(`/menus/${form.id}`, payload);
+        await apiClient.put(API_ENDPOINTS.MENUS.BY_ID(form.id), payload);
       } else {
-        await apiClient.post("/menus", payload);
+        await apiClient.post(API_ENDPOINTS.MENUS.BASE, payload);
       }
       setDialogOpen(false);
       fetchMenus();
@@ -522,49 +528,49 @@ export default function MenuSetup() {
       { headerName: "Path", field: "menuPath", flex: 1, minWidth: 150 },
       {
         headerName: "List",
-        field: "rightList",
+        field: "listRight",
         cellRenderer: BooleanRenderer,
         width: 80,
         flex: 0,
       },
       {
         headerName: "View",
-        field: "rightView",
+        field: "viewRight",
         cellRenderer: BooleanRenderer,
         width: 80,
         flex: 0,
       },
       {
         headerName: "Add",
-        field: "rightAdd",
+        field: "addRight",
         cellRenderer: BooleanRenderer,
         width: 80,
         flex: 0,
       },
       {
         headerName: "Edit",
-        field: "rightEdit",
+        field: "editRight",
         cellRenderer: BooleanRenderer,
         width: 80,
         flex: 0,
       },
       {
         headerName: "Total",
-        field: "rightShowListingTotal",
+        field: "showListingTotalRight",
         cellRenderer: BooleanRenderer,
         width: 80,
         flex: 0,
       },
       {
         headerName: "Print",
-        field: "rightPrint",
+        field: "printRight",
         cellRenderer: BooleanRenderer,
         width: 80,
         flex: 0,
       },
       {
         headerName: "Export",
-        field: "rightExport",
+        field: "exportRight",
         cellRenderer: BooleanRenderer,
         width: 90,
         flex: 0,
@@ -724,18 +730,18 @@ export default function MenuSetup() {
           <h4 className="text-sm font-semibold mb-3">Access Rights</h4>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { key: "rightList" as const, label: "List", icon: List },
-              { key: "rightView" as const, label: "View", icon: Eye },
-              { key: "rightAdd" as const, label: "Add", icon: Plus },
-              { key: "rightEdit" as const, label: "Edit", icon: Edit2 },
+              { key: "listRight" as const, label: "List", icon: List },
+              { key: "viewRight" as const, label: "View", icon: Eye },
+              { key: "addRight" as const, label: "Add", icon: Plus },
+              { key: "editRight" as const, label: "Edit", icon: Edit2 },
               {
-                key: "rightShowListingTotal" as const,
+                key: "showListingTotalRight" as const,
                 label: "Show Total",
                 icon: ArrowUpRight,
               },
-              { key: "rightPrint" as const, label: "Print", icon: Printer },
+              { key: "printRight" as const, label: "Print", icon: Printer },
               {
-                key: "rightExport" as const,
+                key: "exportRight" as const,
                 label: "Export",
                 icon: Download,
               },

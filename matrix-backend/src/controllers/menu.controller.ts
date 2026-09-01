@@ -41,7 +41,7 @@ export class MenuController {
 
   async deleteMenu(req: Request, res: Response) {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(req.params.id as string);
       if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
 
       const deleted = await menuService.deleteMenu(id);
