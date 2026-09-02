@@ -42,15 +42,6 @@ export default function ERPLaoyut() {
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-zinc-200 bg-white/80 px-4 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/80 sm:px-6">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="h-9 w-9 lg:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-              <span className="text-sm font-semibold text-zinc-900 dark:text-white">
-                {currentTitle}
-              </span>
-            </div>
-
             <div className="hidden sm:block">
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />

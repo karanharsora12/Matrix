@@ -340,6 +340,7 @@ export default function MenuSetup() {
         cellRenderer: CaptionRenderer,
         minWidth: 280,
         flex: 2,
+        rowDrag: true,
       },
       { headerName: "Name", field: "menuName", flex: 1, minWidth: 150 },
       { headerName: "Path", field: "menuPath", flex: 1, minWidth: 150 },
@@ -429,6 +430,12 @@ export default function MenuSetup() {
           rowHeight: 48,
           headerHeight: 48,
           pagination: false,
+          rowDragManaged: true,
+          animateRows: true,
+          defaultColDef: {
+            filter: false,
+            floatingFilter: false,
+          },
         }}
       />
 

@@ -7,7 +7,7 @@ export class InventoryService {
     const [metalsData, rateTypesData, commonListsData] = await Promise.all([
       db.select().from(metals),
       db.select().from(rateTypes),
-      db.select().from(commonLists)
+      db.select().from(commonLists),
     ]);
     return {
       metals: metalsData,
@@ -21,17 +21,15 @@ export class InventoryService {
   }
 
   async createItemGroup(data: any) {
-    const [created] = await db
-      .insert(itemGroups)
-      .values(data)
-      .returning();
+    const [created] = await db.insert(itemGroups).values(data).returning();
     return created;
   }
 
   async updateItemGroup(id: number, data: any) {
+    const { id: _, createdAt, updatedAt, ...updateData } = data;
     const [updated] = await db
       .update(itemGroups)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...updateData, updatedAt: new Date() })
       .where(eq(itemGroups.id, id))
       .returning();
     return updated;

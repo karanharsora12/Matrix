@@ -1,0 +1,153 @@
+/* ─── AG Grid Custom Overrides ─── */
+
+/* Floating filter row: subtle background */
+.ag-grid-custom .ag-floating-filter {
+  background-color: hsl(240 4.8% 97.5%);
+  padding: 0 !important;
+}
+.dark .ag-grid-custom .ag-floating-filter {
+  background-color: hsl(240 6% 8%);
+}
+
+/* Floating filter body: fill the entire cell */
+.ag-grid-custom .ag-floating-filter-body {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+}
+
+/* Floating filter input wrapper: fill the cell */
+.ag-grid-custom .ag-floating-filter-input {
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+}
+
+/* Input inside floating filter: stretch to full cell, no border, no rounding */
+.ag-grid-custom .ag-floating-filter-input input,
+.ag-grid-custom .ag-floating-filter-input .ag-input-field-input {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 10px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  font-size: 12px;
+  color: inherit;
+}
+
+/* No focus ring or border on the floating filter inputs */
+.ag-grid-custom .ag-floating-filter-input input:focus,
+.ag-grid-custom .ag-floating-filter-input .ag-input-field-input:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove AG Grid's default text input wrapper styling */
+.ag-grid-custom .ag-floating-filter .ag-text-field-input-wrapper,
+.ag-grid-custom .ag-floating-filter .ag-input-wrapper {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  height: 100%;
+}
+
+/* Filter icon in floating filter: hidden by default, shown on hover & when active */
+.ag-grid-custom .ag-floating-filter-button {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  margin: 0 4px;
+}
+.ag-grid-custom .ag-floating-filter:hover .ag-floating-filter-button {
+  opacity: 1;
+}
+.ag-grid-custom .ag-floating-filter-button.ag-filter-active,
+.ag-grid-custom .ag-header-cell.ag-filter-active .ag-floating-filter-button {
+  opacity: 1;
+}
+
+/* When a filter IS active on a column, always show the button */
+.ag-grid-custom .ag-header-cell-filtered .ag-floating-filter-button {
+  opacity: 1;
+}
+
+/* Header: clean, tight look */
+.ag-grid-custom .ag-header-cell-label {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  color: hsl(240 5.9% 10%);
+}
+.dark .ag-grid-custom .ag-header-cell-label {
+  color: hsl(0 0% 95%);
+}
+
+/* Full-height column border separators */
+.ag-grid-custom .ag-header-cell {
+  border-right: 1px solid hsl(240 5.9% 88%) !important;
+}
+.ag-grid-custom .ag-header-cell:last-child {
+  border-right: none !important;
+}
+.dark .ag-grid-custom .ag-header-cell {
+  border-right: 1px solid hsl(240 3.7% 22%) !important;
+}
+.dark .ag-grid-custom .ag-header-cell:last-child {
+  border-right: none !important;
+}
+
+/* Row hover: smooth transition */
+.ag-grid-custom .ag-row {
+  transition: background-color 0.12s ease;
+}
+
+/* Pagination: match app style */
+.ag-grid-custom .ag-paging-panel {
+  font-size: 13px;
+  border-top: 1px solid hsl(240 5.9% 90%);
+}
+.dark .ag-grid-custom .ag-paging-panel {
+  border-top-color: hsl(240 3.7% 17%);
+}
+
+/* Cell text: prevent wrapping */
+.ag-grid-custom .ag-cell {
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+}
+
+/* Remove outline on focused cells for cleaner look */
+.ag-grid-custom .ag-cell-focus,
+.ag-grid-custom .ag-cell:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Sort icon color in dark header */
+.ag-grid-custom .ag-header-icon {
+  color: hsl(0 0% 70%);
+}
+
+/* ─── Pinned Bottom Total Row ─── */
+.ag-grid-custom .ag-row-pinned {
+  background-color: hsl(240 4.8% 95.9%) !important;
+  font-weight: 600;
+  font-size: 13px;
+  border-top: 2px solid hsl(240 5.9% 85%) !important;
+}
+.dark .ag-grid-custom .ag-row-pinned {
+  background-color: hsl(240 5% 12%) !important;
+  border-top: 2px solid hsl(240 3.7% 22%) !important;
+}
+.ag-grid-custom .ag-row-pinned .ag-cell {
+  color: hsl(240 5.9% 10%);
+}
+.dark .ag-grid-custom .ag-row-pinned .ag-cell {
+  color: hsl(0 0% 95%);
+}

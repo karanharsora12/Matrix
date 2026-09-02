@@ -17,6 +17,7 @@ import { Modal } from "@/components/common/Modal";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -291,13 +292,12 @@ const ItemGroups: React.FC = () => {
 
           <div className="space-y-2">
             <Label>Sales Rate</Label>
-            <Input
-              type="number"
-              value={formData.salesRate || ""}
-              onChange={(e) =>
+            <AmountInput
+              value={formData.salesRate}
+              onChange={(val) =>
                 setFormData({
                   ...formData,
-                  salesRate: parseFloat(e.target.value),
+                  salesRate: val,
                 })
               }
             />
@@ -325,13 +325,12 @@ const ItemGroups: React.FC = () => {
 
           <div className="space-y-2">
             <Label>Purchase Rate</Label>
-            <Input
-              type="number"
-              value={formData.purchaseRate || ""}
-              onChange={(e) =>
+            <AmountInput
+              value={formData.purchaseRate}
+              onChange={(val) =>
                 setFormData({
                   ...formData,
-                  purchaseRate: parseFloat(e.target.value),
+                  purchaseRate: val,
                 })
               }
             />
