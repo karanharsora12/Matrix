@@ -7,6 +7,7 @@ import {
   colorSchemeDark,
 } from "ag-grid-community";
 import type { ColDef, GridOptions } from "ag-grid-community";
+
 // Register all community modules
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -17,12 +18,12 @@ export interface DataGridProps {
   onGridReady?: (params: any) => void;
 }
 
-export const DataGrid: React.FC<DataGridProps> = ({
+export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(({
   rowData,
   columnDefs,
   gridOptions,
   onGridReady,
-}) => {
+}, ref) => {
   const defaultColDef = useMemo<ColDef>(() => {
     return {
       flex: 1,
@@ -41,6 +42,7 @@ export const DataGrid: React.FC<DataGridProps> = ({
   return (
     <div className="h-full w-full">
       <AgGridReact
+        ref={ref}
         theme={myTheme}
         rowData={rowData}
         columnDefs={columnDefs}
@@ -54,4 +56,6 @@ export const DataGrid: React.FC<DataGridProps> = ({
       />
     </div>
   );
-};
+});
+
+DataGrid.displayName = "DataGrid";

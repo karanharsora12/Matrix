@@ -4,6 +4,7 @@ import { DataGrid } from "@/components/common/DataGrid";
 import { ListingHeader } from "@/components/common/ListingHeader";
 import { SideModal } from "@/components/common/SideModal";
 import { confirmAlert } from "@/components/common/AlertModal";
+import { useGridActions } from "@/hooks/useGridActions";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -100,6 +101,7 @@ const emptyForm: MenuForm = {
 };
 
 export default function MenuSetup() {
+  const { gridRef, onExportExcel, onExportPdf, onPrint } = useGridActions();
   const [menus, setMenus] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [search, setSearch] = useState("");
@@ -599,12 +601,13 @@ export default function MenuSetup() {
           placeholder: "Search menus...",
         }}
         onRefresh={fetchMenus}
-        onExportExcel={() => console.log("Export to Excel")}
-        onExportPdf={() => console.log("Export to PDF")}
-        onPrint={() => window.print()}
+        onExportExcel={() => onExportExcel("Menu_Setup")}
+        onExportPdf={() => onExportPdf("Menu Setup List", "Menu_Setup")}
+        onPrint={() => onPrint("Menu Setup List")}
       />
 
       <DataGrid
+        ref={gridRef}
         rowData={visibleRows}
         columnDefs={columnDefs}
         gridOptions={{

@@ -12,6 +12,7 @@ import type { ItemGroup } from "@/api/inventory";
 import { CommonListType } from "@/constants/enums";
 import { ListingHeader } from "@/components/common/ListingHeader";
 import { DataGrid } from "@/components/common/DataGrid";
+import { useGridActions } from "@/hooks/useGridActions";
 import { Modal } from "@/components/common/Modal";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import { Trash2 } from "lucide-react";
 
 const ItemGroups: React.FC = () => {
   const queryClient = useQueryClient();
+  const { gridRef, onExportExcel, onExportPdf, onPrint } = useGridActions();
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ItemGroup | null>(null);
@@ -46,9 +48,13 @@ const ItemGroups: React.FC = () => {
   });
 
   const { data: itemGroups = [], isLoading } = useItemGroups();
-  
-  const { metals, rateTypes, commonLists } = useSelector((state: RootState) => state.inventory);
-  const measureUnits = commonLists.filter(c => c.listType === CommonListType.MEASURE_UNIT);
+
+  const { metals, rateTypes, commonLists } = useSelector(
+    (state: RootState) => state.inventory,
+  );
+  const measureUnits = commonLists.filter(
+    (c) => c.listType === CommonListType.MEASURE_UNIT,
+  );
 
   const createMutation = useCreateItemGroup();
   const updateMutation = useUpdateItemGroup();
@@ -69,7 +75,8 @@ const ItemGroups: React.FC = () => {
   const handleDelete = async (id: number) => {
     const isConfirmed = await confirmAlert({
       title: "Confirm Delete",
-      description: "Are you sure you want to delete this item group? This action cannot be undone.",
+      description:
+        "Are you sure you want to delete this item group? This action cannot be undone.",
       confirmText: "Delete",
       variant: "danger",
     });
@@ -187,13 +194,20 @@ const ItemGroups: React.FC = () => {
         onRefresh={() =>
           queryClient.invalidateQueries({ queryKey: ["itemGroups"] })
         }
+        onExportExcel={() => onExportExcel("Item_Groups")}
+        onExportPdf={() => onExportPdf("Item Groups List", "Item_Groups")}
+        onPrint={() => onPrint("Item Groups List")}
       />
 
       {!isLoading && (
-        <DataGrid 
-          rowData={filteredData} 
-          columnDefs={columnDefs} 
-          gridOptions={{ onRowDoubleClicked: (e) => handleEdit(e.data) }}
+        <DataGrid
+          ref={gridRef}
+          rowData={filteredData}
+          columnDefs={columnDefs}
+          gridOptions={{
+            onRowDoubleClicked: (e) => handleEdit(e.data),
+            pagination: false,
+          }}
         />
       )}
 
