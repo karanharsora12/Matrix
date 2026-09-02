@@ -1,25 +1,21 @@
-import { useState } from "react";
-import {
-  Plus,
-  Search,
-  RefreshCw,
-  FileSpreadsheet,
-  FileText,
-  Printer,
-  ChevronRight,
-  SlidersHorizontal,
-  Download,
-  X,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import {
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Plus,
+  Printer,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
 
 export interface FilterChip {
   label: string;
@@ -28,17 +24,9 @@ export interface FilterChip {
   onClick: () => void;
 }
 
-export interface StatItem {
-  label: string;
-  value: string | number;
-  icon?: React.ReactNode;
-  color?: string;
-}
-
 export interface ListingHeaderProps {
   title: string;
   subtitle?: string;
-  stats?: StatItem[];
   searchProps?: {
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -57,7 +45,6 @@ export interface ListingHeaderProps {
 export const ListingHeader: React.FC<ListingHeaderProps> = ({
   title,
   subtitle,
-  stats,
   searchProps,
   onAdd,
   addText = "Add New",
@@ -92,7 +79,7 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
                 placeholder={searchProps.placeholder || "Search..."}
                 value={searchProps.value}
                 onChange={searchProps.onChange}
-                className="pl-8 pr-8 h-9 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
+                className="pl-8 pr-8 h-9 bg-white dark:bg-zinc-900 shadow-none"
               />
               {searchProps.value && (
                 <button
@@ -113,13 +100,6 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
             <div className="flex items-center gap-1.5">{extraButtons}</div>
           )}
 
-          {/* Separator between filters/search and standard actions */}
-          {(searchProps || extraButtons) && (
-            <Separator
-              orientation="vertical"
-              className="h-5 mx-1 hidden sm:block"
-            />
-          )}
           {onExportExcel && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -206,36 +186,6 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
           )}
         </div>
       </div>
-
-      {stats && stats.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 pt-2">
-          {stats.map((stat, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 shadow-sm"
-            >
-              {stat.icon && (
-                <div
-                  className={cn(
-                    "flex items-center justify-center w-8 h-8 rounded-md",
-                    stat.color || "bg-zinc-100 dark:bg-zinc-800",
-                  )}
-                >
-                  {stat.icon}
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                  {stat.label}
-                </p>
-                <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
-                  {stat.value}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
