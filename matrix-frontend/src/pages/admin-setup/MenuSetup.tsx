@@ -114,157 +114,8 @@ export default function MenuSetup() {
     try {
       const response = await apiClient.get(API_ENDPOINTS.MENUS.BASE);
       setMenus(response.data);
-    } catch {
-      setMenus([
-        {
-          id: 1,
-          menuName: "dashboard",
-          menuCaption: "Dashboard",
-          menuIcon: "LayoutDashboard",
-          menuPath: "/dashboard",
-          children: [],
-        },
-        {
-          id: 2,
-          menuName: "sales",
-          menuCaption: "Sales",
-          menuIcon: "TrendingUp",
-          menuPath: "/sales",
-          children: [
-            {
-              id: 21,
-              menuName: "sales_orders",
-              menuCaption: "Sales Orders",
-              menuIcon: "FileText",
-              menuPath: "/sales/orders",
-              children: [],
-            },
-            {
-              id: 22,
-              menuName: "sales_returns",
-              menuCaption: "Sales Returns",
-              menuIcon: "ArrowUpRight",
-              menuPath: "/sales/returns",
-              children: [],
-            },
-          ],
-        },
-        {
-          id: 3,
-          menuName: "purchases",
-          menuCaption: "Purchases",
-          menuIcon: "ShoppingCart",
-          menuPath: "/purchases",
-          children: [
-            {
-              id: 31,
-              menuName: "purchase_orders",
-              menuCaption: "Purchase Orders",
-              menuIcon: "FileText",
-              menuPath: "/purchases/orders",
-              children: [],
-            },
-          ],
-        },
-        {
-          id: 4,
-          menuName: "inventory",
-          menuCaption: "Inventory",
-          menuIcon: "Package",
-          menuPath: "/inventory",
-          children: [
-            {
-              id: 41,
-              menuName: "products",
-              menuCaption: "Products",
-              menuIcon: "Box",
-              menuPath: "/inventory/products",
-              children: [],
-            },
-            {
-              id: 42,
-              menuName: "stock_adjustments",
-              menuCaption: "Stock Adjustments",
-              menuIcon: "ClipboardList",
-              menuPath: "/inventory/adjustments",
-              children: [],
-            },
-            {
-              id: 43,
-              menuName: "warehouses",
-              menuCaption: "Warehouses",
-              menuIcon: "Warehouse",
-              menuPath: "/inventory/warehouses",
-              children: [],
-            },
-          ],
-        },
-        {
-          id: 5,
-          menuName: "customers",
-          menuCaption: "Customers",
-          menuIcon: "Users",
-          menuPath: "/customers",
-          children: [],
-        },
-        {
-          id: 6,
-          menuName: "finance",
-          menuCaption: "Finance",
-          menuIcon: "DollarSign",
-          menuPath: "/finance",
-          children: [
-            {
-              id: 61,
-              menuName: "invoices",
-              menuCaption: "Invoices",
-              menuIcon: "FileText",
-              menuPath: "/finance/invoices",
-              children: [],
-            },
-            {
-              id: 62,
-              menuName: "payments",
-              menuCaption: "Payments",
-              menuIcon: "CreditCard",
-              menuPath: "/finance/payments",
-              children: [],
-            },
-            {
-              id: 63,
-              menuName: "expenses",
-              menuCaption: "Expenses",
-              menuIcon: "Receipt",
-              menuPath: "/finance/expenses",
-              children: [],
-            },
-          ],
-        },
-        {
-          id: 7,
-          menuName: "hr",
-          menuCaption: "HR",
-          menuIcon: "Briefcase",
-          menuPath: "/hr",
-          children: [],
-        },
-        {
-          id: 8,
-          menuName: "reports",
-          menuCaption: "Reports",
-          menuIcon: "BarChart3",
-          menuPath: "/reports",
-          children: [],
-        },
-        {
-          id: 9,
-          menuName: "settings",
-          menuCaption: "Settings",
-          menuIcon: "Settings",
-          menuPath: "/settings",
-          children: [],
-        },
-      ]);
+    } catch (error) {
+      console.error("Failed to fetch menus:", error);
     }
   };
 
@@ -275,22 +126,6 @@ export default function MenuSetup() {
   const toggleExpand = (id: number) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
-
-  const expandAll = () => {
-    const all: Record<number, boolean> = {};
-    const walk = (items: any[]) => {
-      items.forEach((m) => {
-        if (m.children?.length) {
-          all[m.id] = true;
-          walk(m.children);
-        }
-      });
-    };
-    walk(menus);
-    setExpanded(all);
-  };
-
-  const collapseAll = () => setExpanded({});
 
   const flatMenus = useMemo(() => {
     const flat: any[] = [];
@@ -400,28 +235,8 @@ export default function MenuSetup() {
       }
       setDialogOpen(false);
       fetchMenus();
-    } catch {
-      if (form.id) {
-        setMenus((prev) =>
-          prev.map((m) =>
-            m.id === form.id ? { ...m, ...payload, children: m.children } : m,
-          ),
-        );
-      } else {
-        const newId = Date.now();
-        const newItem = { ...payload, id: newId, children: [] };
-        if (payload.parentMenuId) {
-          const addToParent = (items: any[]): any[] =>
-            items.map((m) =>
-              m.id === payload.parentMenuId
-                ? { ...m, children: [...(m.children || []), newItem] }
-                : { ...m, children: m.children ? addToParent(m.children) : [] },
-            );
-          setMenus((prev) => addToParent(prev));
-        } else {
-          setMenus((prev) => [...prev, newItem]);
-        }
-      }
+    } catch (error) {
+      console.error("Failed to save menu:", error);
       setDialogOpen(false);
     }
   };
