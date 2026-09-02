@@ -5,6 +5,7 @@ import {
   timestamp,
   integer,
   boolean,
+  numeric,
 } from "drizzle-orm/pg-core";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
@@ -34,5 +35,42 @@ export const menus = pgTable("menus", {
     .notNull(),
   exportRight: boolean("export_right").default(false).notNull(),
   printRight: boolean("print_right").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const metals = pgTable("metals", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 256 }).notNull().unique(),
+});
+
+export const rateTypes = pgTable("rate_types", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 256 }).notNull().unique(),
+});
+
+export const itemGroups = pgTable("item_groups", {
+  id: serial("id").primaryKey(),
+  itemGroupName: varchar("item_group_name", { length: 256 }).notNull().unique(),
+  shortName: varchar("short_name", { length: 256 }).notNull(),
+  metalTypeId: integer("metal_type_id")
+    .references((): AnyPgColumn => metals.id)
+    .notNull(),
+  salesRate: numeric("sales_rate").notNull(),
+  purchaseRate: numeric("purchase_rate").notNull(),
+  salesRateTypeId: integer("sales_rate_type_id")
+    .references((): AnyPgColumn => rateTypes.id)
+    .notNull(),
+  purchaseRateTypeId: integer("purchase_rate_type_id")
+    .references((): AnyPgColumn => rateTypes.id)
+    .notNull(),
+  measureUnitCode: varchar("measure_unit_code", { length: 256 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const commonLists = pgTable("common_lists", {
+  id: serial("id").primaryKey(),
+  listType: varchar("list_type", { length: 256 }).notNull(),
+  listValue: varchar("list_value", { length: 256 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
