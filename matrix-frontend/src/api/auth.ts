@@ -26,10 +26,6 @@ const loginFn = async (credentials: LoginCredentials): Promise<AuthResponse> => 
 export const useLogin = () => {
   return useMutation({
     mutationFn: loginFn,
-    onSuccess: (data) => {
-      // Store token on successful login
-      localStorage.setItem("matrix_token", data.token);
-    },
   });
 };
 

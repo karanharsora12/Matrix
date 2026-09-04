@@ -1,16 +1,6 @@
-import { Outlet, useLocation } from "react-router-dom";
-import {
-  Settings,
-  Search,
-  Bell,
-  HelpCircle,
-  LogOut,
-  User,
-  Menu,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Sidebar } from "@/components/Sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,21 +9,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Sidebar } from "@/components/Sidebar";
-
-const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/settings": "Settings",
-};
+import type { RootState } from "@/store";
+import { logout } from "@/store/authSlice";
+import { Bell, HelpCircle, LogOut, Search, Settings, User } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { Outlet, useNavigate } from "react-router-dom";
 
 export default function ERPLaoyut() {
-  const location = useLocation();
-
-  const currentTitle =
-    pageTitles[location.pathname] ||
-    location.pathname.split("/").pop() ||
-    "Dashboard";
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.auth.user);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -73,13 +60,13 @@ export default function ERPLaoyut() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="ml-1 gap-2 px-2 py-1.5">
                     <Avatar className="h-7 w-7">
-                      <AvatarFallback className="bg-blue-600 text-xs text-white">
-                        RK
+                      <AvatarFallback className="bg-blue-600 text-xs text-white uppercase">
+                        {user?.name?.substring(0, 2) || "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="hidden text-left lg:block">
                       <p className="text-sm font-medium leading-none text-zinc-900 dark:text-white">
-                        Rajesh Kumar
+                        {user?.name || "User"}
                       </p>
                       <p className="text-xs leading-none text-zinc-500 dark:text-zinc-400">
                         Admin
@@ -90,9 +77,11 @@ export default function ERPLaoyut() {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-medium">Rajesh Kumar</span>
-                      <span className="text-xs text-zinc-500">
-                        rajesh@acme.com
+                      <span className="text-sm font-medium">
+                        {user?.name || "User"}
+                      </span>
+                      <span className="text-xs text-zinc-500 truncate">
+                        {user?.email || ""}
                       </span>
                     </div>
                   </DropdownMenuLabel>
@@ -106,7 +95,13 @@ export default function ERPLaoyut() {
                     Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                  <DropdownMenuItem
+                    className="text-red-600 focus:text-red-600 cursor-pointer"
+                    onClick={() => {
+                      dispatch(logout());
+                      navigate("/login");
+                    }}
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </DropdownMenuItem>

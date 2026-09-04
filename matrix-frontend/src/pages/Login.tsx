@@ -1,6 +1,8 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLogin } from "@/api/auth";
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +28,7 @@ import {
 
 export default function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { mutate: login, isPending: isLoading } = useLogin();
 
   const [email, setEmail] = useState("");
@@ -101,7 +104,8 @@ export default function Login() {
     login(
       { email, password },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          dispatch(loginSuccess({ user: data.user, token: data.token }));
           navigate("/dashboard");
         },
         onError: (err: any) => {
@@ -249,12 +253,12 @@ export default function Login() {
         {/* Center - Login Form */}
         <div className="flex-1 flex items-center justify-center relative z-10 px-6 py-8">
           <div
-            className={`w-full max-w-[440px] transition-all duration-700 delay-100 ${mounted ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-6 scale-[0.98]"}`}
+            className={`w-full max-w-110 transition-all duration-700 delay-100 ${mounted ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-6 scale-[0.98]"}`}
           >
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center">
+                <div className="w-11 h-11 rounded-2xl bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center">
                   <Lock
                     size={20}
                     className="text-blue-600 dark:text-blue-400"
@@ -406,7 +410,7 @@ export default function Login() {
                 <Checkbox
                   id="remember"
                   checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="border-slate-300 dark:border-white/20 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                 />
                 <Label

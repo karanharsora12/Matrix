@@ -69,6 +69,7 @@ const iconOptions = [
   "Layers",
   "Barcode",
   "Tag",
+  "ContactRound",
 ];
 
 interface MenuForm {
