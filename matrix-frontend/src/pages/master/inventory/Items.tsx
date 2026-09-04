@@ -38,7 +38,9 @@ const Items: React.FC = () => {
     attributes: [],
   });
 
-  const { data: items = [], isLoading } = useItems();
+  const { data: itemsResponse, isLoading } = useItems();
+  const items = itemsResponse?.data || [];
+  const itemsSummary = itemsResponse?.summary || [];
   const { commonLists } = useSelector((state: RootState) => state.inventory);
   const createMutation = useCreateItem();
   const updateMutation = useUpdateItem();
@@ -110,17 +112,22 @@ const Items: React.FC = () => {
 
   const columnDefs = useMemo<ColDef[]>(() => {
     return [
-      { field: "id", headerName: "ID", width: 60 },
+      { field: "id", headerName: "ID", width: 60, type: "numericColumn" },
       { field: "itemName", headerName: "Item Name", width: 200 },
       { field: "shortName", headerName: "Short Name", width: 120 },
       {
         field: "isActive",
         headerName: "Active",
         width: 80,
+        valueGetter: (params) => {
+          if (params.node?.rowPinned) return "";
+          return params.data.isActive;
+        },
       },
       {
         headerName: "Attributes",
         valueGetter: (params) => {
+          if (params.node?.rowPinned) return "";
           const itemAttrs = params.data.attributes || [];
           return itemAttrs
             .map((attrId: number) => {
@@ -134,7 +141,10 @@ const Items: React.FC = () => {
       {
         headerName: "",
         width: 60,
-        cellRenderer: GridDeleteCell,
+        cellRenderer: (params: any) => {
+          if (params.node?.rowPinned) return null;
+          return <GridDeleteCell {...params} />;
+        },
         cellRendererParams: {
           onDelete: handleDelete,
         },
@@ -169,8 +179,12 @@ const Items: React.FC = () => {
           ref={gridRef}
           rowData={filteredData}
           columnDefs={columnDefs}
+          pinnedBottomRowData={itemsSummary}
           gridOptions={{
-            onRowDoubleClicked: (e) => handleEdit(e.data),
+            onRowDoubleClicked: (e) => {
+              if (e.node.rowPinned) return;
+              handleEdit(e.data);
+            },
             pagination: false,
           }}
         />

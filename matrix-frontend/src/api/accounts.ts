@@ -27,32 +27,45 @@ export interface Account {
   isActive: boolean;
 }
 
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  summary?: any[];
+  error?: string;
+  message?: string;
+}
+
 export const getAccountMasterData = async (): Promise<{
   accountTypes: AccountType[];
   accountGroups: AccountGroup[];
 }> => {
-  const { data } = await apiClient.get("/accounts/master-data");
+  const { data } = await apiClient.get<ApiResponse<{ accountTypes: AccountType[]; accountGroups: AccountGroup[] }>>("/accounts/master-data");
+  return data.data;
+};
+
+export const getAccounts = async (): Promise<ApiResponse<Account[]>> => {
+  const { data } = await apiClient.get<ApiResponse<Account[]>>("/accounts");
   return data;
 };
 
-export const getAccounts = async (): Promise<Account[]> => {
-  const { data } = await apiClient.get("/accounts");
-  return data;
+export const getAccount = async (id: number): Promise<Account> => {
+  const { data } = await apiClient.get<ApiResponse<Account>>(`/accounts/${id}`);
+  return data.data;
 };
 
 export const createAccount = async (
   account: Omit<Account, "id">
 ): Promise<Account> => {
-  const { data } = await apiClient.post("/accounts", account);
-  return data;
+  const { data } = await apiClient.post<ApiResponse<Account>>("/accounts", account);
+  return data.data;
 };
 
 export const updateAccount = async (
   id: number,
   account: Partial<Account>
 ): Promise<Account> => {
-  const { data } = await apiClient.put(`/accounts/${id}`, account);
-  return data;
+  const { data } = await apiClient.put<ApiResponse<Account>>(`/accounts/${id}`, account);
+  return data.data;
 };
 
 export const deleteAccount = async (id: number): Promise<void> => {
@@ -70,6 +83,14 @@ export const useAccounts = () => {
   return useQuery({
     queryKey: ["accounts"],
     queryFn: getAccounts,
+  });
+};
+
+export const useAccount = (id?: number) => {
+  return useQuery({
+    queryKey: ["accounts", id],
+    queryFn: () => getAccount(id!),
+    enabled: !!id,
   });
 };
 

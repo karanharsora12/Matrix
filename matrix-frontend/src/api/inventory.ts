@@ -29,34 +29,42 @@ export interface ItemGroup {
   measureUnitCode: string;
 }
 
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  summary?: any[];
+  error?: string;
+  message?: string;
+}
+
 export const getMasterData = async (): Promise<{
   metals: Metal[];
   rateTypes: RateType[];
   commonLists: CommonList[];
   attributes: Attribute[];
 }> => {
-  const { data } = await apiClient.get("/inventory/master-data");
-  return data;
+  const { data } = await apiClient.get<ApiResponse<any>>("/inventory/master-data");
+  return data.data;
 };
 
-export const getItemGroups = async (): Promise<ItemGroup[]> => {
-  const { data } = await apiClient.get("/inventory/item-groups");
+export const getItemGroups = async (): Promise<ApiResponse<ItemGroup[]>> => {
+  const { data } = await apiClient.get<ApiResponse<ItemGroup[]>>("/inventory/item-groups");
   return data;
 };
 
 export const createItemGroup = async (
   group: Omit<ItemGroup, "id">
 ): Promise<ItemGroup> => {
-  const { data } = await apiClient.post("/inventory/item-groups", group);
-  return data;
+  const { data } = await apiClient.post<ApiResponse<ItemGroup>>("/inventory/item-groups", group);
+  return data.data;
 };
 
 export const updateItemGroup = async (
   id: number,
   group: Partial<ItemGroup>
 ): Promise<ItemGroup> => {
-  const { data } = await apiClient.put(`/inventory/item-groups/${id}`, group);
-  return data;
+  const { data } = await apiClient.put<ApiResponse<ItemGroup>>(`/inventory/item-groups/${id}`, group);
+  return data.data;
 };
 
 export const deleteItemGroup = async (id: number): Promise<void> => {
@@ -115,19 +123,19 @@ export interface Item {
   attributes: number[];
 }
 
-export const getItems = async (): Promise<Item[]> => {
-  const { data } = await apiClient.get("/inventory/items");
+export const getItems = async (): Promise<ApiResponse<Item[]>> => {
+  const { data } = await apiClient.get<ApiResponse<Item[]>>("/inventory/items");
   return data;
 };
 
 export const createItem = async (item: Omit<Item, "id">): Promise<Item> => {
-  const { data } = await apiClient.post("/inventory/items", item);
-  return data;
+  const { data } = await apiClient.post<ApiResponse<Item>>("/inventory/items", item);
+  return data.data;
 };
 
 export const updateItem = async (id: number, item: Partial<Item>): Promise<Item> => {
-  const { data } = await apiClient.put(`/inventory/items/${id}`, item);
-  return data;
+  const { data } = await apiClient.put<ApiResponse<Item>>(`/inventory/items/${id}`, item);
+  return data.data;
 };
 
 export const deleteItem = async (id: number): Promise<void> => {

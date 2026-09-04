@@ -49,7 +49,9 @@ const ItemGroups: React.FC = () => {
     measureUnitCode: "",
   });
 
-  const { data: itemGroups = [], isLoading } = useItemGroups();
+  const { data: itemGroupsResponse, isLoading } = useItemGroups();
+  const itemGroups = itemGroupsResponse?.data || [];
+  const itemGroupsSummary = itemGroupsResponse?.summary || [];
 
   const { metals, rateTypes, commonLists } = useSelector(
     (state: RootState) => state.inventory,
@@ -124,24 +126,42 @@ const ItemGroups: React.FC = () => {
 
   const columnDefs = useMemo<ColDef[]>(() => {
     return [
-      { field: "id", headerName: "ID", width: 60 },
+      { field: "id", headerName: "ID", width: 60, type: "numericColumn" },
       { field: "itemGroupName", headerName: "Item Group Name", width: 180 },
       { field: "shortName", headerName: "Short Name", width: 100 },
       {
         field: "metalTypeId",
         headerName: "Metal",
         valueGetter: (params) => {
+          if (params.node?.rowPinned) return "";
           const metal = metals.find((m) => m.id === params.data.metalTypeId);
           return metal ? metal.name : "";
         },
         width: 100,
       },
-      { field: "salesRate", headerName: "Sales Rate", width: 100 },
-      { field: "purchaseRate", headerName: "Purchase Rate", width: 120 },
+      {
+        field: "salesRate",
+        headerName: "Sales Rate",
+        width: 100,
+        valueGetter: (params) => {
+          if (params.node?.rowPinned) return "";
+          return params.data.salesRate;
+        },
+      },
+      {
+        field: "purchaseRate",
+        headerName: "Purchase Rate",
+        width: 120,
+        valueGetter: (params) => {
+          if (params.node?.rowPinned) return "";
+          return params.data.purchaseRate;
+        },
+      },
       {
         field: "salesRateTypeId",
         headerName: "Sales Rate Type",
         valueGetter: (params) => {
+          if (params.node?.rowPinned) return "";
           const rt = rateTypes.find(
             (r) => r.id === params.data.salesRateTypeId,
           );
@@ -153,6 +173,7 @@ const ItemGroups: React.FC = () => {
         field: "purchaseRateTypeId",
         headerName: "Purchase Rate Type",
         valueGetter: (params) => {
+          if (params.node?.rowPinned) return "";
           const rt = rateTypes.find(
             (r) => r.id === params.data.purchaseRateTypeId,
           );
@@ -164,7 +185,10 @@ const ItemGroups: React.FC = () => {
       {
         headerName: "",
         width: 60,
-        cellRenderer: GridDeleteCell,
+        cellRenderer: (params: any) => {
+          if (params.node?.rowPinned) return null;
+          return <GridDeleteCell {...params} />;
+        },
         cellRendererParams: {
           onDelete: handleDelete,
         },
@@ -201,8 +225,12 @@ const ItemGroups: React.FC = () => {
           ref={gridRef}
           rowData={filteredData}
           columnDefs={columnDefs}
+          pinnedBottomRowData={itemGroupsSummary}
           gridOptions={{
-            onRowDoubleClicked: (e) => handleEdit(e.data),
+            onRowDoubleClicked: (e) => {
+              if (e.node.rowPinned) return;
+              handleEdit(e.data);
+            },
             pagination: false,
           }}
         />

@@ -18,6 +18,14 @@ export class AccountService {
     return await db.select().from(accounts).orderBy(accounts.id);
   }
 
+  async getAccountById(id: number) {
+    const [account] = await db
+      .select()
+      .from(accounts)
+      .where(eq(accounts.id, id));
+    return account;
+  }
+
   async createAccount(data: any) {
     const [created] = await db.insert(accounts).values(data).returning();
     return created;

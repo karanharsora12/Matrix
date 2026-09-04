@@ -17,6 +17,7 @@ export interface DataGridProps {
   columnDefs: ColDef[];
   gridOptions?: GridOptions;
   onGridReady?: (params: any) => void;
+  pinnedBottomRowData?: any[];
 }
 
 // Light theme — tuned to match the app's zinc-based palette
@@ -72,7 +73,7 @@ const darkTheme = themeQuartz.withPart(colorSchemeDark).withParams({
 });
 
 export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
-  ({ rowData, columnDefs, gridOptions, onGridReady }, ref) => {
+  ({ rowData, columnDefs, gridOptions, onGridReady, pinnedBottomRowData }, ref) => {
     const defaultColDef = useMemo<ColDef>(() => {
       return {
         filter: true,
@@ -82,8 +83,7 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
         suppressFloatingFilterButton: false,
         wrapHeaderText: true,
         autoHeaderHeight: true,
-        wrapText: true,
-        autoHeight: true,
+        tooltipValueGetter: (p) => p.value,
       };
     }, []);
 
@@ -105,6 +105,7 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
           onGridReady={onGridReady}
           rowSelection="single"
           animateRows={true}
+          pinnedBottomRowData={pinnedBottomRowData}
           {...gridOptions}
         />
       </div>
