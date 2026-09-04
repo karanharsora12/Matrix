@@ -93,3 +93,41 @@ export const items = pgTable("items", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const accountTypes = pgTable("account_types", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 256 }).notNull().unique(),
+  description: varchar("description", { length: 256 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const accountGroups = pgTable("account_groups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 256 }).notNull().unique(),
+  description: varchar("description", { length: 256 }),
+  accountTypeId: integer("account_type_id")
+    .references((): AnyPgColumn => accountTypes.id)
+    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const accounts = pgTable("accounts", {
+  id: serial("id").primaryKey(),
+  accountName: varchar("account_name", { length: 256 }).notNull(),
+  firstName: varchar("first_name", { length: 256 }).notNull(),
+  middleName: varchar("middle_name", { length: 256 }),
+  lastName: varchar("last_name", { length: 256 }).notNull(),
+  userName: varchar("user_name", { length: 256 }).notNull().unique(),
+  email: varchar("email", { length: 256 }).notNull().unique(),
+  accountTypeId: integer("account_type_id")
+    .references((): AnyPgColumn => accountTypes.id)
+    .notNull(),
+  accountGroupId: integer("account_group_id")
+    .references((): AnyPgColumn => accountGroups.id)
+    .notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

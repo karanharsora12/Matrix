@@ -1,5 +1,14 @@
 import { db } from "./index";
-import { users, menus, metals, rateTypes, commonLists, attributes } from "./schema";
+import {
+  users,
+  menus,
+  metals,
+  rateTypes,
+  commonLists,
+  attributes,
+  accountTypes,
+  accountGroups,
+} from "./schema";
 import { CommonListType } from "../constants/enums";
 import bcrypt from "bcryptjs";
 import * as dotenv from "dotenv";
@@ -119,63 +128,224 @@ async function main() {
     ]);
 
     console.log("Seeding common lists (Attributes)...");
-    const attributeCommonLists = await db.insert(commonLists).values([
-      { listType: CommonListType.ATTRIBUTE, listValue: "Grade" },
-      { listType: CommonListType.ATTRIBUTE, listValue: "Diameter" },
-      { listType: CommonListType.ATTRIBUTE, listValue: "Thickness" },
-      { listType: CommonListType.ATTRIBUTE, listValue: "Width" },
-      { listType: CommonListType.ATTRIBUTE, listValue: "Length" },
-      { listType: CommonListType.ATTRIBUTE, listValue: "Shape" },
-      { listType: CommonListType.ATTRIBUTE, listValue: "Standard" },
-    ]).returning();
+    const attributeCommonLists = await db
+      .insert(commonLists)
+      .values([
+        { listType: CommonListType.ATTRIBUTE, listValue: "Grade" },
+        { listType: CommonListType.ATTRIBUTE, listValue: "Diameter" },
+        { listType: CommonListType.ATTRIBUTE, listValue: "Thickness" },
+        { listType: CommonListType.ATTRIBUTE, listValue: "Width" },
+        { listType: CommonListType.ATTRIBUTE, listValue: "Length" },
+        { listType: CommonListType.ATTRIBUTE, listValue: "Shape" },
+        { listType: CommonListType.ATTRIBUTE, listValue: "Standard" },
+      ])
+      .returning()
+      .onConflictDoNothing({
+        target: [commonLists.listType, commonLists.listValue],
+      });
 
     console.log("Seeding attributes...");
     const attributeSeeds = [];
-    
-    const gradeList = attributeCommonLists.find(a => a.listValue === "Grade");
+
+    const gradeList = attributeCommonLists.find((a) => a.listValue === "Grade");
     if (gradeList) {
-      attributeSeeds.push({ attributeNameId: gradeList.id, attributeValue: "Fe500D" });
-      attributeSeeds.push({ attributeNameId: gradeList.id, attributeValue: "Fe550" });
+      attributeSeeds.push({
+        attributeNameId: gradeList.id,
+        attributeValue: "Fe500D",
+      });
+      attributeSeeds.push({
+        attributeNameId: gradeList.id,
+        attributeValue: "Fe550",
+      });
     }
-    
-    const diameterList = attributeCommonLists.find(a => a.listValue === "Diameter");
+
+    const diameterList = attributeCommonLists.find(
+      (a) => a.listValue === "Diameter",
+    );
     if (diameterList) {
-      attributeSeeds.push({ attributeNameId: diameterList.id, attributeValue: "12 mm" });
-      attributeSeeds.push({ attributeNameId: diameterList.id, attributeValue: "16 mm" });
+      attributeSeeds.push({
+        attributeNameId: diameterList.id,
+        attributeValue: "12 mm",
+      });
+      attributeSeeds.push({
+        attributeNameId: diameterList.id,
+        attributeValue: "16 mm",
+      });
     }
 
-    const thicknessList = attributeCommonLists.find(a => a.listValue === "Thickness");
+    const thicknessList = attributeCommonLists.find(
+      (a) => a.listValue === "Thickness",
+    );
     if (thicknessList) {
-      attributeSeeds.push({ attributeNameId: thicknessList.id, attributeValue: "5 mm" });
-      attributeSeeds.push({ attributeNameId: thicknessList.id, attributeValue: "10 mm" });
+      attributeSeeds.push({
+        attributeNameId: thicknessList.id,
+        attributeValue: "5 mm",
+      });
+      attributeSeeds.push({
+        attributeNameId: thicknessList.id,
+        attributeValue: "10 mm",
+      });
     }
 
-    const widthList = attributeCommonLists.find(a => a.listValue === "Width");
+    const widthList = attributeCommonLists.find((a) => a.listValue === "Width");
     if (widthList) {
-      attributeSeeds.push({ attributeNameId: widthList.id, attributeValue: "1250 mm" });
-      attributeSeeds.push({ attributeNameId: widthList.id, attributeValue: "1500 mm" });
+      attributeSeeds.push({
+        attributeNameId: widthList.id,
+        attributeValue: "1250 mm",
+      });
+      attributeSeeds.push({
+        attributeNameId: widthList.id,
+        attributeValue: "1500 mm",
+      });
     }
 
-    const lengthList = attributeCommonLists.find(a => a.listValue === "Length");
+    const lengthList = attributeCommonLists.find(
+      (a) => a.listValue === "Length",
+    );
     if (lengthList) {
-      attributeSeeds.push({ attributeNameId: lengthList.id, attributeValue: "12 m" });
-      attributeSeeds.push({ attributeNameId: lengthList.id, attributeValue: "6 m" });
+      attributeSeeds.push({
+        attributeNameId: lengthList.id,
+        attributeValue: "12 m",
+      });
+      attributeSeeds.push({
+        attributeNameId: lengthList.id,
+        attributeValue: "6 m",
+      });
     }
 
-    const shapeList = attributeCommonLists.find(a => a.listValue === "Shape");
+    const shapeList = attributeCommonLists.find((a) => a.listValue === "Shape");
     if (shapeList) {
-      attributeSeeds.push({ attributeNameId: shapeList.id, attributeValue: "Round" });
-      attributeSeeds.push({ attributeNameId: shapeList.id, attributeValue: "Square" });
+      attributeSeeds.push({
+        attributeNameId: shapeList.id,
+        attributeValue: "Round",
+      });
+      attributeSeeds.push({
+        attributeNameId: shapeList.id,
+        attributeValue: "Square",
+      });
     }
 
-    const standardList = attributeCommonLists.find(a => a.listValue === "Standard");
+    const standardList = attributeCommonLists.find(
+      (a) => a.listValue === "Standard",
+    );
     if (standardList) {
-      attributeSeeds.push({ attributeNameId: standardList.id, attributeValue: "IS 1786" });
-      attributeSeeds.push({ attributeNameId: standardList.id, attributeValue: "IS 2062" });
+      attributeSeeds.push({
+        attributeNameId: standardList.id,
+        attributeValue: "IS 1786",
+      });
+      attributeSeeds.push({
+        attributeNameId: standardList.id,
+        attributeValue: "IS 2062",
+      });
     }
 
     if (attributeSeeds.length > 0) {
-      await db.insert(attributes).values(attributeSeeds);
+      await db
+        .insert(attributes)
+        .values(attributeSeeds)
+        .onConflictDoNothing({
+          target: [attributes.attributeNameId, attributes.attributeValue],
+        });
+    }
+
+    console.log("Seeding account types...");
+    const accountTypesData = await db
+      .insert(accountTypes)
+      .values([
+        { name: "Asset", description: "Resources owned by the business" },
+        { name: "Liability", description: "Obligations of the business" },
+        { name: "Equity", description: "Owner's claim on assets" },
+        { name: "Income", description: "Revenue earned by the business" },
+        { name: "Expense", description: "Costs incurred by the business" },
+      ])
+      .onConflictDoNothing({ target: accountTypes.name })
+      .returning();
+
+    const currentAccountTypes =
+      accountTypesData.length > 0
+        ? accountTypesData
+        : await db.select().from(accountTypes);
+
+    console.log("Seeding account groups...");
+    const accountGroupsSeeds = [];
+
+    const assetType = currentAccountTypes.find((t) => t.name === "Asset");
+    if (assetType) {
+      accountGroupsSeeds.push({
+        name: "Current Assets",
+        description: "Short-term assets",
+        accountTypeId: assetType.id,
+      });
+      accountGroupsSeeds.push({
+        name: "Fixed Assets",
+        description: "Long-term assets",
+        accountTypeId: assetType.id,
+      });
+    }
+
+    const liabilityType = currentAccountTypes.find(
+      (t) => t.name === "Liability",
+    );
+    if (liabilityType) {
+      accountGroupsSeeds.push({
+        name: "Current Liabilities",
+        description: "Short-term obligations",
+        accountTypeId: liabilityType.id,
+      });
+      accountGroupsSeeds.push({
+        name: "Long Term Liabilities",
+        description: "Long-term obligations",
+        accountTypeId: liabilityType.id,
+      });
+    }
+
+    const equityType = currentAccountTypes.find((t) => t.name === "Equity");
+    if (equityType) {
+      accountGroupsSeeds.push({
+        name: "Capital Account",
+        description: "Owner capital",
+        accountTypeId: equityType.id,
+      });
+      accountGroupsSeeds.push({
+        name: "Retained Earnings",
+        description: "Accumulated profits",
+        accountTypeId: equityType.id,
+      });
+    }
+
+    const incomeType = currentAccountTypes.find((t) => t.name === "Income");
+    if (incomeType) {
+      accountGroupsSeeds.push({
+        name: "Direct Income",
+        description: "Core revenue",
+        accountTypeId: incomeType.id,
+      });
+      accountGroupsSeeds.push({
+        name: "Indirect Income",
+        description: "Other revenue",
+        accountTypeId: incomeType.id,
+      });
+    }
+
+    const expenseType = currentAccountTypes.find((t) => t.name === "Expense");
+    if (expenseType) {
+      accountGroupsSeeds.push({
+        name: "Direct Expense",
+        description: "Cost of goods sold",
+        accountTypeId: expenseType.id,
+      });
+      accountGroupsSeeds.push({
+        name: "Indirect Expense",
+        description: "Operating expenses",
+        accountTypeId: expenseType.id,
+      });
+    }
+
+    if (accountGroupsSeeds.length > 0) {
+      await db
+        .insert(accountGroups)
+        .values(accountGroupsSeeds)
+        .onConflictDoNothing({ target: accountGroups.name });
     }
 
     console.log("✅ Seed completed successfully.");

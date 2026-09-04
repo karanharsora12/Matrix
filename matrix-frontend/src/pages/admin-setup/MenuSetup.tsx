@@ -70,6 +70,8 @@ const iconOptions = [
   "Barcode",
   "Tag",
   "ContactRound",
+  "UserRound",
+  "Split",
 ];
 
 interface MenuForm {
