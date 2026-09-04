@@ -56,7 +56,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+        <DialogHeader hideCloseButton>
           <div className="flex flex-col items-center gap-4 py-4 text-center">
             <div className={cn("p-4 rounded-full", iconColor)}>
               <Icon className="w-8 h-8" />

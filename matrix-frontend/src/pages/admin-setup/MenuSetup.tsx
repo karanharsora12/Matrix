@@ -397,6 +397,7 @@ export default function MenuSetup() {
         headerName: "Actions",
         cellRenderer: ActionsRenderer,
         width: 100,
+        pinned: "right",
         flex: 0,
         sortable: false,
         filter: false,

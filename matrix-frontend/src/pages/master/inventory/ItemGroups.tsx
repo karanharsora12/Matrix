@@ -12,6 +12,7 @@ import type { ItemGroup } from "@/api/inventory";
 import { CommonListType } from "@/constants/enums";
 import { ListingHeader } from "@/components/common/ListingHeader";
 import { DataGrid } from "@/components/common/DataGrid";
+import { GridDeleteCell } from "@/components/common/GridDeleteCell";
 import { useGridActions } from "@/hooks/useGridActions";
 import { Modal } from "@/components/common/Modal";
 import { confirmAlert } from "@/components/common/AlertModal";
@@ -123,9 +124,9 @@ const ItemGroups: React.FC = () => {
 
   const columnDefs = useMemo<ColDef[]>(() => {
     return [
-      { field: "id", headerName: "ID", width: 80 },
-      { field: "itemGroupName", headerName: "Item Group Name" },
-      { field: "shortName", headerName: "Short Name" },
+      { field: "id", headerName: "ID", width: 60 },
+      { field: "itemGroupName", headerName: "Item Group Name", width: 180 },
+      { field: "shortName", headerName: "Short Name", width: 100 },
       {
         field: "metalTypeId",
         headerName: "Metal",
@@ -133,9 +134,10 @@ const ItemGroups: React.FC = () => {
           const metal = metals.find((m) => m.id === params.data.metalTypeId);
           return metal ? metal.name : "";
         },
+        width: 100,
       },
-      { field: "salesRate", headerName: "Sales Rate" },
-      { field: "purchaseRate", headerName: "Purchase Rate" },
+      { field: "salesRate", headerName: "Sales Rate", width: 100 },
+      { field: "purchaseRate", headerName: "Purchase Rate", width: 120 },
       {
         field: "salesRateTypeId",
         headerName: "Sales Rate Type",
@@ -145,6 +147,7 @@ const ItemGroups: React.FC = () => {
           );
           return rt ? rt.name : "";
         },
+        width: 120,
       },
       {
         field: "purchaseRateTypeId",
@@ -155,23 +158,16 @@ const ItemGroups: React.FC = () => {
           );
           return rt ? rt.name : "";
         },
+        width: 140,
       },
-      { field: "measureUnitCode", headerName: "Unit Code" },
+      { field: "measureUnitCode", headerName: "Unit Code", width: 100 },
       {
-        headerName: "Actions",
-        width: 120,
-        cellRenderer: (params: any) => (
-          <div className="flex items-center gap-2 mt-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-red-600"
-              onClick={() => handleDelete(params.data.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        ),
+        headerName: "",
+        width: 60,
+        cellRenderer: GridDeleteCell,
+        cellRendererParams: {
+          onDelete: handleDelete,
+        },
       },
     ];
   }, [metals, rateTypes]);

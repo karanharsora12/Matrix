@@ -80,6 +80,10 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
         sortable: true,
         resizable: true,
         suppressFloatingFilterButton: false,
+        wrapHeaderText: true,
+        autoHeaderHeight: true,
+        wrapText: true,
+        autoHeight: true,
       };
     }, []);
 

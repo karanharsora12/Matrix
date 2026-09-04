@@ -50,8 +50,9 @@ DialogContent.displayName = DialogPrimitive.Content.displayName
 const DialogHeader = ({
   className,
   children,
+  hideCloseButton,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: React.HTMLAttributes<HTMLDivElement> & { hideCloseButton?: boolean }) => (
   <div
     className={cn(
       "flex flex-row items-center justify-between",
@@ -59,13 +60,15 @@ const DialogHeader = ({
     )}
     {...props}
   >
-    <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+    <div className="flex flex-col space-y-1.5 text-center sm:text-left w-full">
       {children}
     </div>
-    <DialogPrimitive.Close className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-      <X className="h-5 w-5" />
-      <span className="sr-only">Close</span>
-    </DialogPrimitive.Close>
+    {!hideCloseButton && (
+      <DialogPrimitive.Close className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+        <X className="h-5 w-5" />
+        <span className="sr-only">Close</span>
+      </DialogPrimitive.Close>
+    )}
   </div>
 )
 DialogHeader.displayName = "DialogHeader"
