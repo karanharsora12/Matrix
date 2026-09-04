@@ -226,35 +226,6 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-3 py-2">
         {menus.map((menu) => renderMenu(menu))}
       </nav>
-
-      <div className="mt-auto px-3 pb-3">
-        {(() => {
-          const settingsLink = (
-            <a
-              href="/settings"
-              className={cn(
-                "flex items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors",
-                collapsed && "justify-center px-0",
-                location.pathname === "/settings"
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
-                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white",
-              )}
-            >
-              <Settings className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>Settings</span>}
-            </a>
-          );
-
-          return collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>{settingsLink}</TooltipTrigger>
-              <TooltipContent side="right">Settings</TooltipContent>
-            </Tooltip>
-          ) : (
-            <div>{settingsLink}</div>
-          );
-        })()}
-      </div>
     </aside>
   );
 }

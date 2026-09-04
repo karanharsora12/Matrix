@@ -67,6 +67,8 @@ const iconOptions = [
   "Tags",
   "FolderTree",
   "Layers",
+  "Barcode",
+  "Tag",
 ];
 
 interface MenuForm {

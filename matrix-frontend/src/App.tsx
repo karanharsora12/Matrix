@@ -11,39 +11,37 @@ import MenuSetup from "./pages/admin-setup/MenuSetup";
 import ItemGroups from "./pages/master/inventory/ItemGroups";
 import Items from "./pages/master/inventory/Items";
 import { WEB_ROUTES } from "./config/webRoutes";
+import NotFound from "./pages/NotFound";
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: WEB_ROUTES.HOME,
     element: <Login />,
   },
   {
-    path: WEB_ROUTES.DASHBOARD,
     element: <ERPLaoyut />,
     children: [
       {
-        index: true,
+        path: WEB_ROUTES.DASHBOARD,
         element: <Dashboard />,
+      },
+      {
+        path: WEB_ROUTES.MASTER.MENU_SETUP,
+        element: <MenuSetup />,
+      },
+      {
+        path: WEB_ROUTES.MASTER.INVENTORY.ITEM_GROUPS,
+        element: <ItemGroups />,
+      },
+      {
+        path: WEB_ROUTES.MASTER.INVENTORY.ITEMS,
+        element: <Items />,
       },
     ],
   },
   {
-    path: "/master",
-    element: <ERPLaoyut />,
-    children: [
-      {
-        path: "admin-setup/menu-setup",
-        element: <MenuSetup />,
-      },
-      {
-        path: "inventory/item-groups",
-        element: <ItemGroups />,
-      },
-      {
-        path: "inventory/items",
-        element: <Items />,
-      },
-    ],
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 
