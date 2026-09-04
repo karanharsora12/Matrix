@@ -1,17 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "./input";
 
-export interface NumericInputProps
-  extends Omit<React.ComponentProps<typeof Input>, "onChange" | "value" | "type"> {
-  value?: number;
+export interface NumericInputProps extends Omit<
+  React.ComponentProps<typeof Input>,
+  "onChange" | "value" | "type"
+> {
+  value?: number | string;
   onChange?: (value: number) => void;
   decimals?: number;
   align?: "left" | "right";
 }
 
-export const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps>(
+export const NumericInput = React.forwardRef<
+  HTMLInputElement,
+  NumericInputProps
+>(
   (
-    { value, onChange, decimals = 2, align = "right", onBlur, onFocus, className, ...props },
+    {
+      value,
+      onChange,
+      decimals = 2,
+      align = "right",
+      onBlur,
+      onFocus,
+      className,
+      ...props
+    },
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -19,14 +33,15 @@ export const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps
 
     useEffect(() => {
       if (!isFocused) {
-        if (value === undefined || isNaN(value)) {
+        const numValue = typeof value === "string" ? parseFloat(value) : value;
+        if (numValue == null || typeof numValue !== "number" || isNaN(numValue)) {
           setLocalValue("");
         } else {
           setLocalValue(
             new Intl.NumberFormat("en-US", {
               minimumFractionDigits: decimals,
               maximumFractionDigits: decimals,
-            }).format(value),
+            }).format(numValue),
           );
         }
       }
@@ -42,7 +57,10 @@ export const NumericInput = React.forwardRef<HTMLInputElement, NumericInputProps
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       setIsFocused(true);
-      setLocalValue(value === undefined || isNaN(value) ? "" : value.toFixed(decimals));
+      const numValue = typeof value === "string" ? parseFloat(value) : value;
+      const isValid =
+        numValue != null && typeof numValue === "number" && !isNaN(numValue);
+      setLocalValue(isValid ? numValue.toFixed(decimals) : "");
       setTimeout(() => e.target.select(), 0);
       if (onFocus) onFocus(e);
     };

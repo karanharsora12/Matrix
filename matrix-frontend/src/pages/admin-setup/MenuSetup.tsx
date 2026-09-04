@@ -443,11 +443,6 @@ export default function MenuSetup() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         title={isEditing ? "Edit Menu" : "Add New Menu"}
-        description={
-          isEditing
-            ? "Update the menu configuration below."
-            : "Configure the new menu item below."
-        }
         width="lg"
         footer={
           <>

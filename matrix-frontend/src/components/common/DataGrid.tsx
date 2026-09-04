@@ -75,8 +75,6 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
   ({ rowData, columnDefs, gridOptions, onGridReady }, ref) => {
     const defaultColDef = useMemo<ColDef>(() => {
       return {
-        flex: 1,
-        minWidth: 100,
         filter: true,
         floatingFilter: true,
         sortable: true,

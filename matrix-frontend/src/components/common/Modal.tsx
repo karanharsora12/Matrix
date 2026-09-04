@@ -38,18 +38,20 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${widthClasses[width]} p-0 gap-0 overflow-hidden`}>
-        <DialogHeader className="px-6 pt-6 pb-4">
+      <DialogContent
+        className={`${widthClasses[width]} p-0 gap-0 overflow-hidden`}
+      >
+        <DialogHeader className="px-6 py-4">
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        
+
         <Separator />
-        
+
         <div className="px-6 py-5 max-h-[75vh] overflow-y-auto space-y-4">
           {children}
         </div>
-        
+
         {footer && (
           <>
             <Separator />
