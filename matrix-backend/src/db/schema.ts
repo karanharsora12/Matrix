@@ -74,3 +74,22 @@ export const commonLists = pgTable("common_lists", {
   listValue: varchar("list_value", { length: 256 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const attributes = pgTable("attributes", {
+  id: serial("id").primaryKey(),
+  attributeNameId: integer("attribute_name_id")
+    .references((): AnyPgColumn => commonLists.id)
+    .notNull(),
+  attributeValue: varchar("attribute_value", { length: 256 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const items = pgTable("items", {
+  id: serial("id").primaryKey(),
+  itemName: varchar("item_name", { length: 256 }).notNull(),
+  shortName: varchar("short_name", { length: 256 }).notNull().unique(),
+  isActive: boolean("is_active").default(true).notNull(),
+  attributes: integer("attributes").array().default([]).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, menus, metals, rateTypes, commonLists } from "./schema";
+import { users, menus, metals, rateTypes, commonLists, attributes } from "./schema";
 import { CommonListType } from "../constants/enums";
 import bcrypt from "bcryptjs";
 import * as dotenv from "dotenv";
@@ -110,15 +110,73 @@ async function main() {
       .onConflictDoNothing({ target: rateTypes.name });
 
     console.log("Seeding common lists (MU)...");
-    await db
-      .insert(commonLists)
-      .values([
-        { listType: CommonListType.MEASURE_UNIT, listValue: "PCS" },
-        { listType: CommonListType.MEASURE_UNIT, listValue: "GM" },
-        { listType: CommonListType.MEASURE_UNIT, listValue: "KG" },
-        { listType: CommonListType.MEASURE_UNIT, listValue: "MTR" },
-        { listType: CommonListType.MEASURE_UNIT, listValue: "SQFT" },
-      ]);
+    await db.insert(commonLists).values([
+      { listType: CommonListType.MEASURE_UNIT, listValue: "PCS" },
+      { listType: CommonListType.MEASURE_UNIT, listValue: "GM" },
+      { listType: CommonListType.MEASURE_UNIT, listValue: "KG" },
+      { listType: CommonListType.MEASURE_UNIT, listValue: "MTR" },
+      { listType: CommonListType.MEASURE_UNIT, listValue: "SQFT" },
+    ]);
+
+    console.log("Seeding common lists (Attributes)...");
+    const attributeCommonLists = await db.insert(commonLists).values([
+      { listType: CommonListType.ATTRIBUTE, listValue: "Grade" },
+      { listType: CommonListType.ATTRIBUTE, listValue: "Diameter" },
+      { listType: CommonListType.ATTRIBUTE, listValue: "Thickness" },
+      { listType: CommonListType.ATTRIBUTE, listValue: "Width" },
+      { listType: CommonListType.ATTRIBUTE, listValue: "Length" },
+      { listType: CommonListType.ATTRIBUTE, listValue: "Shape" },
+      { listType: CommonListType.ATTRIBUTE, listValue: "Standard" },
+    ]).returning();
+
+    console.log("Seeding attributes...");
+    const attributeSeeds = [];
+    
+    const gradeList = attributeCommonLists.find(a => a.listValue === "Grade");
+    if (gradeList) {
+      attributeSeeds.push({ attributeNameId: gradeList.id, attributeValue: "Fe500D" });
+      attributeSeeds.push({ attributeNameId: gradeList.id, attributeValue: "Fe550" });
+    }
+    
+    const diameterList = attributeCommonLists.find(a => a.listValue === "Diameter");
+    if (diameterList) {
+      attributeSeeds.push({ attributeNameId: diameterList.id, attributeValue: "12 mm" });
+      attributeSeeds.push({ attributeNameId: diameterList.id, attributeValue: "16 mm" });
+    }
+
+    const thicknessList = attributeCommonLists.find(a => a.listValue === "Thickness");
+    if (thicknessList) {
+      attributeSeeds.push({ attributeNameId: thicknessList.id, attributeValue: "5 mm" });
+      attributeSeeds.push({ attributeNameId: thicknessList.id, attributeValue: "10 mm" });
+    }
+
+    const widthList = attributeCommonLists.find(a => a.listValue === "Width");
+    if (widthList) {
+      attributeSeeds.push({ attributeNameId: widthList.id, attributeValue: "1250 mm" });
+      attributeSeeds.push({ attributeNameId: widthList.id, attributeValue: "1500 mm" });
+    }
+
+    const lengthList = attributeCommonLists.find(a => a.listValue === "Length");
+    if (lengthList) {
+      attributeSeeds.push({ attributeNameId: lengthList.id, attributeValue: "12 m" });
+      attributeSeeds.push({ attributeNameId: lengthList.id, attributeValue: "6 m" });
+    }
+
+    const shapeList = attributeCommonLists.find(a => a.listValue === "Shape");
+    if (shapeList) {
+      attributeSeeds.push({ attributeNameId: shapeList.id, attributeValue: "Round" });
+      attributeSeeds.push({ attributeNameId: shapeList.id, attributeValue: "Square" });
+    }
+
+    const standardList = attributeCommonLists.find(a => a.listValue === "Standard");
+    if (standardList) {
+      attributeSeeds.push({ attributeNameId: standardList.id, attributeValue: "IS 1786" });
+      attributeSeeds.push({ attributeNameId: standardList.id, attributeValue: "IS 2062" });
+    }
+
+    if (attributeSeeds.length > 0) {
+      await db.insert(attributes).values(attributeSeeds);
+    }
 
     console.log("✅ Seed completed successfully.");
     console.log("Login User: admin@company.com");

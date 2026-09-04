@@ -9,6 +9,8 @@ import ERPLaoyut from "./layouts/ERPLaoyut";
 
 import MenuSetup from "./pages/admin-setup/MenuSetup";
 import ItemGroups from "./pages/master/inventory/ItemGroups";
+import Items from "./pages/master/inventory/Items";
+import { WEB_ROUTES } from "./config/webRoutes";
 
 const router = createBrowserRouter([
   {
@@ -16,7 +18,7 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: "/dashboard",
+    path: WEB_ROUTES.DASHBOARD,
     element: <ERPLaoyut />,
     children: [
       {
@@ -36,6 +38,10 @@ const router = createBrowserRouter([
       {
         path: "inventory/item-groups",
         element: <ItemGroups />,
+      },
+      {
+        path: "inventory/items",
+        element: <Items />,
       },
     ],
   },

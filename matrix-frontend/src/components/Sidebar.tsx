@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
 import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import {
   DropdownMenu,
@@ -31,9 +31,8 @@ function SubMenuPopup({ item }: { item: any }) {
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <div>
         <DropdownMenuTrigger asChild>
-          <a
-            href={item.fullPath}
-            onClick={(e) => e.preventDefault()}
+          <Link
+            to={item.fullPath}
             className={cn(
               "flex items-center justify-center rounded-md px-0 py-2 text-sm font-medium transition-colors my-0.5",
               location.pathname === item.fullPath ||
@@ -43,7 +42,7 @@ function SubMenuPopup({ item }: { item: any }) {
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
-          </a>
+          </Link>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
@@ -120,8 +119,8 @@ export function Sidebar() {
     }
 
     const link = (
-      <a
-        href={item.fullPath}
+      <Link
+        to={item.fullPath}
         onClick={(e) => {
           if (hasChildren) {
             toggleExpand(item.id, e);
@@ -150,7 +149,7 @@ export function Sidebar() {
             )}
           />
         )}
-      </a>
+      </Link>
     );
 
     const renderedItem =

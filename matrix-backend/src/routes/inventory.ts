@@ -10,4 +10,9 @@ router.post("/item-groups", inventoryController.createItemGroup.bind(inventoryCo
 router.put("/item-groups/:id", inventoryController.updateItemGroup.bind(inventoryController));
 router.delete("/item-groups/:id", inventoryController.deleteItemGroup.bind(inventoryController));
 
+router.get("/items", inventoryController.getItems.bind(inventoryController));
+router.post("/items", inventoryController.createItem.bind(inventoryController));
+router.put("/items/:id", inventoryController.updateItem.bind(inventoryController));
+router.delete("/items/:id", inventoryController.deleteItem.bind(inventoryController));
+
 export default router;
