@@ -18,7 +18,7 @@ import { Modal } from "@/components/common/Modal";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AmountInput } from "@/components/ui/amount-input";
+import { AmountInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -28,7 +28,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ColDef } from "ag-grid-community";
-import { Trash2 } from "lucide-react";
 
 const ItemGroups: React.FC = () => {
   const queryClient = useQueryClient();

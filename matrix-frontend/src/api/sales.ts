@@ -17,7 +17,6 @@ export interface SaleLineItem {
   netWt?: number;
   adjustedWt?: number;
   fineWt?: number;
-  purity?: string;
   rate: number;
   rateType?: string;
   tax?: string;
@@ -127,7 +126,6 @@ const INITIAL_SALES: Sale[] = [
         netWt: 34.8,
         adjustedWt: 34.8,
         fineWt: 31.88,
-        purity: "91.6 (22K)",
         rate: 7250,
         labourAmount: 18500,
         otherAmount: 0,
@@ -146,7 +144,6 @@ const INITIAL_SALES: Sale[] = [
         netWt: 4.61,
         adjustedWt: 4.61,
         fineWt: 3.45,
-        purity: "75.0 (18K)",
         rate: 115000,
         labourAmount: 12000,
         otherAmount: 1500,
@@ -205,7 +202,6 @@ const INITIAL_SALES: Sale[] = [
         grossWt: 84.5,
         netWt: 82.0,
         fineWt: 75.85,
-        purity: "92.5 (Silver)",
         rate: 95,
         labourAmount: 1200,
         discountAmount: 200,

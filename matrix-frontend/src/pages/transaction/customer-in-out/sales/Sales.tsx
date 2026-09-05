@@ -1,8 +1,8 @@
-import { useAccounts } from "@/api/accounts";
+import { useAccountMasterData, useAccounts } from "@/api/accounts";
 import {
-  useDaybooks,
-  useDaybookGroups,
   generateVoucherNo,
+  useDaybookGroups,
+  useDaybooks,
 } from "@/api/daybooks";
 import { useItemGroups, useItems } from "@/api/inventory";
 import {
@@ -16,9 +16,13 @@ import {
 } from "@/api/sales";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
+import { FormFooter } from "@/components/common/FormFooter";
+import { PopupCellEditor } from "@/components/common/PopupCellEditor";
+import { PopupTable } from "@/components/common/PopupTable";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { WEB_ROUTES } from "@/config/webRoutes";
-import { buildRoute, decodeURL, encodeURL } from "@/lib/utils";
 import { TransactionMenu, getDaybooksByMenu } from "@/constants/enums";
+import { buildRoute, decodeURL, encodeURL } from "@/lib/utils";
 import type {
   CellValueChangedEvent,
   ColDef,
@@ -35,10 +39,10 @@ import React, {
 import { useNavigate, useParams } from "react-router-dom";
 
 // UI Components
-import { AmountInput } from "@/components/ui/amount-input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +52,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AmountInput, WeightInput } from "@/components/ui/numeric-input";
 import {
   Select,
   SelectContent,
@@ -57,42 +62,29 @@ import {
 } from "@/components/ui/select";
 
 // Icons
+import { GridDeleteCell } from "@/components/common/GridDeleteCell";
 import {
-  ArrowLeft,
   Barcode,
   Building2,
   Calendar,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Coins,
-  Copy,
   CreditCard,
   FileText,
   Percent,
   Plus,
   Printer,
   Receipt,
-  RotateCcw,
-  Save,
+  Search,
   Sparkles,
   Tag,
-  Trash2,
   UploadCloud,
   User,
   Wallet,
 } from "lucide-react";
-
-// Standard Purity Options for Jewellery / Metals
-const PURITY_OPTIONS = [
-  { label: "24K (99.9%)", value: "99.9 (24K)" },
-  { label: "22K (91.6%)", value: "91.6 (22K)" },
-  { label: "18K (75.0%)", value: "75.0 (18K)" },
-  { label: "14K (58.5%)", value: "58.5 (14K)" },
-  { label: "92.5 Sterling Silver", value: "92.5 (Silver)" },
-  { label: "Other / Standard", value: "Standard" },
-];
+import type { RootState } from "@/store";
+import { useSelector } from "react-redux";
 
 const BILL_MODES = [
   "Debit Memo",
@@ -116,9 +108,8 @@ const DEFAULT_LINE_ITEM: SaleLineItem = {
   netWt: 0,
   adjustedWt: 0,
   fineWt: 0,
-  purity: "91.6 (22K)",
   rate: 0,
-  rateType: "Per Gram",
+  rateType: "",
   tax: "3%",
   labourAmount: 0,
   otherAmount: 0,
@@ -139,11 +130,13 @@ export const Sales: React.FC = () => {
   const { data: daybooksResp } = useDaybooks();
   const { data: daybookGroupsResp } = useDaybookGroups();
   const { data: accountsResp } = useAccounts();
+  const { data: accountMasterResp } = useAccountMasterData();
   const { data: itemsResp } = useItems();
   const { data: itemGroupsResp } = useItemGroups();
   const { data: existingSale, isLoading: isLoadingSale } = useSale(
     isEditing ? saleId : undefined,
   );
+  const { rateTypes } = useSelector((state: RootState) => state.inventory);
 
   const allDaybooks = daybooksResp?.data || [];
   const daybookGroups = daybookGroupsResp?.data || [];
@@ -151,6 +144,142 @@ export const Sales: React.FC = () => {
   const items = itemsResp?.data || [];
   const itemGroups = itemGroupsResp?.data || [];
   const allSales = salesListResp?.data || [];
+
+  const groupMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    accountMasterResp?.accountGroups?.forEach((g) => {
+      map[g.id] = g.name;
+    });
+    return map;
+  }, [accountMasterResp]);
+
+  const typeMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    accountMasterResp?.accountTypes?.forEach((t) => {
+      map[t.id] = t.name;
+    });
+    return map;
+  }, [accountMasterResp]);
+
+  const accountDropdownColumns = useMemo<ColDef[]>(
+    () => [
+      {
+        headerName: "Account Name",
+        field: "accountName",
+        minWidth: 200,
+        flex: 1,
+        cellClass: "font-semibold text-slate-900 dark:text-zinc-100",
+        valueGetter: (p) =>
+          p.data?.accountName ||
+          `${p.data?.firstName || ""} ${p.data?.lastName || ""}`.trim() ||
+          "-",
+      },
+      {
+        headerName: "ID",
+        field: "id",
+        type: "numericColumn",
+        width: 65,
+        cellClass: "font-mono text-center",
+      },
+      {
+        headerName: "Short Name",
+        field: "userName",
+        width: 100,
+        cellClass: "font-mono text-xs",
+        valueGetter: (p) =>
+          p.data?.userName ||
+          (p.data?.firstName
+            ? p.data.firstName.slice(0, 4).toUpperCase()
+            : "-"),
+      },
+      {
+        headerName: "GroupName",
+        field: "accountGroupId",
+        valueGetter: (p) => groupMap[p.data?.accountGroupId] || "General",
+        minWidth: 120,
+        width: 130,
+      },
+      {
+        headerName: "Mobile No.",
+        field: "phone",
+        valueGetter: (p) => p.data?.mobile || p.data?.phone || "-",
+        minWidth: 120,
+        width: 130,
+      },
+      {
+        headerName: "Account Type",
+        field: "accountTypeId",
+        valueGetter: (p) => typeMap[p.data?.accountTypeId] || "Customer",
+        minWidth: 140,
+        width: 150,
+      },
+    ],
+    [groupMap, typeMap],
+  );
+
+  const itemGroupPopupColumns = useMemo<ColDef[]>(
+    () => [
+      {
+        headerName: "Group Name",
+        field: "itemGroupName",
+        minWidth: 190,
+        flex: 1,
+        cellClass: "font-semibold text-slate-900 dark:text-zinc-100",
+      },
+      {
+        headerName: "Short Name",
+        field: "shortName",
+        width: 100,
+        cellClass: "font-mono text-xs text-slate-700 dark:text-zinc-300",
+        valueGetter: (p) => p.data?.shortName || "-",
+      },
+      {
+        headerName: "Touch %",
+        field: "salesRate",
+        width: 105,
+        type: "numericColumn",
+        cellClass: "font-mono font-medium text-slate-800 dark:text-zinc-200",
+        valueFormatter: (p) =>
+          p.value != null ? `${Number(p.value).toFixed(2)} %` : "-",
+      },
+      {
+        headerName: "ID",
+        field: "id",
+        width: 60,
+        type: "numericColumn",
+        cellClass: "font-mono text-center text-slate-700 dark:text-zinc-300",
+      },
+    ],
+    [],
+  );
+
+  // Item Popup Table Columns
+  const itemPopupColumns = useMemo<ColDef[]>(
+    () => [
+      {
+        headerName: "Item Name",
+        field: "itemName",
+        minWidth: 220,
+        flex: 1,
+        cellClass: "font-semibold text-slate-900 dark:text-zinc-100",
+      },
+      {
+        headerName: "Short Name",
+        field: "shortName",
+        width: 120,
+        cellClass: "font-mono text-xs text-slate-700 dark:text-zinc-300",
+        valueGetter: (p) => p.data?.shortName || "-",
+      },
+      {
+        headerName: "ID",
+        field: "id",
+        width: 65,
+        type: "numericColumn",
+        cellClass: "font-mono text-center text-slate-700 dark:text-zinc-300",
+      },
+    ],
+    [],
+  );
 
   // Filter daybooks for SALES menu only
   const daybooks = useMemo(() => {
@@ -167,25 +296,18 @@ export const Sales: React.FC = () => {
   const updateMutation = useUpdateSale();
   const deleteMutation = useDeleteSale();
 
-  // Active Customer Tab state
   const [customerTab, setCustomerTab] = useState<
     "general" | "shipping" | "kyc"
   >("general");
-  // Active Settlement Tab state
   const [settlementTab, setSettlementTab] = useState<"receipt" | "remarks">(
     "receipt",
   );
-  // Modals
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-  // Barcode quick scan input
   const [quickBarcode, setQuickBarcode] = useState("");
-  // Tax Type: CGST+SGST (state) or IGST
   const [taxMode, setTaxMode] = useState<"GST" | "IGST">("GST");
-  // Special discount / coupon
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
 
-  // Form State
   const [formData, setFormData] = useState<Partial<Sale>>({
     voucherNo: "",
     voucherDate: new Date().toISOString().slice(0, 10),
@@ -235,7 +357,6 @@ export const Sales: React.FC = () => {
     status: "Draft",
   });
 
-  // Sync existing sale data when editing
   useEffect(() => {
     if (existingSale && isEditing) {
       setFormData({
@@ -460,7 +581,6 @@ export const Sales: React.FC = () => {
     setFormData((prev) => {
       const lines = prev.itemLines || [];
       if (lines.length <= 1) {
-        // Reset single row instead of empty table
         return {
           ...prev,
           itemLines: [
@@ -554,6 +674,30 @@ export const Sales: React.FC = () => {
       const field = event.colDef.field as keyof SaleLineItem;
       let value = event.newValue;
 
+      if (field === "itemGroupName") {
+        const grp = itemGroups.find((g) => g.itemGroupName === value);
+        if (grp) {
+          handleLineItemChange(rowIndex, "itemGroupId", grp.id);
+          handleLineItemChange(rowIndex, "itemGroupName", grp.itemGroupName);
+          if (grp.salesRate) {
+            handleLineItemChange(rowIndex, "rate", grp.salesRate);
+          }
+          if (grp.measureUnitCode) {
+            handleLineItemChange(rowIndex, "uom", grp.measureUnitCode);
+          }
+          return;
+        }
+      }
+
+      if (field === "itemName") {
+        const matched = items.find((i) => i.itemName === value);
+        if (matched) {
+          handleLineItemChange(rowIndex, "itemId", matched.id);
+          handleLineItemChange(rowIndex, "itemName", matched.itemName);
+          return;
+        }
+      }
+
       if (
         [
           "quantity",
@@ -571,7 +715,7 @@ export const Sales: React.FC = () => {
 
       handleLineItemChange(rowIndex, field, value);
     },
-    [handleLineItemChange],
+    [handleLineItemChange, itemGroups, items],
   );
 
   const columnDefs = useMemo<ColDef[]>(() => {
@@ -588,26 +732,70 @@ export const Sales: React.FC = () => {
         cellClass: "text-center font-mono text-slate-400 font-medium",
       },
       {
-        headerName: "Item",
+        headerName: "Item Group",
+        field: "itemGroupName",
+        minWidth: 170,
+        width: 180,
+        editable: (p) => !p.node?.rowPinned,
+        cellEditor: PopupCellEditor,
+        cellEditorParams: {
+          apiEndpoint: API_ENDPOINTS.INVENTORY.ITEM_GROUPS,
+          columns: itemGroupPopupColumns,
+          onItemSelect: (item: any, rowIndex: number) => {
+            handleSelectItemGroupForRow(rowIndex, item);
+          },
+          searchPlaceholder: "Search Item Group...",
+          width: 720,
+          height: 360,
+        },
+        cellClass: (p) =>
+          p.node?.rowPinned
+            ? "font-bold text-slate-900 dark:text-zinc-100"
+            : "font-medium",
+        valueGetter: (p) =>
+          p.node?.rowPinned ? "TOTAL" : p.data?.itemGroupName || "",
+        cellRenderer: (p: ICellRendererParams) => {
+          if (p.node?.rowPinned) {
+            return (
+              <span className="font-bold text-slate-900 dark:text-zinc-100">
+                {p.value || "TOTAL"}
+              </span>
+            );
+          }
+          return (
+            <span className="truncate font-medium text-slate-900 dark:text-zinc-100">
+              {p.value || ""}
+            </span>
+          );
+        },
+      },
+      {
+        headerName: "Items",
         field: "itemName",
         minWidth: 180,
         flex: 1,
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agTextCellEditor",
+        cellEditor: PopupCellEditor,
+        cellEditorParams: {
+          apiEndpoint: API_ENDPOINTS.INVENTORY.ITEMS,
+          columns: itemPopupColumns,
+          onItemSelect: (item: any, rowIndex: number) => {
+            handleSelectItemForRow(rowIndex, item);
+          },
+          searchPlaceholder: "Search Item...",
+          width: 720,
+          height: 360,
+        },
+        cellClass: (p) => (p.node?.rowPinned ? "" : "font-medium"),
         valueGetter: (p) => (p.node?.rowPinned ? "" : p.data?.itemName || ""),
-      },
-      {
-        headerName: "Item Code",
-        field: "itemCode",
-        width: 120,
-        editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agTextCellEditor",
-        cellClass: (p) =>
-          p.node?.rowPinned
-            ? "font-bold text-slate-900 dark:text-zinc-100"
-            : "font-mono font-medium",
-        valueGetter: (p) =>
-          p.node?.rowPinned ? "TOTAL" : p.data?.itemCode || p.data?.tagNo || "",
+        cellRenderer: (p: ICellRendererParams) => {
+          if (p.node?.rowPinned) return null;
+          return (
+            <span className="truncate font-medium text-slate-900 dark:text-zinc-100">
+              {p.value || ""}
+            </span>
+          );
+        },
       },
       {
         headerName: "Qty",
@@ -617,10 +805,6 @@ export const Sales: React.FC = () => {
         editable: (p) => !p.node?.rowPinned,
         cellEditor: "agNumberCellEditor",
         cellEditorParams: { min: 1, step: 1 },
-        cellClass: (p) =>
-          p.node?.rowPinned
-            ? "font-mono font-bold text-slate-900 dark:text-zinc-100"
-            : "font-mono",
         valueFormatter: (p) =>
           p.value != null && p.value !== "" ? String(p.value) : "",
       },
@@ -643,16 +827,8 @@ export const Sales: React.FC = () => {
         width: 110,
         type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
+        cellEditor: WeightInput,
         cellEditorParams: { min: 0, step: 0.001 },
-        cellClass: (p) =>
-          p.node?.rowPinned
-            ? "font-mono font-bold text-amber-700 dark:text-amber-400"
-            : "font-mono text-amber-700 dark:text-amber-400",
-        valueFormatter: (p) => {
-          if (p.node?.rowPinned) return p.value ?? "";
-          return p.value != null ? `${Number(p.value).toFixed(3)}g` : "0.000g";
-        },
       },
       {
         headerName: "Net Wt.",
@@ -660,16 +836,8 @@ export const Sales: React.FC = () => {
         width: 110,
         type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
+        cellEditor: WeightInput,
         cellEditorParams: { min: 0, step: 0.001 },
-        cellClass: (p) =>
-          p.node?.rowPinned
-            ? "font-mono font-bold text-amber-800 dark:text-amber-300"
-            : "font-mono font-medium text-amber-800 dark:text-amber-300",
-        valueFormatter: (p) => {
-          if (p.node?.rowPinned) return p.value ?? "";
-          return p.value != null ? `${Number(p.value).toFixed(3)}g` : "0.000g";
-        },
       },
       {
         headerName: "Rate (₹)",
@@ -677,29 +845,28 @@ export const Sales: React.FC = () => {
         width: 115,
         type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellClass: "font-mono",
-        valueFormatter: (p) => {
-          if (p.node?.rowPinned) return "";
-          return p.value != null
-            ? `₹${Number(p.value).toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}`
-            : "₹0.00";
-        },
+        cellEditor: AmountInput,
       },
       {
         headerName: "Rate Type",
         field: "rateType",
-        width: 120,
+        width: 140,
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agSelectCellEditor",
+        cellEditor: PopupCellEditor,
         cellEditorParams: {
-          values: ["Per Gram", "Per Piece", "Flat / Fixed"],
+          data: rateTypes,
+          columns: [
+            {
+              headerName: "Rate Type",
+              field: "name",
+              flex: 1,
+              cellClass: "font-semibold text-slate-900 dark:text-zinc-100",
+            },
+          ],
+          searchPlaceholder: "Search Rate Type...",
+          width: 320,
+          height: 220,
         },
-        valueGetter: (p) =>
-          p.node?.rowPinned ? "" : p.data?.rateType || "Per Gram",
       },
       {
         headerName: "Discount (₹)",
@@ -707,31 +874,7 @@ export const Sales: React.FC = () => {
         width: 115,
         type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellClass: (p) =>
-          p.node?.rowPinned
-            ? "font-mono font-bold text-rose-600 dark:text-rose-400"
-            : "font-mono text-rose-600 dark:text-rose-400",
-        valueFormatter: (p) => {
-          const val = Number(p.value || 0);
-          if (val === 0) return "₹0.00";
-          return `-₹${val.toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`;
-        },
-      },
-      {
-        headerName: "Tax",
-        field: "tax",
-        width: 80,
-        editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: {
-          values: ["3%", "5%", "12%", "18%", "0%"],
-        },
-        cellClass: "text-center font-medium",
-        valueGetter: (p) => (p.node?.rowPinned ? "" : p.data?.tax || "3%"),
+        cellEditor: AmountInput,
       },
       {
         headerName: "Amount (₹)",
@@ -739,69 +882,38 @@ export const Sales: React.FC = () => {
         width: 135,
         type: "numericColumn",
         editable: false,
-        cellClass: (p) =>
-          p.node?.rowPinned
-            ? "font-mono text-sm font-bold text-emerald-700 dark:text-emerald-400"
-            : "font-mono text-xs font-semibold text-slate-900 dark:text-zinc-100",
-        valueFormatter: (p) => {
-          const val = Number(p.value || 0);
-          return `₹${val.toLocaleString("en-IN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`;
-        },
       },
       {
-        headerName: "Actions",
+        headerName: "",
         width: 85,
         pinned: "right",
         sortable: false,
         filter: false,
         resizable: false,
-        cellRenderer: (params: ICellRendererParams) => {
+        cellRenderer: (params) => {
           if (params.node?.rowPinned) return null;
-          const idx = params.node?.rowIndex ?? 0;
           return (
-            <div className="flex items-center justify-center gap-1 h-full w-full">
-              <button
-                type="button"
-                className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-                title="Duplicate Row"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDuplicateLineItem(idx);
-                }}
-              >
-                <Copy className="h-3.5 w-3.5" />
-              </button>
-
-              <button
-                type="button"
-                className="inline-flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:text-rose-400 dark:hover:bg-zinc-800 transition-colors"
-                title="Delete Row"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteLineItem(idx);
-                }}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
+            <GridDeleteCell
+              {...params}
+              onDelete={() => {
+                handleDeleteLineItem(params.node?.rowIndex);
+              }}
+            />
           );
         },
       },
     ];
-  }, [handleDuplicateLineItem, handleDeleteLineItem]);
+  }, [handleDuplicateLineItem, handleDeleteLineItem, itemGroups, items]);
 
   const pinnedBottomRowData = useMemo(() => {
     return [
       {
-        itemCode: "TOTAL",
+        itemGroupName: "TOTAL",
         itemName: "",
         quantity: calculatedTotals.pcs,
         uom: "",
-        grossWt: `${calculatedTotals.grossWt.toFixed(3)}g`,
-        netWt: `${calculatedTotals.netWt.toFixed(3)}g`,
+        grossWt: calculatedTotals.grossWt.toFixed(3),
+        netWt: calculatedTotals.netWt.toFixed(3),
         rate: null,
         rateType: "",
         discountAmount: calculatedTotals.totalLineDiscount,
@@ -812,18 +924,82 @@ export const Sales: React.FC = () => {
   }, [calculatedTotals]);
 
   // Customer Selection Handler
-  const handleSelectCustomer = (accountIdStr: string) => {
-    const accId = Number(accountIdStr);
-    const acc = accounts.find((a) => a.id === accId);
+  const handleSelectCustomer = (accountOrId: any) => {
+    const acc =
+      typeof accountOrId === "object"
+        ? accountOrId
+        : accounts.find((a) => a.id === Number(accountOrId));
     if (acc) {
       setFormData((prev) => ({
         ...prev,
         partyId: acc.id,
-        partyName: acc.accountName || `${acc.firstName} ${acc.lastName}`,
+        partyName:
+          acc.accountName ||
+          `${acc.firstName || ""} ${acc.lastName || ""}`.trim(),
         customerEmail: acc.email || prev.customerEmail,
       }));
     }
   };
+
+  // Item Group Selection for Grid Line Item
+  const handleSelectItemGroupForRow = useCallback(
+    (rowIndex: number, grp: any) => {
+      setFormData((prev) => {
+        const lines = [...(prev.itemLines || [])];
+        if (!lines[rowIndex]) return prev;
+        const current = { ...lines[rowIndex] };
+        current.itemGroupId = grp.id;
+        current.itemGroupName = grp.itemGroupName;
+        if (grp.salesRate) {
+          current.rate = Number(grp.salesRate);
+        }
+        if (grp.measureUnitCode) {
+          current.uom = grp.measureUnitCode;
+        }
+
+        const rate = Number(current.rate || 0);
+        const labour = Number(current.labourAmount || 0);
+        const other = Number(current.otherAmount || 0);
+        const discount = Number(current.discountAmount || 0);
+
+        let baseAmount = 0;
+        if (current.rateType === "Per Piece") {
+          baseAmount = (current.quantity || 1) * rate;
+        } else if (current.rateType === "Flat / Fixed") {
+          baseAmount = rate;
+        } else {
+          const wt = Number(current.netWt || 0);
+          baseAmount = (wt > 0 ? wt : current.quantity || 1) * rate;
+        }
+
+        current.amount = Math.max(
+          0,
+          Math.round(baseAmount + labour + other - discount),
+        );
+
+        lines[rowIndex] = current;
+        return { ...prev, itemLines: lines };
+      });
+    },
+    [],
+  );
+
+  // Item Selection for Grid Line Item
+  const handleSelectItemForRow = useCallback((rowIndex: number, item: any) => {
+    setFormData((prev) => {
+      const lines = [...(prev.itemLines || [])];
+      if (!lines[rowIndex]) return prev;
+      const current = { ...lines[rowIndex] };
+      current.itemId = item.id;
+      current.itemName = item.itemName;
+      if (!current.tagNo || current.tagNo.startsWith("TAG-")) {
+        current.tagNo = item.shortName || item.itemName;
+        current.itemCode = item.shortName || item.itemName;
+      }
+      lines[rowIndex] = current;
+      return { ...prev, itemLines: lines };
+    });
+  }, []);
 
   // Save / Update
   const isSaving = createMutation.isPending || updateMutation.isPending;
@@ -991,12 +1167,12 @@ export const Sales: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full flex flex-col bg-slate-50/60 pb-20 dark:bg-zinc-950">
+    <div className="min-h-full flex flex-col bg-slate-50/60 dark:bg-zinc-950">
       <div className="flex-1 space-y-4 p-5 md:p-6">
         {/* ── SECTION 1: VOUCHER DETAILS & CUSTOMER PROFILE ── */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
           {/* LEFT 4 COLS: Daybook & Voucher Details */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4">
             <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
               <div className="flex items-center gap-2">
                 <Receipt className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -1042,12 +1218,7 @@ export const Sales: React.FC = () => {
                 </Label>
                 <Input
                   value={formData.voucherNo || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      voucherNo: e.target.value,
-                    }))
-                  }
+                  disabled
                   className="h-8 text-xs font-mono font-medium"
                   placeholder="e.g. HRIA-215"
                 />
@@ -1058,19 +1229,16 @@ export const Sales: React.FC = () => {
                 <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
                   Date
                 </Label>
-                <div className="relative">
-                  <Input
-                    type="date"
-                    value={formData.voucherDate || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        voucherDate: e.target.value,
-                      }))
-                    }
-                    className="h-8 text-xs"
-                  />
-                </div>
+                <DatePicker
+                  value={formData.voucherDate}
+                  onChange={(val) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      voucherDate: val,
+                    }))
+                  }
+                  className="h-8 text-xs"
+                />
               </div>
 
               {/* Salesman */}
@@ -1140,7 +1308,7 @@ export const Sales: React.FC = () => {
           </div>
 
           {/* MIDDLE 5 COLS: Customer Details */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-5">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-5">
             <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -1149,19 +1317,25 @@ export const Sales: React.FC = () => {
                 </h2>
               </div>
               <div className="flex items-center gap-1.5">
-                {/* Select from existing accounts */}
-                <Select onValueChange={handleSelectCustomer}>
-                  <SelectTrigger className="h-6 w-32 text-[11px]">
-                    <SelectValue placeholder="Find Party" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts.map((acc) => (
-                      <SelectItem key={acc.id} value={String(acc.id)}>
-                        {acc.accountName || `${acc.firstName} ${acc.lastName}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <PopupTable
+                  trigger={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-6 px-2.5 text-[11px] font-medium border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 gap-1.5 shadow-2xs"
+                      title="Search Party in Dropdown Table"
+                    >
+                      <Search className="h-3 w-3 text-slate-500" />
+                      Find Party
+                    </Button>
+                  }
+                  placement="bottom-end"
+                  apiEndpoint={API_ENDPOINTS.ACCOUNTS.BASE}
+                  columnDefs={accountDropdownColumns}
+                  onSelect={handleSelectCustomer}
+                  searchPlaceholder="Search accounts..."
+                />
               </div>
             </div>
 
@@ -1293,7 +1467,7 @@ export const Sales: React.FC = () => {
           </div>
 
           {/* RIGHT 3 COLS: Customer Tabs (General Info / Tax / KYC Upload) */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
             <div className="mb-2.5 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
               <div className="flex gap-1">
                 <button
@@ -1470,16 +1644,13 @@ export const Sales: React.FC = () => {
         </div>
 
         {/* ── SECTION 2: TRANSACTION LINE ITEMS GRID ── */}
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex flex-wrap items-center justify-between border-b border-slate-200 bg-slate-50/70 px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-900/80">
             <div className="flex items-center gap-2">
               <Coins className="h-4 w-4 text-amber-600" />
               <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                Item Line Details ({formData.itemLines?.length || 0})
+                Item Line Details
               </h3>
-              <span className="text-[11px] text-slate-400 dark:text-zinc-500 ml-2 hidden sm:inline">
-                (Click cell to edit &bull; Tab to next)
-              </span>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -1508,7 +1679,6 @@ export const Sales: React.FC = () => {
               gridOptions={{
                 pagination: false,
                 singleClickEdit: true,
-                stopEditingWhenCellsLoseFocus: true,
                 rowHeight: 38,
                 headerHeight: 38,
                 onCellValueChanged: handleCellValueChanged,
@@ -1527,7 +1697,7 @@ export const Sales: React.FC = () => {
         {/* ── SECTION 3: FINANCIAL SUMMARY & MULTI-TENDER SETTLEMENT ── */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
           {/* CARD 1 (3 COLS): SUMMARY & TAXES */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
             <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -1631,7 +1801,7 @@ export const Sales: React.FC = () => {
           </div>
 
           {/* CARD 2 (6 COLS): PAYMENT SETTLEMENT MODES */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-6">
             <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
               <div className="flex gap-1">
                 <button
@@ -1692,7 +1862,6 @@ export const Sales: React.FC = () => {
                       <Wallet className="h-3.5 w-3.5 text-emerald-600" />
                       <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
                         Cash{" "}
-                        <span className="text-[10px] text-slate-400">[F7]</span>
                       </span>
                     </div>
                     <div className="w-28">
@@ -1712,7 +1881,6 @@ export const Sales: React.FC = () => {
                       <Building2 className="h-3.5 w-3.5 text-blue-600" />
                       <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
                         Bank / UPI{" "}
-                        <span className="text-[10px] text-slate-400">[F8]</span>
                       </span>
                     </div>
                     <div className="w-28">
@@ -1732,7 +1900,6 @@ export const Sales: React.FC = () => {
                       <CreditCard className="h-3.5 w-3.5 text-purple-600" />
                       <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
                         Card{" "}
-                        <span className="text-[10px] text-slate-400">[F5]</span>
                       </span>
                     </div>
                     <div className="w-28">
@@ -1752,7 +1919,6 @@ export const Sales: React.FC = () => {
                       <Sparkles className="h-3.5 w-3.5 text-amber-600" />
                       <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
                         Advance{" "}
-                        <span className="text-[10px] text-slate-400">[F4]</span>
                       </span>
                     </div>
                     <div className="w-28">
@@ -1775,7 +1941,6 @@ export const Sales: React.FC = () => {
                       <Coins className="h-3.5 w-3.5 text-amber-500" />
                       <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
                         URD / Old Gold{" "}
-                        <span className="text-[10px] text-slate-400">[F3]</span>
                       </span>
                     </div>
                     <div className="w-28">
@@ -1866,7 +2031,7 @@ export const Sales: React.FC = () => {
           </div>
 
           {/* CARD 3 (3 COLS): OTHER SUMMARY & DUE DETAILS */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
+          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
             <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -1904,13 +2069,12 @@ export const Sales: React.FC = () => {
                 <Label className="text-[11px] font-medium text-slate-500">
                   Payment Due Date
                 </Label>
-                <Input
-                  type="date"
-                  value={formData.dueDate || ""}
-                  onChange={(e) =>
+                <DatePicker
+                  value={formData.dueDate}
+                  onChange={(val) =>
                     setFormData((prev) => ({
                       ...prev,
-                      dueDate: e.target.value,
+                      dueDate: val,
                     }))
                   }
                   className="h-7 text-xs"
@@ -1952,106 +2116,25 @@ export const Sales: React.FC = () => {
         </div>
       </div>
 
-      {/* ── FIXED BOTTOM ACTION BAR ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200/80 bg-white/95 px-6 py-2.5 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95">
-        <div className="mx-auto flex flex-wrap items-center justify-between gap-3">
-          {/* Record Navigator */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => handleNavigateRecord("prev")}
-              title="Previous Record"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Button>
-            <span className="px-2 text-xs font-medium text-slate-500">
-              Voucher {isEditing ? `#${saleId}` : "New"}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => handleNavigateRecord("next")}
-              title="Next Record"
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 text-xs text-slate-700 dark:text-zinc-300"
-              onClick={() => setIsTagModalOpen(true)}
-            >
-              <Tag className="h-3.5 w-3.5 text-amber-600" />
-              <span>Tag Print</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 text-xs text-slate-700 dark:text-zinc-300"
-              onClick={() => setIsPrintModalOpen(true)}
-            >
-              <Printer className="h-3.5 w-3.5" />
-              <span>Print Invoice</span>
-            </Button>
-
-            {isEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 border-rose-200 text-xs text-rose-600 hover:bg-rose-50 hover:border-rose-300 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/30"
-                onClick={handleDelete}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                <span>Delete</span>
-              </Button>
-            )}
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 text-xs text-slate-700 dark:text-zinc-300"
-              onClick={handleClear}
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>Clear</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 text-xs text-slate-700 dark:text-zinc-300"
-              onClick={() => navigate(WEB_ROUTES.TRANSACTION.SALES_LIST)}
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Back</span>
-            </Button>
-
-            <Button
-              size="sm"
-              className="min-w-[130px] gap-2 bg-zinc-900 text-xs font-semibold text-white shadow-sm hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              <Save className="h-4 w-4" />
-              <span>
-                {isSaving
-                  ? "Saving..."
-                  : isEditing
-                    ? "Update (Ctrl+S)"
-                    : "Save (Ctrl+S)"}
-              </span>
-            </Button>
-          </div>
-        </div>
-      </div>
+      <FormFooter
+        showVoucherNavigation={true}
+        onNavigatePrev={() => handleNavigateRecord("prev")}
+        onNavigateNext={() => handleNavigateRecord("next")}
+        onTagPrint={() => setIsTagModalOpen(true)}
+        tagPrintText="Tag Print"
+        onPrint={() => setIsPrintModalOpen(true)}
+        printText="Print Invoice"
+        onDelete={isEditing ? handleDelete : undefined}
+        deleteText="Delete"
+        onClear={handleClear}
+        clearText="Clear"
+        onBack={() => navigate(WEB_ROUTES.TRANSACTION.SALES_LIST)}
+        backText="Back"
+        onSave={handleSave}
+        saveText={isEditing ? "Update" : "Save"}
+        isSaving={isSaving}
+        isSaveDisabled={isSaving}
+      />
 
       {/* ── PRINT TAX INVOICE PREVIEW MODAL ── */}
       <Dialog open={isPrintModalOpen} onOpenChange={setIsPrintModalOpen}>
@@ -2295,8 +2378,8 @@ export const Sales: React.FC = () => {
                     {line.itemName || "Item"}
                   </div>
                   <div className="mt-1 flex justify-between font-mono text-[11px] text-slate-700 dark:text-zinc-300">
-                    <span>GW: {line.grossWt?.toFixed(3)}g</span>
-                    <span>NW: {line.netWt?.toFixed(3)}g</span>
+                    <span>GW: {line.grossWt?.toFixed(3)}</span>
+                    <span>NW: {line.netWt?.toFixed(3)}</span>
                     <span className="font-semibold text-amber-800 dark:text-amber-300">
                       ₹{line.amount?.toLocaleString("en-IN")}
                     </span>

@@ -35,7 +35,7 @@ const lightTheme = themeQuartz.withParams({
   selectedRowBackgroundColor: "hsl(217 91% 96%)",
   oddRowBackgroundColor: "hsl(0 0% 100%)",
   borderRadius: 6,
-  wrapperBorderRadius: 8,
+  wrapperBorderRadius: 0,
   cellHorizontalPadding: 12,
   headerCellHoverBackgroundColor: "hsl(240 4.8% 92%)",
   filterToolPanelGroupIndent: 12,
@@ -73,7 +73,10 @@ const darkTheme = themeQuartz.withPart(colorSchemeDark).withParams({
 });
 
 export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
-  ({ rowData, columnDefs, gridOptions, onGridReady, pinnedBottomRowData }, ref) => {
+  (
+    { rowData, columnDefs, gridOptions, onGridReady, pinnedBottomRowData },
+    ref,
+  ) => {
     const defaultColDef = useMemo<ColDef>(() => {
       return {
         filter: true,
