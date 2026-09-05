@@ -79,12 +79,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           {/* Secondary actions - Print */}
           {onPrint && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onPrint}
-              className="gap-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600"
-            >
+            <Button size="sm" type="button" variant="outline" onClick={onPrint}>
               <Printer className="h-4 w-4" />
               <span className="hidden sm:inline">{printText}</span>
             </Button>
@@ -92,12 +87,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
 
           {/* Navigation action - Back */}
           {onBack && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onBack}
-              className="gap-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600"
-            >
+            <Button size="sm" type="button" variant="outline" onClick={onBack}>
               <ArrowLeft className="h-4 w-4" />
               {backText}
             </Button>
@@ -105,12 +95,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
 
           {/* Destructive/Reset action - Clear */}
           {onClear && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClear}
-              className="gap-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-600"
-            >
+            <Button size="sm" type="button" variant="outline" onClick={onClear}>
               <RotateCcw className="h-4 w-4" />
               {clearText}
             </Button>
@@ -119,15 +104,11 @@ export const FormFooter: React.FC<FormFooterProps> = ({
           {/* Primary action - Save */}
           {onSave && (
             <Button
+              size="sm"
               type="button"
               onClick={onSave}
               disabled={isSaveDisabled || isSaving}
-              className={cn(
-                "min-w-[120px] gap-2 bg-zinc-900 text-white shadow-sm transition-all hover:bg-zinc-800 hover:shadow-md",
-                "dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200",
-                "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
-                saveButtonClassName,
-              )}
+              className={cn(saveButtonClassName)}
             >
               {isSaving ? (
                 <>

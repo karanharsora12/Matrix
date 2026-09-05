@@ -1,21 +1,16 @@
-import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { ListingHeader } from "@/components/common/ListingHeader";
+import { useDeleteSale, useSales } from "@/api/sales";
+import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { GridDeleteCell } from "@/components/common/GridDeleteCell";
-import { useGridActions } from "@/hooks/useGridActions";
-import { confirmAlert } from "@/components/common/AlertModal";
+import { ListingHeader } from "@/components/common/ListingHeader";
 import { Badge } from "@/components/ui/badge";
-import {
-  useSales,
-  useDeleteSale,
-  type Sale,
-} from "@/api/sales";
 import { WEB_ROUTES } from "@/config/webRoutes";
-import { buildRoute, encodeURL } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { useGridActions } from "@/hooks/useGridActions";
+import { buildRoute, cn, encodeURL } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
+import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const statusClasses: Record<string, string> = {
   Posted: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -68,7 +63,8 @@ const SalesList: React.FC = () => {
         field: "voucherDate",
         headerName: "Date",
         width: 110,
-        valueGetter: (p) => p.node?.rowPinned ? "" : p.data?.voucherDate?.slice(0, 10),
+        valueGetter: (p) =>
+          p.node?.rowPinned ? "" : p.data?.voucherDate?.slice(0, 10),
       },
       { field: "daybookName", headerName: "Daybook", width: 160 },
       { field: "partyName", headerName: "Customer / Party", width: 180 },
@@ -98,7 +94,8 @@ const SalesList: React.FC = () => {
               variant="outline"
               className={cn(
                 "border",
-                statusClasses[params.value] || "bg-zinc-50 text-zinc-600 border-zinc-200",
+                statusClasses[params.value] ||
+                  "bg-zinc-50 text-zinc-600 border-zinc-200",
               )}
             >
               {params.value}

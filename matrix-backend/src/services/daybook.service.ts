@@ -73,6 +73,23 @@ export class DaybookService {
       .returning();
     return deleted;
   }
+
+  async generateVoucherNo(daybookId: number) {
+    const daybook = await this.getDaybookById(daybookId);
+    if (!daybook) {
+      throw new Error("Daybook not found");
+    }
+
+    const prefix = daybook.voucherPrefix || "VCH";
+    const randomNum = Math.floor(100 + Math.random() * 900);
+    const voucherNo = `${prefix}-${randomNum}`;
+
+    return {
+      voucherNo,
+      daybookId,
+      voucherPrefix: prefix,
+    };
+  }
 }
 
 export const daybookService = new DaybookService();

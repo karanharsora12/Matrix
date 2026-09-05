@@ -27,6 +27,14 @@ router.delete(
 // Daybooks CRUD
 router.get("/", daybookController.getDaybooks.bind(daybookController));
 router.get("/:id", daybookController.getDaybookById.bind(daybookController));
+router.get(
+  "/:id/generate-voucher-no",
+  daybookController.generateVoucherNo.bind(daybookController),
+);
+router.post(
+  "/generate-voucher-no",
+  daybookController.generateVoucherNo.bind(daybookController),
+);
 router.post("/", daybookController.createDaybook.bind(daybookController));
 router.put("/:id", daybookController.updateDaybook.bind(daybookController));
 router.delete("/:id", daybookController.deleteDaybook.bind(daybookController));

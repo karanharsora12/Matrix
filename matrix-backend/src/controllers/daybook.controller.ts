@@ -211,6 +211,26 @@ export class DaybookController {
       });
     }
   }
+
+  async generateVoucherNo(req: Request, res: Response) {
+    try {
+      const id = parseInt((req.params.id || req.body?.daybookId) as string);
+      if (isNaN(id)) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Invalid Daybook ID" });
+      }
+
+      const result = await daybookService.generateVoucherNo(id);
+      res.json({ success: true, data: result });
+    } catch (error: any) {
+      console.error("Error generating voucher number:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Internal server error",
+      });
+    }
+  }
 }
 
 export const daybookController = new DaybookController();

@@ -165,3 +165,18 @@ export const useDeleteDaybook = () => {
     },
   });
 };
+
+export interface VoucherNoResponse {
+  voucherNo: string;
+  daybookId: number;
+  voucherPrefix: string;
+}
+
+export const generateVoucherNo = async (
+  daybookId: number,
+): Promise<ApiResponse<VoucherNoResponse>> => {
+  const { data } = await apiClient.get<ApiResponse<VoucherNoResponse>>(
+    API_ENDPOINTS.DAYBOOKS.GENERATE_VOUCHER_NO(daybookId),
+  );
+  return data;
+};
