@@ -1,9 +1,9 @@
 import type { ICellEditorParams } from "ag-grid-community";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { PopupTable } from "./PopupTable";
 
-export interface PopupCellEditorParams extends Omit<ICellEditorParams, "data"> {
-  data?: any[];
+export interface PopupCellEditorParams extends ICellEditorParams {
+  tableData?: any[];
   apiEndpoint?: string;
   columns?: any[];
   columnDefs?: any[];
@@ -45,7 +45,7 @@ export const PopupCellEditor = forwardRef<any, PopupCellEditorParams>(
       <PopupTable
         open={open}
         onOpenChange={handleOpenChange}
-        data={props.data}
+        tableData={props.tableData}
         apiEndpoint={props.apiEndpoint}
         columns={props.columns || props.columnDefs}
         onSelect={handleSelect}

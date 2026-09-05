@@ -50,7 +50,6 @@ const SalesList: React.FC = () => {
     const q = searchTerm.toLowerCase();
     return (
       sale.voucherNo?.toLowerCase().includes(q) ||
-      sale.partyName?.toLowerCase().includes(q) ||
       sale.daybookName?.toLowerCase().includes(q) ||
       sale.reference?.toLowerCase().includes(q)
     );
@@ -58,21 +57,26 @@ const SalesList: React.FC = () => {
 
   const columnDefs = useMemo<ColDef[]>(() => {
     return [
-      { field: "voucherNo", headerName: "Voucher No.", width: 140 },
+      { field: "voucherNo", headerName: "Voucher No.", width: 120 },
       {
         field: "voucherDate",
-        headerName: "Date",
+        headerName: "Voucher Date",
         width: 110,
         valueGetter: (p) =>
           p.node?.rowPinned ? "" : p.data?.voucherDate?.slice(0, 10),
       },
+      { field: "daybookGroupName", headerName: "Daybook Group", width: 120 },
       { field: "daybookName", headerName: "Daybook", width: 160 },
-      { field: "partyName", headerName: "Customer / Party", width: 180 },
-      { field: "reference", headerName: "Reference", width: 140 },
+      { field: "accountName", headerName: "Account Name", width: 250 },
+      { field: "discountAmount", headerName: "Disc. Amount", width: 100 },
+      { field: "kasarAmount", headerName: "Kasar Amount", width: 100 },
+      { field: "roundOff", headerName: "ROF Amount", width: 100 },
+      { field: "taxAmount", headerName: "Tax Amount", width: 100 },
+      { field: "tdsAmount", headerName: "TDS Amount", width: 100 },
       {
         field: "grandTotal",
         headerName: "Amount",
-        width: 130,
+        width: 100,
         type: "numericColumn",
         valueFormatter: (p) =>
           p.node?.rowPinned
@@ -83,35 +87,8 @@ const SalesList: React.FC = () => {
                 minimumFractionDigits: 2,
               }),
       },
-      {
-        field: "status",
-        headerName: "Status",
-        width: 120,
-        cellRenderer: (params: any) => {
-          if (params.node?.rowPinned) return params.value;
-          return (
-            <Badge
-              variant="outline"
-              className={cn(
-                "border",
-                statusClasses[params.value] ||
-                  "bg-zinc-50 text-zinc-600 border-zinc-200",
-              )}
-            >
-              {params.value}
-            </Badge>
-          );
-        },
-      },
-      {
-        headerName: "",
-        width: 60,
-        cellRenderer: (params: any) => {
-          if (params.node?.rowPinned) return null;
-          return <GridDeleteCell {...params} />;
-        },
-        cellRendererParams: { onDelete: handleDelete },
-      },
+      { field: "salesmanName", headerName: "Salesman", width: 150 },
+      { field: "remarks", headerName: "Remarks", width: 150 },
     ];
   }, [handleDelete]);
 
@@ -158,7 +135,7 @@ const SalesList: React.FC = () => {
               if (e.node.rowPinned) return;
               handleNavigate(e.data.id);
             },
-            pagination: true,
+            pagination: false,
           }}
         />
       )}

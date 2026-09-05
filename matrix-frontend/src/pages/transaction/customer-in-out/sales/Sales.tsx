@@ -19,9 +19,14 @@ import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
 import { PopupCellEditor } from "@/components/common/PopupCellEditor";
 import { PopupTable } from "@/components/common/PopupTable";
+import { SelectCellEditor } from "@/components/common/SelectCellEditor";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { WEB_ROUTES } from "@/config/webRoutes";
-import { TransactionMenu, getDaybooksByMenu } from "@/constants/enums";
+import {
+  CommonListType,
+  TransactionMenu,
+  getDaybooksByMenu,
+} from "@/constants/enums";
 import { buildRoute, decodeURL, encodeURL } from "@/lib/utils";
 import type {
   CellValueChangedEvent,
@@ -136,7 +141,12 @@ export const Sales: React.FC = () => {
   const { data: existingSale, isLoading: isLoadingSale } = useSale(
     isEditing ? saleId : undefined,
   );
-  const { rateTypes } = useSelector((state: RootState) => state.inventory);
+  const { rateTypes, commonLists } = useSelector(
+    (state: RootState) => state.inventory,
+  );
+  const measureUnits = commonLists.filter(
+    (c) => c.listType === CommonListType.MEASURE_UNIT,
+  );
 
   const allDaybooks = daybooksResp?.data || [];
   const daybookGroups = daybookGroupsResp?.data || [];
@@ -168,7 +178,6 @@ export const Sales: React.FC = () => {
         field: "accountName",
         minWidth: 200,
         flex: 1,
-        cellClass: "font-semibold text-slate-900 dark:text-zinc-100",
         valueGetter: (p) =>
           p.data?.accountName ||
           `${p.data?.firstName || ""} ${p.data?.lastName || ""}`.trim() ||
@@ -179,13 +188,11 @@ export const Sales: React.FC = () => {
         field: "id",
         type: "numericColumn",
         width: 65,
-        cellClass: "font-mono text-center",
       },
       {
         headerName: "Short Name",
         field: "userName",
         width: 100,
-        cellClass: "font-mono text-xs",
         valueGetter: (p) =>
           p.data?.userName ||
           (p.data?.firstName
@@ -223,31 +230,18 @@ export const Sales: React.FC = () => {
         headerName: "Group Name",
         field: "itemGroupName",
         minWidth: 190,
-        flex: 1,
-        cellClass: "font-semibold text-slate-900 dark:text-zinc-100",
       },
       {
         headerName: "Short Name",
         field: "shortName",
         width: 100,
-        cellClass: "font-mono text-xs text-slate-700 dark:text-zinc-300",
         valueGetter: (p) => p.data?.shortName || "-",
-      },
-      {
-        headerName: "Touch %",
-        field: "salesRate",
-        width: 105,
-        type: "numericColumn",
-        cellClass: "font-mono font-medium text-slate-800 dark:text-zinc-200",
-        valueFormatter: (p) =>
-          p.value != null ? `${Number(p.value).toFixed(2)} %` : "-",
       },
       {
         headerName: "ID",
         field: "id",
         width: 60,
         type: "numericColumn",
-        cellClass: "font-mono text-center text-slate-700 dark:text-zinc-300",
       },
     ],
     [],
@@ -260,14 +254,11 @@ export const Sales: React.FC = () => {
         headerName: "Item Name",
         field: "itemName",
         minWidth: 220,
-        flex: 1,
-        cellClass: "font-semibold text-slate-900 dark:text-zinc-100",
       },
       {
         headerName: "Short Name",
         field: "shortName",
         width: 120,
-        cellClass: "font-mono text-xs text-slate-700 dark:text-zinc-300",
         valueGetter: (p) => p.data?.shortName || "-",
       },
       {
@@ -275,7 +266,6 @@ export const Sales: React.FC = () => {
         field: "id",
         width: 65,
         type: "numericColumn",
-        cellClass: "font-mono text-center text-slate-700 dark:text-zinc-300",
       },
     ],
     [],
@@ -313,8 +303,6 @@ export const Sales: React.FC = () => {
     voucherDate: new Date().toISOString().slice(0, 10),
     daybookId: undefined,
     daybookName: "",
-    partyId: undefined,
-    partyName: "",
     reference: "",
     remarks: "",
     salesmanName: "Amit Verma",
@@ -354,7 +342,6 @@ export const Sales: React.FC = () => {
     dueDate: new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
     deliveryPending: false,
     isActive: true,
-    status: "Draft",
   });
 
   useEffect(() => {
@@ -369,7 +356,7 @@ export const Sales: React.FC = () => {
                 itemCode: line.itemCode || line.tagNo || `ITM-${idx + 1}`,
                 tagNo: line.tagNo || line.itemCode || `TAG-${idx + 1}`,
                 uom: line.uom || "GMS",
-                rateType: line.rateType || "Per Gram",
+                rateType: line.rateType,
                 tax: line.tax || "3%",
               }))
             : [
@@ -532,7 +519,6 @@ export const Sales: React.FC = () => {
         } else if (current.rateType === "Flat / Fixed") {
           baseAmount = rate;
         } else {
-          // Default: "Per Gram"
           const wt = Number(current.netWt || 0);
           baseAmount = (wt > 0 ? wt : current.quantity || 1) * rate;
         }
@@ -542,7 +528,6 @@ export const Sales: React.FC = () => {
           Math.round(baseAmount + labour + other - discount),
         );
 
-        // Auto calculate fine weight if purity is known and netWt exists
         if (field === "purity" || field === "netWt") {
           const net = Number(current.netWt || 0);
           if (current.purity?.includes("91.6")) {
@@ -596,28 +581,6 @@ export const Sales: React.FC = () => {
       return {
         ...prev,
         itemLines: lines.filter((_, i) => i !== index),
-      };
-    });
-  }, []);
-
-  const handleDuplicateLineItem = useCallback((index: number) => {
-    setFormData((prev) => {
-      const lines = prev.itemLines || [];
-      const source = lines[index];
-      if (!source) return prev;
-      const duplicated: SaleLineItem = {
-        ...source,
-        id: `line-${Date.now()}`,
-        itemCode: `${source.itemCode || source.tagNo || "ITM"}-COPY`,
-        tagNo: `${source.tagNo || source.itemCode || "TAG"}-COPY`,
-      };
-      return {
-        ...prev,
-        itemLines: [
-          ...lines.slice(0, index + 1),
-          duplicated,
-          ...lines.slice(index + 1),
-        ],
       };
     });
   }, []);
@@ -729,7 +692,6 @@ export const Sales: React.FC = () => {
         resizable: false,
         valueGetter: (params) =>
           params.node?.rowPinned ? "" : (params.node?.rowIndex ?? 0) + 1,
-        cellClass: "text-center font-mono text-slate-400 font-medium",
       },
       {
         headerName: "Item Group",
@@ -748,10 +710,6 @@ export const Sales: React.FC = () => {
           width: 720,
           height: 360,
         },
-        cellClass: (p) =>
-          p.node?.rowPinned
-            ? "font-bold text-slate-900 dark:text-zinc-100"
-            : "font-medium",
         valueGetter: (p) =>
           p.node?.rowPinned ? "TOTAL" : p.data?.itemGroupName || "",
         cellRenderer: (p: ICellRendererParams) => {
@@ -773,7 +731,6 @@ export const Sales: React.FC = () => {
         headerName: "Items",
         field: "itemName",
         minWidth: 180,
-        flex: 1,
         editable: (p) => !p.node?.rowPinned,
         cellEditor: PopupCellEditor,
         cellEditorParams: {
@@ -786,7 +743,6 @@ export const Sales: React.FC = () => {
           width: 720,
           height: 360,
         },
-        cellClass: (p) => (p.node?.rowPinned ? "" : "font-medium"),
         valueGetter: (p) => (p.node?.rowPinned ? "" : p.data?.itemName || ""),
         cellRenderer: (p: ICellRendererParams) => {
           if (p.node?.rowPinned) return null;
@@ -813,13 +769,12 @@ export const Sales: React.FC = () => {
         field: "uom",
         width: 90,
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agSelectCellEditor",
+        cellEditor: SelectCellEditor,
         cellEditorParams: {
-          values: ["GMS", "PCS", "KGS", "MTR", "SET", "PAIR", "BOX"],
+          options: measureUnits,
+          valueKey: "listValue",
+          labelKey: "listValue",
         },
-        cellClass:
-          "text-center font-medium uppercase text-slate-600 dark:text-zinc-400",
-        valueGetter: (p) => (p.node?.rowPinned ? "" : p.data?.uom || "GMS"),
       },
       {
         headerName: "Gross Wt.",
@@ -854,13 +809,11 @@ export const Sales: React.FC = () => {
         editable: (p) => !p.node?.rowPinned,
         cellEditor: PopupCellEditor,
         cellEditorParams: {
-          data: rateTypes,
+          tableData: rateTypes,
           columns: [
             {
               headerName: "Rate Type",
               field: "name",
-              flex: 1,
-              cellClass: "font-semibold text-slate-900 dark:text-zinc-100",
             },
           ],
           searchPlaceholder: "Search Rate Type...",
@@ -903,7 +856,7 @@ export const Sales: React.FC = () => {
         },
       },
     ];
-  }, [handleDuplicateLineItem, handleDeleteLineItem, itemGroups, items]);
+  }, [handleDeleteLineItem, itemGroups, items]);
 
   const pinnedBottomRowData = useMemo(() => {
     return [
@@ -933,10 +886,9 @@ export const Sales: React.FC = () => {
       setFormData((prev) => ({
         ...prev,
         partyId: acc.id,
-        partyName:
+        accountName:
           acc.accountName ||
           `${acc.firstName || ""} ${acc.lastName || ""}`.trim(),
-        customerEmail: acc.email || prev.customerEmail,
       }));
     }
   };
@@ -944,6 +896,7 @@ export const Sales: React.FC = () => {
   // Item Group Selection for Grid Line Item
   const handleSelectItemGroupForRow = useCallback(
     (rowIndex: number, grp: any) => {
+      console.log(grp);
       setFormData((prev) => {
         const lines = [...(prev.itemLines || [])];
         if (!lines[rowIndex]) return prev;
@@ -1009,10 +962,6 @@ export const Sales: React.FC = () => {
       alert("Please provide a Voucher / Bill Number.");
       return;
     }
-    if (!formData.partyName?.trim() && !formData.partyId) {
-      alert("Please specify or select a Customer / Party Name.");
-      return;
-    }
 
     const payload: Omit<Sale, "id"> = {
       voucherNo: formData.voucherNo || "INV-001",
@@ -1020,9 +969,8 @@ export const Sales: React.FC = () => {
         formData.voucherDate || new Date().toISOString().slice(0, 10),
       daybookId: formData.daybookId || 1,
       daybookName: formData.daybookName || "RETAIL INVOICE",
-      partyId: formData.partyId,
-      partyName: formData.partyName || "Walk-in Customer",
       reference: formData.reference || "",
+      accountId: formData.accountId,
       remarks: formData.remarks || "",
       salesmanName: formData.salesmanName || "Sales Executive",
       billMode: formData.billMode || "Debit Memo",
@@ -1037,7 +985,9 @@ export const Sales: React.FC = () => {
       customerPanNo: formData.customerPanNo || "",
       customerAadharNo: formData.customerAadharNo || "",
       customerEmail: formData.customerEmail || "",
-      itemLines: formData.itemLines || [],
+      itemLines: (formData.itemLines || []).filter(
+        (line) => line.itemId && line.itemId > 0,
+      ),
       subtotal: calculatedTotals.subtotal,
       discountRate: formData.discountRate || 0,
       discountAmount: calculatedTotals.totalLineDiscount + couponDiscount,
@@ -1061,8 +1011,12 @@ export const Sales: React.FC = () => {
       dueDate: formData.dueDate,
       deliveryPending: formData.deliveryPending || false,
       isActive: formData.isActive ?? true,
-      status: (formData.status as any) || "Posted",
     };
+
+    if (payload.itemLines.length === 0) {
+      alert("Please add at least one valid item to save the sale.");
+      return;
+    }
 
     if (isEditing) {
       updateMutation.mutate(
@@ -1094,8 +1048,6 @@ export const Sales: React.FC = () => {
       voucherDate: new Date().toISOString().slice(0, 10),
       daybookId: 1,
       daybookName: "RETAIL INVOICE",
-      partyId: undefined,
-      partyName: "",
       reference: "",
       remarks: "",
       salesmanName: "Amit Verma",
@@ -1113,7 +1065,6 @@ export const Sales: React.FC = () => {
       advanceAmount: 0,
       urdAmount: 0,
       isActive: true,
-      status: "Draft",
     });
     setCouponDiscount(0);
   };
@@ -1347,11 +1298,11 @@ export const Sales: React.FC = () => {
                     Customer Full Name <span className="text-rose-500">*</span>
                   </Label>
                   <Input
-                    value={formData.partyName || ""}
+                    value={formData.accountName || ""}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        partyName: e.target.value,
+                        accountName: e.target.value,
                       }))
                     }
                     placeholder="e.g. Rahul Sharma"
@@ -1974,7 +1925,6 @@ export const Sales: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Settlement Balance Status Bar */}
                 <div className="mt-2 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-2.5 dark:border-zinc-800 dark:bg-zinc-800/60">
                   <div>
                     <span className="text-[11px] text-slate-500">
@@ -2186,7 +2136,7 @@ export const Sales: React.FC = () => {
                   Billed To:
                 </p>
                 <p className="font-bold text-sm text-slate-900">
-                  {formData.partyName || "Walk-in Customer"}
+                  {formData.accountName || "Walk-in Customer"}
                 </p>
                 {formData.customerPhone && (
                   <p className="text-slate-600">

@@ -20,7 +20,6 @@ import type {
   GridReadyEvent,
   RowDoubleClickedEvent,
 } from "ag-grid-community";
-import { Grip } from "lucide-react";
 
 export interface PopupTableProps<T = any> {
   open?: boolean;
@@ -28,7 +27,8 @@ export interface PopupTableProps<T = any> {
   trigger?: React.ReactNode;
   title?: string;
   apiEndpoint?: string;
-  data?: T[];
+  tableData?: T[];
+
   columnDefs?: ColDef[];
   columns?: ColDef[];
   onSelect: (item: T) => void;
@@ -44,7 +44,7 @@ export function PopupTable<T extends Record<string, any>>({
   onOpenChange,
   trigger,
   apiEndpoint,
-  data = [],
+  tableData,
   columnDefs,
   columns,
   onSelect,
@@ -84,13 +84,11 @@ export function PopupTable<T extends Record<string, any>>({
     enabled: !!apiEndpoint,
   });
 
-  console.log(data);
-
   const rowData = useMemo(() => {
-    if (data && data.length > 0) return data;
+    if (Array.isArray(tableData) && tableData.length > 0) return tableData;
     if (fetchedData && Array.isArray(fetchedData)) return fetchedData;
     return [];
-  }, [data, fetchedData]);
+  }, [tableData, fetchedData]);
 
   // Normalize column definitions for DataGrid
   const effectiveColDefs = useMemo<ColDef[]>(() => {
