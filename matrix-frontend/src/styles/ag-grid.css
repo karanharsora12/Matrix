@@ -118,8 +118,15 @@
   --ag-cell-editing-border-color: transparent !important;
 }
 
-/* Cell itself when focused or editing */
-.ag-grid-custom .ag-cell,
+/* Cell vertical column borders */
+.ag-grid-custom .ag-cell {
+  border-right: 1px solid hsl(240 5.9% 90%) !important;
+}
+.dark .ag-grid-custom .ag-cell {
+  border-right: 1px solid hsl(240 3.7% 20%) !important;
+}
+
+/* Cell itself when focused or editing (remove focus rings/outlines, preserve vertical border) */
 .ag-grid-custom .ag-cell:focus,
 .ag-grid-custom .ag-cell:focus-within,
 .ag-grid-custom .ag-cell-focus,
@@ -127,17 +134,17 @@
 .ag-grid-custom .ag-cell.ag-cell-focus:not(.ag-cell-range-selected),
 .ag-grid-custom .ag-cell-inline-editing,
 .ag-grid-custom .ag-cell.ag-cell-inline-editing,
-.ag-grid-custom .ag-cell.ag-cell-inline-editing:focus,
-.ag-grid-custom .ag-cell.ag-cell-inline-editing:focus-within {
+.ag-grid-custom .ag-cell-inline-editing:focus,
+.ag-grid-custom .ag-cell-inline-editing:focus-within {
   outline: none !important;
-  border: none !important;
   box-shadow: none !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-bottom: none !important;
   border-radius: 0 !important;
 }
 
 /* Pseudo-elements used by AG Grid Theme Quartz for focus rectangles */
-.ag-grid-custom .ag-cell::after,
-.ag-grid-custom .ag-cell::before,
 .ag-grid-custom .ag-cell-focus::after,
 .ag-grid-custom .ag-cell-focus::before,
 .ag-grid-custom .ag-cell:focus::after,
