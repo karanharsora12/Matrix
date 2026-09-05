@@ -100,10 +100,6 @@ const Accounts: React.FC = () => {
         field: "isActive",
         headerName: "Active",
         width: 70,
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          return params.data.isActive;
-        },
       },
       {
         headerName: "",

@@ -131,3 +131,29 @@ export const accounts = pgTable("accounts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const daybookGroups = pgTable("daybook_groups", {
+  id: serial("id").primaryKey(),
+  groupName: varchar("group_name", { length: 256 }).notNull(),
+  shortName: varchar("short_name", { length: 256 }).notNull().unique(),
+  description: varchar("description", { length: 256 }),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const daybooks = pgTable("daybooks", {
+  id: serial("id").primaryKey(),
+  daybookName: varchar("daybook_name", { length: 256 }).notNull(),
+  shortName: varchar("short_name", { length: 256 }).notNull().unique(),
+  daybookGroupId: integer("daybook_group_id")
+    .references((): AnyPgColumn => daybookGroups.id)
+    .notNull(),
+  voucherPrefix: varchar("voucher_prefix", { length: 256 }).notNull(),
+  allowManualNumber: boolean("allow_manual_number").default(false).notNull(),
+  description: varchar("description", { length: 256 }),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import type { Metal, RateType, CommonList, Attribute } from "@/api/inventory";
+import type { Metal, RateType, CommonList, Attribute, DaybookGroup, Daybook } from "@/api/inventory";
 import { getMasterData } from "@/api/inventory";
 
 interface InventoryState {
@@ -7,6 +7,8 @@ interface InventoryState {
   rateTypes: RateType[];
   commonLists: CommonList[];
   attributes: Attribute[];
+  daybookGroups: DaybookGroup[];
+  daybooks: Daybook[];
   isMasterDataLoaded: boolean;
   status: "idle" | "loading" | "succeeded" | "failed";
 }
@@ -16,6 +18,8 @@ const initialState: InventoryState = {
   rateTypes: [],
   commonLists: [],
   attributes: [],
+  daybookGroups: [],
+  daybooks: [],
   isMasterDataLoaded: false,
   status: "idle",
 };
@@ -39,10 +43,12 @@ const inventorySlice = createSlice({
       })
       .addCase(fetchMasterData.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.metals = action.payload.metals;
-        state.rateTypes = action.payload.rateTypes;
-        state.commonLists = action.payload.commonLists;
-        state.attributes = action.payload.attributes;
+        state.metals = action.payload.metals || [];
+        state.rateTypes = action.payload.rateTypes || [];
+        state.commonLists = action.payload.commonLists || [];
+        state.attributes = action.payload.attributes || [];
+        state.daybookGroups = action.payload.daybookGroups || [];
+        state.daybooks = action.payload.daybooks || [];
         state.isMasterDataLoaded = true;
       })
       .addCase(fetchMasterData.rejected, (state) => {

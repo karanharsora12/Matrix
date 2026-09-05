@@ -4,6 +4,7 @@ import { DataGrid } from "@/components/common/DataGrid";
 import { ListingHeader } from "@/components/common/ListingHeader";
 import { SideModal } from "@/components/common/SideModal";
 import { confirmAlert } from "@/components/common/AlertModal";
+import { GridDeleteCell } from "@/components/common/GridDeleteCell";
 import { useGridActions } from "@/hooks/useGridActions";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -43,6 +44,7 @@ const iconOptions = [
   "LayoutDashboard",
   "TrendingUp",
   "ShoppingCart",
+  "ShoppingBag",
   "Package",
   "Users",
   "DollarSign",
@@ -66,12 +68,25 @@ const iconOptions = [
   "Group",
   "Tags",
   "FolderTree",
+  "Folder",
   "Layers",
   "Barcode",
   "Tag",
   "ContactRound",
   "UserRound",
   "Split",
+  "Waypoints",
+  "Activity",
+  "Repeat2",
+  "Shuffle",
+  "ClipboardCheck",
+  "Route",
+  "Network",
+  "NotebookTabs",
+  "DoorOpen",
+  "Wallet",
+  "Car",
+  "BookOpen",
 ];
 
 interface MenuForm {
@@ -265,9 +280,6 @@ export default function MenuSetup() {
 
     const isExpanded = expanded[data.id];
     const hasChildren = data.children && data.children.length > 0;
-    const Icon =
-      (LucideIcons as any)[data.menuIcon || "Box"] || LucideIcons.Box;
-
     return (
       <div
         className="flex items-center gap-2 h-full"
@@ -285,11 +297,8 @@ export default function MenuSetup() {
             )}
           </button>
         ) : (
-          <div className="w-6" /> // spacer
+          <div className="w-6" />
         )}
-        <div className="flex items-center justify-center w-6 h-6 rounded-md bg-zinc-100 dark:bg-zinc-800">
-          <Icon className="h-3.5 w-3.5 text-zinc-500 shrink-0 dark:text-zinc-400" />
-        </div>
         <span className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
           {data.menuCaption}
         </span>
@@ -399,13 +408,16 @@ export default function MenuSetup() {
         flex: 0,
       },
       {
-        headerName: "Actions",
-        cellRenderer: ActionsRenderer,
-        width: 100,
+        headerName: "",
+        width: 60,
         pinned: "right",
-        flex: 0,
-        sortable: false,
-        filter: false,
+        cellRenderer: (params: any) => {
+          if (params.node?.rowPinned) return null;
+          return <GridDeleteCell {...params} />;
+        },
+        cellRendererParams: {
+          onDelete: handleDelete,
+        },
       },
     ],
     [expanded],
@@ -433,14 +445,17 @@ export default function MenuSetup() {
         rowData={visibleRows}
         columnDefs={columnDefs}
         gridOptions={{
-          rowHeight: 48,
-          headerHeight: 48,
+          rowHeight: 40,
           pagination: false,
           rowDragManaged: true,
           animateRows: true,
           defaultColDef: {
             filter: false,
             floatingFilter: false,
+          },
+          onRowDoubleClicked: (e) => {
+            if (e.node.rowPinned) return;
+            handleEdit(e.data);
           },
         }}
       />

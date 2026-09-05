@@ -1,20 +1,40 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
-import { itemGroups, metals, rateTypes, commonLists, items, attributes } from "../db/schema";
+import {
+  itemGroups,
+  metals,
+  rateTypes,
+  commonLists,
+  items,
+  attributes,
+  daybookGroups,
+  daybooks,
+} from "../db/schema";
 
 export class InventoryService {
   async getMasterData() {
-    const [metalsData, rateTypesData, commonListsData, attributesData] = await Promise.all([
+    const [
+      metalsData,
+      rateTypesData,
+      commonListsData,
+      attributesData,
+      daybookGroupsData,
+      daybooksData,
+    ] = await Promise.all([
       db.select().from(metals),
       db.select().from(rateTypes),
       db.select().from(commonLists),
       db.select().from(attributes),
+      db.select().from(daybookGroups),
+      db.select().from(daybooks),
     ]);
     return {
       metals: metalsData,
       rateTypes: rateTypesData,
       commonLists: commonListsData,
       attributes: attributesData,
+      daybookGroups: daybookGroupsData,
+      daybooks: daybooksData,
     };
   }
 

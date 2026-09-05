@@ -29,6 +29,31 @@ export interface ItemGroup {
   measureUnitCode: string;
 }
 
+export interface Attribute {
+  id: number;
+  attributeNameId: number;
+  attributeValue: string;
+}
+
+export interface DaybookGroup {
+  id: number;
+  groupName: string;
+  shortName: string;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface Daybook {
+  id: number;
+  daybookName: string;
+  shortName: string;
+  daybookGroupId: number;
+  voucherPrefix: string;
+  allowManualNumber: boolean;
+  description?: string;
+  isActive: boolean;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -42,6 +67,8 @@ export const getMasterData = async (): Promise<{
   rateTypes: RateType[];
   commonLists: CommonList[];
   attributes: Attribute[];
+  daybookGroups: DaybookGroup[];
+  daybooks: Daybook[];
 }> => {
   const { data } = await apiClient.get<ApiResponse<any>>("/inventory/master-data");
   return data.data;

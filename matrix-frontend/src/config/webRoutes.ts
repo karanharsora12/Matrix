@@ -17,5 +17,9 @@ export const WEB_ROUTES = {
       ACCOUNT_MASTER_ADD: "/master/accounts/account-master/add",
       ACCOUNT_MASTER_EDIT: "/master/accounts/account-master/edit/:id",
     },
+    OTHER_MASTER: {
+      DAYBOOK_GROUPS: "/master/other-master/daybook-groups",
+      DAYBOOKS: "/master/other-master/daybooks",
+    },
   },
 };

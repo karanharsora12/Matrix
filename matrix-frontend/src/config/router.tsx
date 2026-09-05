@@ -9,6 +9,8 @@ import ItemGroups from "../pages/master/inventory/ItemGroups";
 import Items from "../pages/master/inventory/Items";
 import Accounts from "../pages/master/accounts/Accounts";
 import AccountForm from "../pages/master/accounts/AccountForm";
+import DaybookGroups from "../pages/master/other-master/DaybookGroups";
+import Daybooks from "../pages/master/other-master/Daybooks";
 import NotFound from "../pages/NotFound";
 import { WEB_ROUTES } from "./webRoutes";
 
@@ -59,6 +61,14 @@ export const router = createBrowserRouter([
           {
             path: WEB_ROUTES.MASTER.ACCOUNTS_MANAGEMENT.ACCOUNT_MASTER_EDIT,
             element: <AccountForm />,
+          },
+          {
+            path: WEB_ROUTES.MASTER.OTHER_MASTER.DAYBOOK_GROUPS,
+            element: <DaybookGroups />,
+          },
+          {
+            path: WEB_ROUTES.MASTER.OTHER_MASTER.DAYBOOKS,
+            element: <Daybooks />,
           },
         ],
       },

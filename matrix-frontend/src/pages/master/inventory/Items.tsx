@@ -119,10 +119,6 @@ const Items: React.FC = () => {
         field: "isActive",
         headerName: "Active",
         width: 80,
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          return params.data.isActive;
-        },
       },
       {
         headerName: "Attributes",
