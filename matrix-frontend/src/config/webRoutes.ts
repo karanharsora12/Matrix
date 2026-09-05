@@ -23,6 +23,7 @@ export const WEB_ROUTES = {
     },
   },
   TRANSACTION: {
-    SALES: "/transactions/customer-in-out/sales",
+    SALES_LIST: "/transactions/customer-in-out/sales",
+    SALES: "/transactions/customer-in-out/sales/:token",
   },
 };

@@ -1,15 +1,12 @@
-import { ListingHeader } from "@/components/common/ListingHeader";
+import { decodeURL } from "@/lib/utils";
+import { useParams } from "react-router-dom";
 
-const Sales = () => {
-  return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Sales"
-        subtitle="Manage your sales"
-        addText="Add Sales"
-      />
-    </div>
-  );
+const Sales: React.FC = () => {
+  const params = useParams();
+  const token = decodeURL(params?.token);
+  console.log(token);
+
+  return <div>Sales</div>;
 };
 
 export default Sales;

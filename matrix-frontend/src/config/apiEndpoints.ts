@@ -29,4 +29,8 @@ export const API_ENDPOINTS = {
     GROUPS: "/daybooks/groups",
     GROUP_BY_ID: (id: string | number) => `/daybooks/groups/${id}`,
   },
+  SALES: {
+    BASE: "/sales",
+    BY_ID: (id: string | number) => `/sales/${id}`,
+  },
 };
