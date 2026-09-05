@@ -126,7 +126,6 @@
   border-right: 1px solid hsl(240 3.7% 20%) !important;
 }
 
-/* Cell itself when focused or editing (remove focus rings/outlines, preserve vertical border) */
 .ag-grid-custom .ag-cell:focus,
 .ag-grid-custom .ag-cell:focus-within,
 .ag-grid-custom .ag-cell-focus,

@@ -1170,7 +1170,7 @@ export const Sales: React.FC = () => {
                 <Input
                   value={formData.voucherNo || ""}
                   disabled
-                  className="h-8 text-xs font-mono font-medium"
+                  className="h-8 text-xs  font-medium"
                   placeholder="e.g. HRIA-215"
                 />
               </div>
@@ -1194,7 +1194,7 @@ export const Sales: React.FC = () => {
 
               {/* Salesman */}
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+                <Label className="text-xs  text-slate-600 dark:text-zinc-400">
                   Salesman
                 </Label>
                 <Input
@@ -1212,7 +1212,7 @@ export const Sales: React.FC = () => {
 
               {/* Reference / Inquiry Info */}
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+                <Label className="text-xs  text-slate-600 dark:text-zinc-400">
                   Inquiry / Ref
                 </Label>
                 <Input
@@ -1274,7 +1274,7 @@ export const Sales: React.FC = () => {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-6 px-2.5 text-[11px] font-medium border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 gap-1.5 shadow-2xs"
+                      className="h-6 px-2.5 text-[11px]  border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 gap-1.5 shadow-2xs"
                       title="Search Party in Dropdown Table"
                     >
                       <Search className="h-3 w-3 text-slate-500" />
@@ -1294,7 +1294,7 @@ export const Sales: React.FC = () => {
               {/* Customer Name & Phone */}
               <div className="grid grid-cols-12 gap-2">
                 <div className="col-span-12 sm:col-span-7 space-y-1">
-                  <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
                     Customer Full Name <span className="text-rose-500">*</span>
                   </Label>
                   <Input
@@ -1306,11 +1306,11 @@ export const Sales: React.FC = () => {
                       }))
                     }
                     placeholder="e.g. Rahul Sharma"
-                    className="h-8 text-xs font-medium"
+                    className="h-8 text-xs "
                   />
                 </div>
                 <div className="col-span-12 sm:col-span-5 space-y-1">
-                  <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
                     Mobile No.
                   </Label>
                   <Input
@@ -1330,7 +1330,7 @@ export const Sales: React.FC = () => {
               {/* Address Line 1 & Line 2 */}
               <div className="grid grid-cols-12 gap-2">
                 <div className="col-span-12 sm:col-span-7 space-y-1">
-                  <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
                     Address Line 1
                   </Label>
                   <Input
@@ -1346,7 +1346,7 @@ export const Sales: React.FC = () => {
                   />
                 </div>
                 <div className="col-span-12 sm:col-span-5 space-y-1">
-                  <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
                     Alternate No.
                   </Label>
                   <Input
@@ -1366,7 +1366,7 @@ export const Sales: React.FC = () => {
               {/* City, Pincode, State */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
                     City
                   </Label>
                   <Input
@@ -1382,7 +1382,7 @@ export const Sales: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
                     Pincode
                   </Label>
                   <Input
@@ -1398,7 +1398,7 @@ export const Sales: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
                     State
                   </Label>
                   <Input
@@ -1424,7 +1424,7 @@ export const Sales: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCustomerTab("general")}
-                  className={`rounded-md px-2 py-1 text-xs font-medium transition-all ${
+                  className={`rounded-md px-2 py-1 text-xs  transition-all ${
                     customerTab === "general"
                       ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                       : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
@@ -1435,7 +1435,7 @@ export const Sales: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCustomerTab("shipping")}
-                  className={`rounded-md px-2 py-1 text-xs font-medium transition-all ${
+                  className={`rounded-md px-2 py-1 text-xs  transition-all ${
                     customerTab === "shipping"
                       ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                       : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
@@ -1446,7 +1446,7 @@ export const Sales: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCustomerTab("kyc")}
-                  className={`rounded-md px-2 py-1 text-xs font-medium transition-all ${
+                  className={`rounded-md px-2 py-1 text-xs  transition-all ${
                     customerTab === "kyc"
                       ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                       : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
@@ -1465,7 +1465,7 @@ export const Sales: React.FC = () => {
             {customerTab === "general" && (
               <div className="space-y-2">
                 <div className="space-y-1">
-                  <Label className="text-[11px] font-medium text-slate-500">
+                  <Label className="text-[11px]  text-slate-500">
                     GSTIN / Tax No.
                   </Label>
                   <Input
@@ -1477,11 +1477,11 @@ export const Sales: React.FC = () => {
                       }))
                     }
                     placeholder="24AAACH7409R1ZZ"
-                    className="h-7 text-xs font-mono"
+                    className="h-7 text-xs "
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px] font-medium text-slate-500">
+                  <Label className="text-[11px]  text-slate-500">
                     PAN Card No.
                   </Label>
                   <Input
@@ -1493,11 +1493,11 @@ export const Sales: React.FC = () => {
                       }))
                     }
                     placeholder="ABCDE1234F"
-                    className="h-7 text-xs font-mono uppercase"
+                    className="h-7 text-xs  uppercase"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px] font-medium text-slate-500">
+                  <Label className="text-[11px]  text-slate-500">
                     Aadhar Card No.
                   </Label>
                   <Input
@@ -1509,7 +1509,7 @@ export const Sales: React.FC = () => {
                       }))
                     }
                     placeholder="4532 8901 2341"
-                    className="h-7 text-xs font-mono"
+                    className="h-7 text-xs "
                   />
                 </div>
               </div>
@@ -1519,7 +1519,7 @@ export const Sales: React.FC = () => {
             {customerTab === "shipping" && (
               <div className="space-y-2">
                 <div className="space-y-1">
-                  <Label className="text-[11px] font-medium text-slate-500">
+                  <Label className="text-[11px]  text-slate-500">
                     Recipient Email
                   </Label>
                   <Input
@@ -1536,7 +1536,7 @@ export const Sales: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px] font-medium text-slate-500">
+                  <Label className="text-[11px]  text-slate-500">
                     Landmark / Delivery
                   </Label>
                   <Input
@@ -1576,7 +1576,7 @@ export const Sales: React.FC = () => {
             {customerTab === "kyc" && (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50/50 p-4 text-center dark:border-zinc-700 dark:bg-zinc-800/50">
                 <UploadCloud className="h-7 w-7 text-slate-400" />
-                <p className="mt-1 text-xs font-medium text-slate-700 dark:text-zinc-200">
+                <p className="mt-1 text-xs  text-slate-700 dark:text-zinc-200">
                   KYC & Document Media
                 </p>
                 <p className="text-[10px] text-slate-500">
@@ -1608,7 +1608,7 @@ export const Sales: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleAddLineItem}
-                className="h-7 gap-1.5 border-amber-300 bg-amber-50 text-xs font-medium text-amber-800 hover:bg-amber-100 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300"
+                className="h-7 gap-1.5 border-amber-300 bg-amber-50 text-xs  text-amber-800 hover:bg-amber-100 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Add Item Row</span>
@@ -1679,7 +1679,7 @@ export const Sales: React.FC = () => {
                 <span className="text-slate-600 dark:text-zinc-400">
                   Gross Subtotal:
                 </span>
-                <span className="font-mono font-medium text-slate-900 dark:text-zinc-100">
+                <span className="  text-slate-900 dark:text-zinc-100">
                   ₹
                   {calculatedTotals.subtotal.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -1696,7 +1696,7 @@ export const Sales: React.FC = () => {
                   <AmountInput
                     value={couponDiscount}
                     onChange={(val) => setCouponDiscount(val)}
-                    className="h-6 text-xs text-right font-mono"
+                    className="h-6 text-xs text-right "
                   />
                 </div>
               </div>
@@ -1711,7 +1711,7 @@ export const Sales: React.FC = () => {
                     {formData.taxRate || 3}%
                   </span>
                 </div>
-                <span className="font-mono font-medium text-slate-900 dark:text-zinc-100">
+                <span className=" font-medium text-slate-900 dark:text-zinc-100">
                   ₹
                   {calculatedTotals.taxAmount.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -1724,7 +1724,7 @@ export const Sales: React.FC = () => {
                 <span className="text-slate-600 dark:text-zinc-400">
                   Round Off:
                 </span>
-                <span className="font-mono text-slate-500">
+                <span className=" text-slate-500">
                   {calculatedTotals.roundOff >= 0
                     ? `+₹${calculatedTotals.roundOff}`
                     : `-₹${Math.abs(calculatedTotals.roundOff)}`}
@@ -1741,7 +1741,7 @@ export const Sales: React.FC = () => {
                     Dr
                   </Badge>
                 </div>
-                <div className="mt-1 text-2xl font-black tracking-tight text-emerald-900 dark:text-emerald-100 font-mono">
+                <div className="mt-1 text-2xl font-black tracking-tight text-emerald-900 dark:text-emerald-100 ">
                   ₹
                   {calculatedTotals.grandTotal.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -1821,7 +1821,7 @@ export const Sales: React.FC = () => {
                         onChange={(val) =>
                           setFormData((prev) => ({ ...prev, cashAmount: val }))
                         }
-                        className="h-7 text-xs font-mono"
+                        className="h-7 text-xs"
                       />
                     </div>
                   </div>
@@ -1840,7 +1840,7 @@ export const Sales: React.FC = () => {
                         onChange={(val) =>
                           setFormData((prev) => ({ ...prev, bankAmount: val }))
                         }
-                        className="h-7 text-xs font-mono"
+                        className="h-7 text-xs"
                       />
                     </div>
                   </div>
@@ -1859,7 +1859,7 @@ export const Sales: React.FC = () => {
                         onChange={(val) =>
                           setFormData((prev) => ({ ...prev, cardAmount: val }))
                         }
-                        className="h-7 text-xs font-mono"
+                        className="h-7 text-xs "
                       />
                     </div>
                   </div>
@@ -1881,7 +1881,7 @@ export const Sales: React.FC = () => {
                             advanceAmount: val,
                           }))
                         }
-                        className="h-7 text-xs font-mono"
+                        className="h-7 text-xs "
                       />
                     </div>
                   </div>
@@ -1900,7 +1900,7 @@ export const Sales: React.FC = () => {
                         onChange={(val) =>
                           setFormData((prev) => ({ ...prev, urdAmount: val }))
                         }
-                        className="h-7 text-xs font-mono"
+                        className="h-7 text-xs "
                       />
                     </div>
                   </div>
@@ -1919,7 +1919,7 @@ export const Sales: React.FC = () => {
                         onChange={(val) =>
                           setFormData((prev) => ({ ...prev, kasarAmount: val }))
                         }
-                        className="h-7 text-xs font-mono"
+                        className="h-7 text-xs "
                       />
                     </div>
                   </div>
@@ -1930,7 +1930,7 @@ export const Sales: React.FC = () => {
                     <span className="text-[11px] text-slate-500">
                       Total Tender Received:{" "}
                     </span>
-                    <span className="font-mono text-xs font-semibold text-slate-900 dark:text-zinc-100">
+                    <span className=" text-xs font-semibold text-slate-900 dark:text-zinc-100">
                       ₹
                       {calculatedTotals.totalPaid.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
@@ -1947,7 +1947,7 @@ export const Sales: React.FC = () => {
                     ) : (
                       <Badge
                         variant="outline"
-                        className="border-amber-300 bg-amber-50 font-mono text-amber-800 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300"
+                        className="border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300"
                       >
                         ₹
                         {calculatedTotals.balanceDue.toLocaleString("en-IN", {
@@ -2040,20 +2040,20 @@ export const Sales: React.FC = () => {
                   onChange={(val) =>
                     setFormData((prev) => ({ ...prev, tdsAmount: val }))
                   }
-                  className="h-7 text-xs font-mono"
+                  className="h-7 text-xs "
                 />
               </div>
 
               <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-2 text-[11px] text-slate-500 dark:border-zinc-800 dark:bg-zinc-800/40">
                 <div className="flex justify-between">
                   <span>Customer Ledger OS:</span>
-                  <span className="font-mono font-medium text-slate-900 dark:text-zinc-100">
+                  <span className=" font-medium text-slate-900 dark:text-zinc-100">
                     ₹0.00
                   </span>
                 </div>
                 <div className="mt-1 flex justify-between">
                   <span>Bill OS:</span>
-                  <span className="font-mono font-medium text-amber-600">
+                  <span className=" font-medium text-amber-600">
                     ₹
                     {calculatedTotals.balanceDue.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
@@ -2120,7 +2120,7 @@ export const Sales: React.FC = () => {
                 <Badge className="bg-amber-600 text-white font-bold">
                   RETAIL TAX INVOICE
                 </Badge>
-                <p className="mt-1 text-xs font-mono font-bold">
+                <p className="mt-1 text-xs  font-bold">
                   Invoice #{formData.voucherNo}
                 </p>
                 <p className="text-xs text-slate-500">
@@ -2149,12 +2149,12 @@ export const Sales: React.FC = () => {
                   </p>
                 )}
                 {formData.customerGstNo && (
-                  <p className="text-slate-600 font-mono">
+                  <p className="text-slate-600 ">
                     GSTIN: {formData.customerGstNo}
                   </p>
                 )}
                 {formData.customerPanNo && (
-                  <p className="text-slate-600 font-mono">
+                  <p className="text-slate-600 ">
                     PAN: {formData.customerPanNo}
                   </p>
                 )}
@@ -2200,7 +2200,7 @@ export const Sales: React.FC = () => {
               <tbody className="divide-y divide-slate-200">
                 {(formData.itemLines || []).map((line, i) => (
                   <tr key={i}>
-                    <td className="p-1.5 text-center font-mono">{i + 1}</td>
+                    <td className="p-1.5 text-center ">{i + 1}</td>
                     <td className="p-1.5 font-medium">
                       {line.itemName || "Jewellery Item"}
                       {line.tagNo && (
@@ -2210,16 +2210,16 @@ export const Sales: React.FC = () => {
                       )}
                     </td>
                     <td className="p-1.5">{line.purity || "22K"}</td>
-                    <td className="p-1.5 text-right font-mono">
+                    <td className="p-1.5 text-right ">
                       {line.netWt?.toFixed(3)}g
                     </td>
-                    <td className="p-1.5 text-right font-mono">
+                    <td className="p-1.5 text-right ">
                       ₹{line.rate?.toLocaleString("en-IN")}
                     </td>
-                    <td className="p-1.5 text-right font-mono">
+                    <td className="p-1.5 text-right ">
                       ₹{line.labourAmount?.toLocaleString("en-IN")}
                     </td>
-                    <td className="p-1.5 text-right font-mono font-semibold">
+                    <td className="p-1.5 text-right  font-semibold">
                       ₹{line.amount?.toLocaleString("en-IN")}
                     </td>
                   </tr>
@@ -2239,7 +2239,7 @@ export const Sales: React.FC = () => {
               <div className="w-64 space-y-1.5 text-right">
                 <div className="flex justify-between">
                   <span className="text-slate-600">Subtotal:</span>
-                  <span className="font-mono font-medium">
+                  <span className=" font-medium">
                     ₹
                     {calculatedTotals.subtotal.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
@@ -2249,7 +2249,7 @@ export const Sales: React.FC = () => {
                 {calculatedTotals.totalLineDiscount > 0 && (
                   <div className="flex justify-between text-rose-600">
                     <span>Discount:</span>
-                    <span className="font-mono">
+                    <span className="">
                       -₹
                       {calculatedTotals.totalLineDiscount.toLocaleString(
                         "en-IN",
@@ -2260,7 +2260,7 @@ export const Sales: React.FC = () => {
                 )}
                 <div className="flex justify-between">
                   <span className="text-slate-600">GST (3%):</span>
-                  <span className="font-mono">
+                  <span className="">
                     ₹
                     {calculatedTotals.taxAmount.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
@@ -2269,7 +2269,7 @@ export const Sales: React.FC = () => {
                 </div>
                 <div className="flex justify-between border-t border-slate-300 pt-1 font-bold text-sm text-slate-900">
                   <span>Grand Total:</span>
-                  <span className="font-mono text-emerald-800">
+                  <span className=" text-emerald-800">
                     ₹
                     {calculatedTotals.grandTotal.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
@@ -2327,7 +2327,7 @@ export const Sales: React.FC = () => {
                   <div className="text-[11px] text-slate-600 dark:text-zinc-300 mt-1">
                     {line.itemName || "Item"}
                   </div>
-                  <div className="mt-1 flex justify-between font-mono text-[11px] text-slate-700 dark:text-zinc-300">
+                  <div className="mt-1 flex justify-between  text-[11px] text-slate-700 dark:text-zinc-300">
                     <span>GW: {line.grossWt?.toFixed(3)}</span>
                     <span>NW: {line.netWt?.toFixed(3)}</span>
                     <span className="font-semibold text-amber-800 dark:text-amber-300">
