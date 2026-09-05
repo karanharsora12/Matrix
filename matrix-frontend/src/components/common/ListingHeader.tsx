@@ -103,12 +103,7 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
           {onExportExcel && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onExportExcel}
-                  className="h-9 w-9 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
-                >
+                <Button variant="outline" size="icon" onClick={onExportExcel}>
                   <FileSpreadsheet className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -118,12 +113,7 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
           {onExportPdf && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onExportPdf}
-                  className="h-9 w-9 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-                >
+                <Button variant="outline" size="icon" onClick={onExportPdf}>
                   <FileText className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -133,12 +123,7 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
           {onPrint && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onPrint}
-                  className="h-9 w-9 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20"
-                >
+                <Button variant="outline" size="icon" onClick={onPrint}>
                   <Printer className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -148,12 +133,7 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
           {onImport && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onImport}
-                  className="h-9 w-9 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/20"
-                >
+                <Button variant="outline" size="icon" onClick={onImport}>
                   <Download className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -163,12 +143,7 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
           {onRefresh && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onRefresh}
-                  className="h-9 w-9 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-                >
+                <Button variant="outline" size="icon" onClick={onRefresh}>
                   <RefreshCw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -178,6 +153,7 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
           {onAdd && (
             <Button
               onClick={onAdd}
+              variant="default"
               className="h-9 gap-1.5 font-semibold shadow-sm"
             >
               <Plus className="h-4 w-4" />
