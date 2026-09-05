@@ -22,4 +22,7 @@ export const WEB_ROUTES = {
       DAYBOOKS: "/master/other-master/daybooks",
     },
   },
+  TRANSACTION: {
+    SALES: "/transactions/customer-in-out/sales",
+  },
 };

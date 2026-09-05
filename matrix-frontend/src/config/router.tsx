@@ -12,6 +12,7 @@ import AccountForm from "../pages/master/accounts/AccountForm";
 import DaybookGroups from "../pages/master/other-master/DaybookGroups";
 import Daybooks from "../pages/master/other-master/Daybooks";
 import NotFound from "../pages/NotFound";
+import Sales from "../pages/transaction/customer-in-out/sales/Sales";
 import { WEB_ROUTES } from "./webRoutes";
 
 export const router = createBrowserRouter([
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
           {
             path: WEB_ROUTES.MASTER.OTHER_MASTER.DAYBOOKS,
             element: <Daybooks />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.SALES,
+            element: <Sales />,
           },
         ],
       },

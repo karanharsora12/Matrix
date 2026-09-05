@@ -1,4 +1,5 @@
 import apiClient from "@/api/client";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,7 +92,7 @@ export function Sidebar() {
   useEffect(() => {
     const fetchMenus = async () => {
       try {
-        const response = await apiClient.get("/menus");
+        const response = await apiClient.get(API_ENDPOINTS.MENUS.BASE);
         setMenus(response.data);
       } catch (error) {
         console.error("Failed to fetch menus", error);
@@ -199,12 +200,6 @@ export function Sidebar() {
               <span className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white">
                 MATRIX
               </span>
-              <Badge
-                variant="secondary"
-                className="h-5 px-1.5 text-[10px] font-medium"
-              >
-                ERP
-              </Badge>
             </div>
           )}
         </div>

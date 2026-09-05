@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "./client";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 
 export interface Metal {
   id: number;
@@ -70,32 +71,42 @@ export const getMasterData = async (): Promise<{
   daybookGroups: DaybookGroup[];
   daybooks: Daybook[];
 }> => {
-  const { data } = await apiClient.get<ApiResponse<any>>("/inventory/master-data");
+  const { data } = await apiClient.get<ApiResponse<any>>(
+    API_ENDPOINTS.INVENTORY.MASTER_DATA,
+  );
   return data.data;
 };
 
 export const getItemGroups = async (): Promise<ApiResponse<ItemGroup[]>> => {
-  const { data } = await apiClient.get<ApiResponse<ItemGroup[]>>("/inventory/item-groups");
+  const { data } = await apiClient.get<ApiResponse<ItemGroup[]>>(
+    API_ENDPOINTS.INVENTORY.ITEM_GROUPS,
+  );
   return data;
 };
 
 export const createItemGroup = async (
-  group: Omit<ItemGroup, "id">
+  group: Omit<ItemGroup, "id">,
 ): Promise<ItemGroup> => {
-  const { data } = await apiClient.post<ApiResponse<ItemGroup>>("/inventory/item-groups", group);
+  const { data } = await apiClient.post<ApiResponse<ItemGroup>>(
+    API_ENDPOINTS.INVENTORY.ITEM_GROUPS,
+    group,
+  );
   return data.data;
 };
 
 export const updateItemGroup = async (
   id: number,
-  group: Partial<ItemGroup>
+  group: Partial<ItemGroup>,
 ): Promise<ItemGroup> => {
-  const { data } = await apiClient.put<ApiResponse<ItemGroup>>(`/inventory/item-groups/${id}`, group);
+  const { data } = await apiClient.put<ApiResponse<ItemGroup>>(
+    API_ENDPOINTS.INVENTORY.ITEM_GROUP_BY_ID(id),
+    group,
+  );
   return data.data;
 };
 
 export const deleteItemGroup = async (id: number): Promise<void> => {
-  await apiClient.delete(`/inventory/item-groups/${id}`);
+  await apiClient.delete(API_ENDPOINTS.INVENTORY.ITEM_GROUP_BY_ID(id));
 };
 
 export const useItemGroups = () => {
@@ -136,12 +147,6 @@ export const useDeleteItemGroup = () => {
   });
 };
 
-export interface Attribute {
-  id: number;
-  attributeNameId: number;
-  attributeValue: string;
-}
-
 export interface Item {
   id: number;
   itemName: string;
@@ -151,22 +156,33 @@ export interface Item {
 }
 
 export const getItems = async (): Promise<ApiResponse<Item[]>> => {
-  const { data } = await apiClient.get<ApiResponse<Item[]>>("/inventory/items");
+  const { data } = await apiClient.get<ApiResponse<Item[]>>(
+    API_ENDPOINTS.INVENTORY.ITEMS,
+  );
   return data;
 };
 
 export const createItem = async (item: Omit<Item, "id">): Promise<Item> => {
-  const { data } = await apiClient.post<ApiResponse<Item>>("/inventory/items", item);
+  const { data } = await apiClient.post<ApiResponse<Item>>(
+    API_ENDPOINTS.INVENTORY.ITEMS,
+    item,
+  );
   return data.data;
 };
 
-export const updateItem = async (id: number, item: Partial<Item>): Promise<Item> => {
-  const { data } = await apiClient.put<ApiResponse<Item>>(`/inventory/items/${id}`, item);
+export const updateItem = async (
+  id: number,
+  item: Partial<Item>,
+): Promise<Item> => {
+  const { data } = await apiClient.put<ApiResponse<Item>>(
+    API_ENDPOINTS.INVENTORY.ITEM_BY_ID(id),
+    item,
+  );
   return data.data;
 };
 
 export const deleteItem = async (id: number): Promise<void> => {
-  await apiClient.delete(`/inventory/items/${id}`);
+  await apiClient.delete(API_ENDPOINTS.INVENTORY.ITEM_BY_ID(id));
 };
 
 export const useItems = () => {

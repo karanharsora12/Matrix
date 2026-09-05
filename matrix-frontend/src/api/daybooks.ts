@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "./client";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import type { ApiResponse } from "./inventory";
 
 export interface DaybookGroup {
@@ -25,8 +26,9 @@ export interface Daybook {
 export const getDaybookGroups = async (): Promise<
   ApiResponse<DaybookGroup[]>
 > => {
-  const { data } =
-    await apiClient.get<ApiResponse<DaybookGroup[]>>("/daybooks/groups");
+  const { data } = await apiClient.get<ApiResponse<DaybookGroup[]>>(
+    API_ENDPOINTS.DAYBOOKS.GROUPS,
+  );
   return data;
 };
 
@@ -34,7 +36,7 @@ export const createDaybookGroup = async (
   group: Omit<DaybookGroup, "id">,
 ): Promise<DaybookGroup> => {
   const { data } = await apiClient.post<ApiResponse<DaybookGroup>>(
-    "/daybooks/groups",
+    API_ENDPOINTS.DAYBOOKS.GROUPS,
     group,
   );
   return data.data;
@@ -45,14 +47,14 @@ export const updateDaybookGroup = async (
   group: Partial<DaybookGroup>,
 ): Promise<DaybookGroup> => {
   const { data } = await apiClient.put<ApiResponse<DaybookGroup>>(
-    `/daybooks/groups/${id}`,
+    API_ENDPOINTS.DAYBOOKS.GROUP_BY_ID(id),
     group,
   );
   return data.data;
 };
 
 export const deleteDaybookGroup = async (id: number): Promise<void> => {
-  await apiClient.delete(`/daybooks/groups/${id}`);
+  await apiClient.delete(API_ENDPOINTS.DAYBOOKS.GROUP_BY_ID(id));
 };
 
 export const useDaybookGroups = () => {
@@ -95,7 +97,9 @@ export const useDeleteDaybookGroup = () => {
 
 // --- Daybooks API ---
 export const getDaybooks = async (): Promise<ApiResponse<Daybook[]>> => {
-  const { data } = await apiClient.get<ApiResponse<Daybook[]>>("/daybooks");
+  const { data } = await apiClient.get<ApiResponse<Daybook[]>>(
+    API_ENDPOINTS.DAYBOOKS.BASE,
+  );
   return data;
 };
 
@@ -103,7 +107,7 @@ export const createDaybook = async (
   daybook: Omit<Daybook, "id">,
 ): Promise<Daybook> => {
   const { data } = await apiClient.post<ApiResponse<Daybook>>(
-    "/daybooks",
+    API_ENDPOINTS.DAYBOOKS.BASE,
     daybook,
   );
   return data.data;
@@ -114,14 +118,14 @@ export const updateDaybook = async (
   daybook: Partial<Daybook>,
 ): Promise<Daybook> => {
   const { data } = await apiClient.put<ApiResponse<Daybook>>(
-    `/daybooks/${id}`,
+    API_ENDPOINTS.DAYBOOKS.BY_ID(id),
     daybook,
   );
   return data.data;
 };
 
 export const deleteDaybook = async (id: number): Promise<void> => {
-  await apiClient.delete(`/daybooks/${id}`);
+  await apiClient.delete(API_ENDPOINTS.DAYBOOKS.BY_ID(id));
 };
 
 export const useDaybooks = () => {

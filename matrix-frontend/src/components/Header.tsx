@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import type { RootState } from "@/store";
 import { logout } from "@/store/authSlice";
 import apiClient from "@/api/client";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { Bell, HelpCircle, LogOut, Search, Settings, User } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -31,7 +32,7 @@ export function Header() {
   useEffect(() => {
     const fetchMenus = async () => {
       try {
-        const response = await apiClient.get("/menus");
+        const response = await apiClient.get(API_ENDPOINTS.MENUS.BASE);
         setMenus(response.data);
       } catch (error) {
         console.error("Failed to fetch menus", error);

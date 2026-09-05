@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "./client";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 
 export interface AccountType {
   id: number;
@@ -39,37 +40,52 @@ export const getAccountMasterData = async (): Promise<{
   accountTypes: AccountType[];
   accountGroups: AccountGroup[];
 }> => {
-  const { data } = await apiClient.get<ApiResponse<{ accountTypes: AccountType[]; accountGroups: AccountGroup[] }>>("/accounts/master-data");
+  const { data } = await apiClient.get<
+    ApiResponse<{
+      accountTypes: AccountType[];
+      accountGroups: AccountGroup[];
+    }>
+  >(API_ENDPOINTS.ACCOUNTS.MASTER_DATA);
   return data.data;
 };
 
 export const getAccounts = async (): Promise<ApiResponse<Account[]>> => {
-  const { data } = await apiClient.get<ApiResponse<Account[]>>("/accounts");
+  const { data } = await apiClient.get<ApiResponse<Account[]>>(
+    API_ENDPOINTS.ACCOUNTS.BASE,
+  );
   return data;
 };
 
 export const getAccount = async (id: number): Promise<Account> => {
-  const { data } = await apiClient.get<ApiResponse<Account>>(`/accounts/${id}`);
+  const { data } = await apiClient.get<ApiResponse<Account>>(
+    API_ENDPOINTS.ACCOUNTS.BY_ID(id),
+  );
   return data.data;
 };
 
 export const createAccount = async (
-  account: Omit<Account, "id">
+  account: Omit<Account, "id">,
 ): Promise<Account> => {
-  const { data } = await apiClient.post<ApiResponse<Account>>("/accounts", account);
+  const { data } = await apiClient.post<ApiResponse<Account>>(
+    API_ENDPOINTS.ACCOUNTS.BASE,
+    account,
+  );
   return data.data;
 };
 
 export const updateAccount = async (
   id: number,
-  account: Partial<Account>
+  account: Partial<Account>,
 ): Promise<Account> => {
-  const { data } = await apiClient.put<ApiResponse<Account>>(`/accounts/${id}`, account);
+  const { data } = await apiClient.put<ApiResponse<Account>>(
+    API_ENDPOINTS.ACCOUNTS.BY_ID(id),
+    account,
+  );
   return data.data;
 };
 
 export const deleteAccount = async (id: number): Promise<void> => {
-  await apiClient.delete(`/accounts/${id}`);
+  await apiClient.delete(API_ENDPOINTS.ACCOUNTS.BY_ID(id));
 };
 
 export const useAccountMasterData = () => {
