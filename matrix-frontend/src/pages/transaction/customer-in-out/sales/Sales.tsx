@@ -1,5 +1,9 @@
 import { useAccounts } from "@/api/accounts";
-import { useDaybooks, useDaybookGroups, generateVoucherNo } from "@/api/daybooks";
+import {
+  useDaybooks,
+  useDaybookGroups,
+  generateVoucherNo,
+} from "@/api/daybooks";
 import { useItemGroups, useItems } from "@/api/inventory";
 import {
   useCreateSale,
@@ -1000,9 +1004,6 @@ export const Sales: React.FC = () => {
                   Voucher Information
                 </h2>
               </div>
-              <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
-                F2 Lookup
-              </span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
