@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq , sql, gt } from "drizzle-orm";
 import { db } from "../db";
 import { accounts, accountTypes, accountGroups } from "../db/schema";
 
@@ -14,9 +14,28 @@ export class AccountService {
     };
   }
 
-  async getAccounts() {
-    return await db.select().from(accounts).orderBy(accounts.id);
-  }
+async getAccounts(limit: number, cursor?: number) {
+  const query = db
+    .select()
+    .from(accounts)
+    .orderBy(accounts.id)
+    .limit(limit + 1); // fetch one extra to know if there's more
+
+  const rows = cursor
+    ? await query.where(gt(accounts.id, cursor))
+    : await query;
+
+  const hasMore = rows.length > limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore ? data[data.length - 1]?.id ?? null : null;
+
+  return { data, nextCursor, hasMore };
+}
+
+async getAccountsCount() {
+  const result = await db.select({ count: sql<number>`count(*)` }).from(accounts);
+  return Number(result[0]?.count ?? 0);
+}
 
   async getAccountById(id: number) {
     const [account] = await db

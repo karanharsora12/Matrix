@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "./client";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 
@@ -36,6 +36,19 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+// New: matches the paginated backend response shape (nextCursor/hasMore)
+export interface PaginatedResponse<T> {
+  success: boolean;
+  data: T;
+  pagination: {
+    nextCursor: number | null;
+    hasMore: boolean;
+    limit: number;
+  };
+  error?: string;
+  message?: string;
+}
+
 export const getAccountMasterData = async (): Promise<{
   accountTypes: AccountType[];
   accountGroups: AccountGroup[];
@@ -49,9 +62,19 @@ export const getAccountMasterData = async (): Promise<{
   return data.data;
 };
 
-export const getAccounts = async (): Promise<ApiResponse<Account[]>> => {
-  const { data } = await apiClient.get<ApiResponse<Account[]>>(
+// Updated: now accepts optional cursor/limit, returns pagination info
+export const getAccounts = async (params?: {
+  cursor?: number;
+  limit?: number;
+}): Promise<PaginatedResponse<Account[]>> => {
+  const { data } = await apiClient.get<PaginatedResponse<Account[]>>(
     API_ENDPOINTS.ACCOUNTS.BASE,
+    {
+      params: {
+        limit: params?.limit ?? 20,
+        ...(params?.cursor !== undefined ? { cursor: params.cursor } : {}),
+      },
+    },
   );
   return data;
 };
@@ -95,10 +118,17 @@ export const useAccountMasterData = () => {
   });
 };
 
-export const useAccounts = () => {
-  return useQuery({
+// Updated: useAccounts is now a cursor-based infinite query.
+// BREAKING CHANGE: callers now get { data: { pages, pageParams }, fetchNextPage, hasNextPage, ... }
+// instead of { data: ApiResponse<Account[]> }. Check for other usages before merging.
+export const useAccounts = (limit = 20) => {
+  return useInfiniteQuery({
     queryKey: ["accounts"],
-    queryFn: getAccounts,
+    queryFn: ({ pageParam }) =>
+      getAccounts({ cursor: pageParam as number | undefined, limit }),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination.hasMore ? lastPage.pagination.nextCursor ?? undefined : undefined,
   });
 };
 

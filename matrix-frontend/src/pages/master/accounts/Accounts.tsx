@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ListingHeader } from "@/components/common/ListingHeader";
@@ -12,7 +12,7 @@ import {
   useAccountMasterData,
 } from "@/api/accounts";
 import type { Account } from "@/api/accounts";
-import type { ColDef } from "ag-grid-community";
+import type { ColDef, BodyScrollEvent } from "ag-grid-community";
 import { WEB_ROUTES } from "@/config/webRoutes";
 
 const Accounts: React.FC = () => {
@@ -21,9 +21,20 @@ const Accounts: React.FC = () => {
   const { gridRef, onExportExcel, onExportPdf, onPrint } = useGridActions();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: accountsResponse, isLoading } = useAccounts();
-  const accounts = accountsResponse?.data || [];
-  const accountsSummary: any = accountsResponse?.summary || [];
+  const {
+    data: accountsResponse,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAccounts();
+
+  // Flatten all loaded pages into one array for the grid
+  const accounts = useMemo(
+    () => accountsResponse?.pages.flatMap((page) => page.data) ?? [],
+    [accountsResponse],
+  );
+
   const { data: masterData } = useAccountMasterData();
   const deleteMutation = useDeleteAccount();
 
@@ -53,6 +64,21 @@ const Accounts: React.FC = () => {
       deleteMutation.mutate(id);
     }
   };
+
+  const handleBodyScroll = useCallback(
+    (e: BodyScrollEvent) => {
+      if (!hasNextPage || isFetchingNextPage) return;
+
+      const api = e.api;
+      const lastRowIndex = api.getLastDisplayedRowIndex();
+      const totalRows = api.getDisplayedRowCount();
+
+      if (lastRowIndex >= totalRows - 10) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage],
+  );
 
   const columnDefs = useMemo<ColDef[]>(() => {
     return [
@@ -148,15 +174,21 @@ const Accounts: React.FC = () => {
           ref={gridRef}
           rowData={filteredData}
           columnDefs={columnDefs}
-          pinnedBottomRowData={accountsSummary}
           gridOptions={{
+            getRowId: (params) => String(params.data.id),
             onRowDoubleClicked: (e) => {
               if (e.node.rowPinned) return;
               handleEdit(e.data);
             },
+            onBodyScroll: handleBodyScroll,
             pagination: false,
           }}
         />
+      )}
+      {isFetchingNextPage && (
+        <div className="text-center text-sm text-gray-500 py-2">
+          Loading more accounts...
+        </div>
       )}
     </div>
   );
