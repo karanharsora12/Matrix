@@ -1,22 +1,14 @@
 import { useDeleteSale, useSales } from "@/api/sales";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
-import { GridDeleteCell } from "@/components/common/GridDeleteCell";
 import { ListingHeader } from "@/components/common/ListingHeader";
-import { Badge } from "@/components/ui/badge";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import { useGridActions } from "@/hooks/useGridActions";
-import { buildRoute, cn, encodeURL } from "@/lib/utils";
+import { buildRoute, encodeURL } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const statusClasses: Record<string, string> = {
-  Posted: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Draft: "bg-amber-50 text-amber-700 border-amber-200",
-  Cancelled: "bg-rose-50 text-rose-700 border-rose-200",
-};
 
 const SalesList: React.FC = () => {
   const navigate = useNavigate();
