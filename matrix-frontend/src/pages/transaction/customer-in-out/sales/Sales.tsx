@@ -28,6 +28,11 @@ import {
   getDaybooksByMenu,
 } from "@/constants/enums";
 import { buildRoute, decodeURL, encodeURL } from "@/lib/utils";
+import {
+  calculateLineItemAmount,
+  calculateTransactionTotals,
+  getItemGroupUpdates,
+} from "@/utils/transactionCalculations";
 import type {
   CellValueChangedEvent,
   ColDef,
@@ -57,7 +62,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AmountInput, WeightInput } from "@/components/ui/numeric-input";
+import { AmountInput } from "@/components/ui/numeric-input";
 import {
   Select,
   SelectContent,
@@ -68,12 +73,12 @@ import {
 
 // Icons
 import { GridDeleteCell } from "@/components/common/GridDeleteCell";
+import type { RootState } from "@/store";
 import {
   Barcode,
   Building2,
   Calendar,
   CheckCircle2,
-  Clock,
   Coins,
   CreditCard,
   FileText,
@@ -88,7 +93,6 @@ import {
   User,
   Wallet,
 } from "lucide-react";
-import type { RootState } from "@/store";
 import { useSelector } from "react-redux";
 
 const BILL_MODES = [
@@ -107,7 +111,7 @@ const DEFAULT_LINE_ITEM: SaleLineItem = {
   itemGroupId: 0,
   itemGroupName: "",
   tagNo: "",
-  quantity: 1,
+  pcs: 1,
   uom: "GMS",
   grossWt: 0,
   netWt: 0,
@@ -373,60 +377,12 @@ export const Sales: React.FC = () => {
 
   // Calculations
   const calculatedTotals = useMemo(() => {
-    const lines = formData.itemLines || [];
-    let pcs = 0;
-    let grossWt = 0;
-    let netWt = 0;
-    let fineWt = 0;
-    let totalLabour = 0;
-    let totalLineDiscount = 0;
-    let subtotal = 0;
-
-    lines.forEach((line) => {
-      pcs += Number(line.quantity || 0);
-      grossWt += Number(line.grossWt || 0);
-      netWt += Number(line.netWt || 0);
-      fineWt += Number(line.fineWt || 0);
-      totalLabour += Number(line.labourAmount || 0);
-      totalLineDiscount += Number(line.discountAmount || 0);
-      subtotal += Number(line.amount || 0);
-    });
-
-    const taxRate = Number(formData.taxRate || 3);
-    const taxableAmount = Math.max(0, subtotal - couponDiscount);
-    const taxAmount = (taxableAmount * taxRate) / 100;
-    const rawTotal = taxableAmount + taxAmount;
-    const roundedTotal = Math.round(rawTotal);
-    const roundOff = Number((roundedTotal - rawTotal).toFixed(2));
-    const grandTotal = roundedTotal;
-
-    // Payments
-    const cash = Number(formData.cashAmount || 0);
-    const bank = Number(formData.bankAmount || 0);
-    const card = Number(formData.cardAmount || 0);
-    const advance = Number(formData.advanceAmount || 0);
-    const urd = Number(formData.urdAmount || 0);
-    const returns = Number(formData.salesReturnAmount || 0);
-    const kasar = Number(formData.kasarAmount || 0);
-    const gift = Number(formData.giftVoucherAmount || 0);
-    const totalPaid =
-      cash + bank + card + advance + urd + returns + kasar + gift;
-    const balanceDue = grandTotal - totalPaid;
-
-    return {
-      pcs,
-      grossWt: Number(grossWt.toFixed(3)),
-      netWt: Number(netWt.toFixed(3)),
-      fineWt: Number(fineWt.toFixed(3)),
-      totalLabour: Number(totalLabour.toFixed(2)),
-      totalLineDiscount: Number(totalLineDiscount.toFixed(2)),
-      subtotal: Number(subtotal.toFixed(2)),
-      taxAmount: Number(taxAmount.toFixed(2)),
-      roundOff,
-      grandTotal,
-      totalPaid,
-      balanceDue,
-    };
+    return calculateTransactionTotals(
+      formData.itemLines || [],
+      Number(formData.taxRate || 3),
+      couponDiscount,
+      formData,
+    );
   }, [
     formData.itemLines,
     formData.taxRate,
@@ -465,11 +421,16 @@ export const Sales: React.FC = () => {
       }));
 
       try {
-        const resp = await generateVoucherNo(dbId);
+        const resp = await generateVoucherNo({
+          daybookId: dbId,
+          daybookGroupId: db?.daybookGroupId,
+          tableName: "sales",
+        });
         if (resp.success && resp.data?.voucherNo) {
           setFormData((prev) => ({
             ...prev,
             voucherNo: resp.data.voucherNo,
+            srNo: resp.data.srNo,
           }));
         }
       } catch (err) {
@@ -477,7 +438,7 @@ export const Sales: React.FC = () => {
         const prefix = db?.voucherPrefix || "INV";
         setFormData((prev) => ({
           ...prev,
-          voucherNo: `${prefix}-${Math.floor(100 + Math.random() * 900)}`,
+          voucherNo: `${prefix}-1`,
         }));
       }
     },
@@ -508,39 +469,26 @@ export const Sales: React.FC = () => {
         }
 
         // Auto-calculate line amount based on rateType
-        const rate = Number(current.rate || 0);
-        const labour = Number(current.labourAmount || 0);
-        const other = Number(current.otherAmount || 0);
-        const discount = Number(current.discountAmount || 0);
+        const updatedLine = calculateLineItemAmount(current, field);
+        updatedLines[index] = updatedLine;
+        return { ...prev, itemLines: updatedLines };
+      });
+    },
+    [],
+  );
 
-        let baseAmount = 0;
-        if (current.rateType === "Per Piece") {
-          baseAmount = (current.quantity || 1) * rate;
-        } else if (current.rateType === "Flat / Fixed") {
-          baseAmount = rate;
-        } else {
-          const wt = Number(current.netWt || 0);
-          baseAmount = (wt > 0 ? wt : current.quantity || 1) * rate;
-        }
+  const applyLineItemUpdates = useCallback(
+    (index: number, updates: Partial<SaleLineItem>) => {
+      setFormData((prev) => {
+        const updatedLines = [...(prev.itemLines || [])];
+        if (!updatedLines[index]) return prev;
 
-        current.amount = Math.max(
-          0,
-          Math.round(baseAmount + labour + other - discount),
-        );
+        let current = { ...updatedLines[index], ...updates };
 
-        if (field === "purity" || field === "netWt") {
-          const net = Number(current.netWt || 0);
-          if (current.purity?.includes("91.6")) {
-            current.fineWt = Number((net * 0.916).toFixed(3));
-          } else if (current.purity?.includes("75.0")) {
-            current.fineWt = Number((net * 0.75).toFixed(3));
-          } else if (current.purity?.includes("99.9")) {
-            current.fineWt = Number((net * 0.999).toFixed(3));
-          } else if (current.purity?.includes("92.5")) {
-            current.fineWt = Number((net * 0.925).toFixed(3));
-          }
-        }
+        if (updates.itemCode !== undefined) current.tagNo = updates.itemCode;
+        if (updates.tagNo !== undefined) current.itemCode = updates.tagNo;
 
+        current = calculateLineItemAmount(current);
         updatedLines[index] = current;
         return { ...prev, itemLines: updatedLines };
       });
@@ -603,22 +551,20 @@ export const Sales: React.FC = () => {
       id: `line-${Date.now()}`,
       itemCode: searchTag.toUpperCase(),
       tagNo: searchTag.toUpperCase(),
-      itemId: matchedItem?.id || 1,
+      itemId: matchedItem?.id || 0,
       itemName: matchedItem?.itemName || `Item ${searchTag}`,
-      itemGroupId: 1,
-      itemGroupName: "Gold Jewellery",
-      quantity: 1,
-      uom: "GMS",
-      grossWt: 10.5,
-      netWt: 10.2,
-      fineWt: 9.34,
-      purity: "91.6 (22K)",
-      rate: 7250,
-      rateType: "Per Gram",
-      labourAmount: 3500,
+      itemGroupId: 0,
+      itemGroupName: "",
+      pcs: 0,
+      uom: "",
+      grossWt: 0,
+      netWt: 0,
+      rate: 0,
+      rateType: "",
+      labourAmount: 0,
       discountAmount: 0,
-      tax: "3%",
-      amount: 77450,
+      tax: "",
+      amount: 0,
     };
 
     setFormData((prev) => ({
@@ -640,14 +586,8 @@ export const Sales: React.FC = () => {
       if (field === "itemGroupName") {
         const grp = itemGroups.find((g) => g.itemGroupName === value);
         if (grp) {
-          handleLineItemChange(rowIndex, "itemGroupId", grp.id);
-          handleLineItemChange(rowIndex, "itemGroupName", grp.itemGroupName);
-          if (grp.salesRate) {
-            handleLineItemChange(rowIndex, "rate", grp.salesRate);
-          }
-          if (grp.measureUnitCode) {
-            handleLineItemChange(rowIndex, "uom", grp.measureUnitCode);
-          }
+          const updates = getItemGroupUpdates(grp, rateTypes, "sales");
+          applyLineItemUpdates(rowIndex, updates);
           return;
         }
       }
@@ -663,17 +603,17 @@ export const Sales: React.FC = () => {
 
       if (
         [
-          "quantity",
+          "pcs",
           "grossWt",
           "netWt",
-          "fineWt",
           "rate",
           "labourAmount",
           "otherAmount",
           "discountAmount",
         ].includes(field as string)
       ) {
-        value = Number(value || 0);
+        const parsed = parseFloat(String(value ?? ""));
+        value = isNaN(parsed) ? 0 : parsed;
       }
 
       handleLineItemChange(rowIndex, field, value);
@@ -754,13 +694,18 @@ export const Sales: React.FC = () => {
         },
       },
       {
-        headerName: "Qty",
-        field: "quantity",
+        headerName: "Pcs",
+        field: "pcs",
         width: 80,
         type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
         cellEditor: "agNumberCellEditor",
         cellEditorParams: { min: 1, step: 1 },
+        valueParser: (params) => {
+          if (params.newValue === "" || params.newValue == null) return 1;
+          const n = parseInt(params.newValue, 10);
+          return isNaN(n) ? 1 : n;
+        },
         valueFormatter: (p) =>
           p.value != null && p.value !== "" ? String(p.value) : "",
       },
@@ -782,17 +727,28 @@ export const Sales: React.FC = () => {
         width: 110,
         type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: WeightInput,
-        cellEditorParams: { min: 0, step: 0.001 },
+        cellEditor: "agNumberCellEditor",
+        cellEditorParams: { min: 0, step: 0.001, precision: 3 },
+        valueParser: (params) => {
+          if (params.newValue === "" || params.newValue == null) return 0;
+          const n = parseFloat(params.newValue);
+          return isNaN(n) ? 0 : n;
+        },
+        valueFormatter: (p) =>
+          p.value != null && p.value !== "" && !isNaN(Number(p.value))
+            ? Number(p.value).toFixed(3)
+            : "",
       },
       {
         headerName: "Net Wt.",
         field: "netWt",
         width: 110,
         type: "numericColumn",
-        editable: (p) => !p.node?.rowPinned,
-        cellEditor: WeightInput,
-        cellEditorParams: { min: 0, step: 0.001 },
+        editable: false,
+        valueFormatter: (p) =>
+          p.value != null && p.value !== "" && !isNaN(Number(p.value))
+            ? Number(p.value).toFixed(3)
+            : "",
       },
       {
         headerName: "Rate (₹)",
@@ -800,7 +756,17 @@ export const Sales: React.FC = () => {
         width: 115,
         type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: AmountInput,
+        cellEditor: "agNumberCellEditor",
+        cellEditorParams: { min: 0, step: 0.01, precision: 2 },
+        valueParser: (params) => {
+          if (params.newValue === "" || params.newValue == null) return 0;
+          const n = parseFloat(params.newValue);
+          return isNaN(n) ? 0 : n;
+        },
+        valueFormatter: (p) =>
+          p.value != null && p.value !== "" && !isNaN(Number(p.value))
+            ? Number(p.value).toFixed(2)
+            : "",
       },
       {
         headerName: "Rate Type",
@@ -827,7 +793,17 @@ export const Sales: React.FC = () => {
         width: 115,
         type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: AmountInput,
+        cellEditor: "agNumberCellEditor",
+        cellEditorParams: { min: 0, step: 0.01, precision: 2 },
+        valueParser: (params) => {
+          if (params.newValue === "" || params.newValue == null) return 0;
+          const n = parseFloat(params.newValue);
+          return isNaN(n) ? 0 : n;
+        },
+        valueFormatter: (p) =>
+          p.value != null && p.value !== "" && !isNaN(Number(p.value))
+            ? Number(p.value).toFixed(2)
+            : "",
       },
       {
         headerName: "Amount (₹)",
@@ -835,14 +811,15 @@ export const Sales: React.FC = () => {
         width: 135,
         type: "numericColumn",
         editable: false,
+        valueFormatter: (p) =>
+          p.value != null && p.value !== "" && !isNaN(Number(p.value))
+            ? Number(p.value).toFixed(2)
+            : "",
       },
       {
         headerName: "",
-        width: 85,
+        width: 60,
         pinned: "right",
-        sortable: false,
-        filter: false,
-        resizable: false,
         cellRenderer: (params) => {
           if (params.node?.rowPinned) return null;
           return (
@@ -863,7 +840,7 @@ export const Sales: React.FC = () => {
       {
         itemGroupName: "TOTAL",
         itemName: "",
-        quantity: calculatedTotals.pcs,
+        pcs: calculatedTotals.pcs,
         uom: "",
         grossWt: calculatedTotals.grossWt.toFixed(3),
         netWt: calculatedTotals.netWt.toFixed(3),
@@ -896,45 +873,11 @@ export const Sales: React.FC = () => {
   // Item Group Selection for Grid Line Item
   const handleSelectItemGroupForRow = useCallback(
     (rowIndex: number, grp: any) => {
-      console.log(grp);
-      setFormData((prev) => {
-        const lines = [...(prev.itemLines || [])];
-        if (!lines[rowIndex]) return prev;
-        const current = { ...lines[rowIndex] };
-        current.itemGroupId = grp.id;
-        current.itemGroupName = grp.itemGroupName;
-        if (grp.salesRate) {
-          current.rate = Number(grp.salesRate);
-        }
-        if (grp.measureUnitCode) {
-          current.uom = grp.measureUnitCode;
-        }
-
-        const rate = Number(current.rate || 0);
-        const labour = Number(current.labourAmount || 0);
-        const other = Number(current.otherAmount || 0);
-        const discount = Number(current.discountAmount || 0);
-
-        let baseAmount = 0;
-        if (current.rateType === "Per Piece") {
-          baseAmount = (current.quantity || 1) * rate;
-        } else if (current.rateType === "Flat / Fixed") {
-          baseAmount = rate;
-        } else {
-          const wt = Number(current.netWt || 0);
-          baseAmount = (wt > 0 ? wt : current.quantity || 1) * rate;
-        }
-
-        current.amount = Math.max(
-          0,
-          Math.round(baseAmount + labour + other - discount),
-        );
-
-        lines[rowIndex] = current;
-        return { ...prev, itemLines: lines };
-      });
+      if (!grp) return;
+      const updates = getItemGroupUpdates(grp, rateTypes, "sales");
+      applyLineItemUpdates(rowIndex, updates);
     },
-    [],
+    [rateTypes, applyLineItemUpdates],
   );
 
   // Item Selection for Grid Line Item
@@ -965,6 +908,7 @@ export const Sales: React.FC = () => {
 
     const payload: Omit<Sale, "id"> = {
       voucherNo: formData.voucherNo || "INV-001",
+      srNo: formData.srNo,
       voucherDate:
         formData.voucherDate || new Date().toISOString().slice(0, 10),
       daybookId: formData.daybookId || 1,
@@ -1043,11 +987,14 @@ export const Sales: React.FC = () => {
   };
 
   const handleClear = () => {
+    const defaultDb = daybooks[0];
+    const defaultDbId = defaultDb?.id || 1;
     setFormData({
-      voucherNo: `HRIA-${Math.floor(200 + Math.random() * 800)}`,
+      voucherNo: "",
+      srNo: undefined,
       voucherDate: new Date().toISOString().slice(0, 10),
-      daybookId: 1,
-      daybookName: "RETAIL INVOICE",
+      daybookId: defaultDbId,
+      daybookName: defaultDb?.daybookName || "RETAIL INVOICE",
       reference: "",
       remarks: "",
       salesmanName: "Amit Verma",
@@ -1067,6 +1014,7 @@ export const Sales: React.FC = () => {
       isActive: true,
     });
     setCouponDiscount(0);
+    handleSelectDaybook(String(defaultDbId));
   };
 
   const handleDelete = async () => {
@@ -1283,7 +1231,7 @@ export const Sales: React.FC = () => {
                   }
                   placement="bottom-end"
                   apiEndpoint={API_ENDPOINTS.ACCOUNTS.BASE}
-                  columnDefs={accountDropdownColumns}
+                  columns={accountDropdownColumns}
                   onSelect={handleSelectCustomer}
                   searchPlaceholder="Search accounts..."
                 />
@@ -1454,10 +1402,6 @@ export const Sales: React.FC = () => {
                 >
                   KYC Docs
                 </button>
-              </div>
-              <div className="flex items-center gap-1 text-[11px] text-slate-400">
-                <Clock className="h-3 w-3" />
-                <span>GST: 3%</span>
               </div>
             </div>
 
@@ -1630,8 +1574,6 @@ export const Sales: React.FC = () => {
               gridOptions={{
                 pagination: false,
                 singleClickEdit: true,
-                rowHeight: 38,
-                headerHeight: 38,
                 onCellValueChanged: handleCellValueChanged,
                 getRowId: (params) => params.data.id,
                 defaultColDef: {

@@ -214,14 +214,30 @@ export class DaybookController {
 
   async generateVoucherNo(req: Request, res: Response) {
     try {
-      const id = parseInt((req.params.id || req.body?.daybookId) as string);
-      if (isNaN(id)) {
-        return res
-          .status(400)
-          .json({ success: false, error: "Invalid Daybook ID" });
+      const rawDaybookId = req.body?.daybookId;
+      const rawDaybookGroupId = req.body?.daybookGroupId;
+      const rawTableName = req.body?.tableName;
+
+      const daybookId = rawDaybookId
+        ? parseInt(String(rawDaybookId), 10)
+        : undefined;
+      const daybookGroupId = rawDaybookGroupId
+        ? parseInt(String(rawDaybookGroupId), 10)
+        : undefined;
+
+      if (!daybookId && !daybookGroupId) {
+        return res.status(400).json({
+          success: false,
+          error: "daybookId or daybookGroupId is required",
+        });
       }
 
-      const result = await daybookService.generateVoucherNo(id);
+      const result = await daybookService.generateVoucherNo({
+        daybookId,
+        daybookGroupId,
+        tableName: String(rawTableName),
+      });
+
       res.json({ success: true, data: result });
     } catch (error: any) {
       console.error("Error generating voucher number:", error);

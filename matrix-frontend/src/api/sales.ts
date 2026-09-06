@@ -10,7 +10,7 @@ export interface SaleLineItem {
   itemGroupId?: number;
   itemGroupName?: string;
   tagNo?: string;
-  quantity: number;
+  pcs: number;
   uom?: string;
   weight?: number;
   grossWt?: number;
@@ -29,6 +29,7 @@ export interface SaleLineItem {
 export interface Sale {
   id: number;
   voucherNo: string;
+  srNo?: number;
   voucherDate: string;
   daybookId?: number;
   daybookName?: string;

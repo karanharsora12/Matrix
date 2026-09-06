@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   sales,
@@ -52,15 +52,29 @@ export class SalesService {
     return await db.transaction(async (tx) => {
       const { itemLines, ...saleData } = data;
 
+      let srNo = saleData.srNo ? Number(saleData.srNo) : undefined;
+      if (!srNo && saleData.daybookId) {
+        const [maxRow] = await tx
+          .select({ maxSr: sql<number>`COALESCE(MAX(sr_no), 0)` })
+          .from(sales)
+          .where(eq(sales.daybookId, saleData.daybookId));
+        srNo = Number(maxRow?.maxSr || 0) + 1;
+      }
+
       // Insert sale header
       const [newSale] = await tx
         .insert(sales)
         .values({
           ...saleData,
+          srNo,
           voucherDate: new Date(saleData.voucherDate),
           dueDate: saleData.dueDate ? new Date(saleData.dueDate) : undefined,
         })
         .returning();
+
+      if (!newSale) {
+        throw new Error("Failed to create sale header");
+      }
 
       if (itemLines && itemLines.length > 0) {
         const itemsToInsert = itemLines.map((item: any) => ({

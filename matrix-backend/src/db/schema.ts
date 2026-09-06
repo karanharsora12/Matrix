@@ -160,6 +160,7 @@ export const daybooks = pgTable("daybooks", {
 export const sales = pgTable("sales", {
   id: serial("id").primaryKey(),
   voucherNo: varchar("voucher_no", { length: 256 }).notNull().unique(),
+  srNo: integer("sr_no"),
   voucherDate: timestamp("voucher_date").notNull(),
   daybookId: integer("daybook_id").references((): AnyPgColumn => daybooks.id),
   accountId: integer("account_id").references((): AnyPgColumn => accounts.id),

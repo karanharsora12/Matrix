@@ -166,17 +166,31 @@ export const useDeleteDaybook = () => {
   });
 };
 
+export interface GenerateVoucherNoParams {
+  daybookId?: number;
+  daybookGroupId?: number;
+  tableName?: string;
+}
+
 export interface VoucherNoResponse {
   voucherNo: string;
+  srNo: number;
   daybookId: number;
+  daybookGroupId?: number;
   voucherPrefix: string;
+  tableName?: string;
 }
 
 export const generateVoucherNo = async (
-  daybookId: number,
+  params: GenerateVoucherNoParams | number,
 ): Promise<ApiResponse<VoucherNoResponse>> => {
-  const { data } = await apiClient.get<ApiResponse<VoucherNoResponse>>(
-    API_ENDPOINTS.DAYBOOKS.GENERATE_VOUCHER_NO(daybookId),
+  const payload =
+    typeof params === "number"
+      ? { daybookId: params, tableName: "sales" }
+      : { tableName: "sales", ...params };
+  const { data } = await apiClient.post<ApiResponse<VoucherNoResponse>>(
+    API_ENDPOINTS.DAYBOOKS.GENERATE_VOUCHER_NO,
+    payload,
   );
   return data;
 };

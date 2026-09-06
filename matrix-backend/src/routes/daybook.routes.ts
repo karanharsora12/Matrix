@@ -28,7 +28,7 @@ router.delete(
 router.get("/", daybookController.getDaybooks.bind(daybookController));
 router.get("/:id", daybookController.getDaybookById.bind(daybookController));
 router.get(
-  "/:id/generate-voucher-no",
+  "/generate-voucher-no",
   daybookController.generateVoucherNo.bind(daybookController),
 );
 router.post(

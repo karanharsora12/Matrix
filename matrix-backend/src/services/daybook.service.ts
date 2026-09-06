@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { daybookGroups, daybooks } from "../db/schema";
 
@@ -74,20 +74,76 @@ export class DaybookService {
     return deleted;
   }
 
-  async generateVoucherNo(daybookId: number) {
-    const daybook = await this.getDaybookById(daybookId);
+  async generateVoucherNo(params: {
+    daybookId?: number | undefined;
+    daybookGroupId?: number | undefined;
+    tableName?: string | undefined;
+  }) {
+    let daybook: any = null;
+    if (params.daybookId) {
+      daybook = await this.getDaybookById(params.daybookId);
+    } else if (params.daybookGroupId) {
+      const [firstDaybook] = await db
+        .select()
+        .from(daybooks)
+        .where(
+          and(
+            eq(daybooks.daybookGroupId, params.daybookGroupId),
+            eq(daybooks.isActive, true),
+          ),
+        )
+        .limit(1);
+      daybook = firstDaybook;
+    }
+
     if (!daybook) {
       throw new Error("Daybook not found");
     }
 
-    const prefix = daybook.voucherPrefix || "VCH";
-    const randomNum = Math.floor(100 + Math.random() * 900);
-    const voucherNo = `${prefix}-${randomNum}`;
+    const prefix = (daybook.voucherPrefix || "VCH").trim();
+    const rawTableName = (params.tableName || "sales").trim().toLowerCase();
+
+    // Sanitize table name against safe identifier pattern
+    if (!/^[a-zA-Z0-9_]+$/.test(rawTableName)) {
+      throw new Error("Invalid table name");
+    }
+
+    const colCheck = await db.execute(
+      sql`SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = ${rawTableName} 
+          AND column_name IN ('sr_no', 'daybook_id')`,
+    );
+
+    const cols = (colCheck.rows as any[]).map((r) => r.column_name);
+    const hasSrNo = cols.includes("sr_no");
+    const hasDaybookId = cols.includes("daybook_id");
+
+    let nextSrNo = 1;
+    if (hasSrNo) {
+      let query;
+      if (hasDaybookId && daybook.id) {
+        query = sql`SELECT COALESCE(MAX(sr_no), 0) as max_sr FROM ${sql.raw(rawTableName)} WHERE daybook_id = ${daybook.id}`;
+      } else {
+        query = sql`SELECT COALESCE(MAX(sr_no), 0) as max_sr FROM ${sql.raw(rawTableName)}`;
+      }
+      const maxResult = await db.execute(query);
+      const maxSr = Number(maxResult.rows[0]?.max_sr || 0);
+      nextSrNo = maxSr + 1;
+    }
+
+    const voucherNo =
+      prefix.endsWith("-") || prefix.endsWith("/")
+        ? `${prefix}${nextSrNo}`
+        : `${prefix}-${nextSrNo}`;
 
     return {
       voucherNo,
-      daybookId,
+      srNo: nextSrNo,
+      daybookId: daybook.id,
+      daybookGroupId: daybook.daybookGroupId,
       voucherPrefix: prefix,
+      tableName: rawTableName,
     };
   }
 }

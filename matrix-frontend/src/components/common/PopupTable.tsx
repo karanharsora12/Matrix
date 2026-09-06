@@ -28,8 +28,6 @@ export interface PopupTableProps<T = any> {
   title?: string;
   apiEndpoint?: string;
   tableData?: T[];
-
-  columnDefs?: ColDef[];
   columns?: ColDef[];
   onSelect: (item: T) => void;
   searchPlaceholder?: string;
@@ -45,7 +43,6 @@ export function PopupTable<T extends Record<string, any>>({
   trigger,
   apiEndpoint,
   tableData,
-  columnDefs,
   columns,
   onSelect,
   searchPlaceholder = "Search...",
@@ -89,36 +86,6 @@ export function PopupTable<T extends Record<string, any>>({
     if (fetchedData && Array.isArray(fetchedData)) return fetchedData;
     return [];
   }, [tableData, fetchedData]);
-
-  // Normalize column definitions for DataGrid
-  const effectiveColDefs = useMemo<ColDef[]>(() => {
-    const rawCols = columnDefs || columns;
-    if (rawCols && rawCols.length > 0) {
-      return rawCols.map((c: any) => ({
-        ...c,
-        filter: false,
-        floatingFilter: false,
-        sortable: c.sortable ?? true,
-        resizable: c.resizable ?? true,
-      }));
-    }
-    return [
-      {
-        headerName: "Name",
-        field: "name",
-        minWidth: 200,
-        flex: 1,
-        cellClass: "font-semibold text-foreground",
-      },
-      {
-        headerName: "ID",
-        field: "id",
-        width: 75,
-        type: "numericColumn",
-        cellClass: "font-mono",
-      },
-    ];
-  }, [columnDefs, columns]);
 
   const updatePosition = useCallback(() => {
     if (!anchorRef.current) return;
@@ -423,22 +390,13 @@ export function PopupTable<T extends Record<string, any>>({
       <div className="w-full bg-background flex-1 flex flex-col min-h-0 relative">
         <DataGrid
           rowData={rowData}
-          columnDefs={effectiveColDefs}
+          columnDefs={columns}
           onGridReady={handleGridReady}
           gridOptions={{
             onRowDoubleClicked: handleRowDoubleClick,
             rowSelection: "single",
             animateRows: false,
             pagination: false,
-            headerHeight: 34,
-            rowHeight: 34,
-            suppressCellFocus: false,
-            defaultColDef: {
-              filter: false,
-              floatingFilter: false,
-              sortable: true,
-              resizable: true,
-            },
           }}
         />
       </div>
