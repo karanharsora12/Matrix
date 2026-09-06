@@ -104,7 +104,8 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
             <Button
               onClick={onAdd}
               variant="default"
-              className="h-9 gap-1.5 font-semibold shadow-sm"
+              size="sm"
+              className="gap-1.5 font-semibold shadow-sm"
             >
               <Plus className="h-4 w-4" />
               {addText}
@@ -115,7 +116,7 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="icon" onClick={onExportExcel}>
-                  <FileSpreadsheet className="h-4 w-4" />
+                  <FileSpreadsheet className="h-3 w-3" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Export to Excel</TooltipContent>

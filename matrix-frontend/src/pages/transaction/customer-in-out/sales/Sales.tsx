@@ -356,7 +356,6 @@ export const Sales: React.FC = () => {
           existingSale.itemLines && existingSale.itemLines.length > 0
             ? existingSale.itemLines.map((line, idx) => ({
                 ...line,
-                id: line.id || `line-${idx}-${Date.now()}`,
                 itemCode: line.itemCode || line.tagNo || `ITM-${idx + 1}`,
                 tagNo: line.tagNo || line.itemCode || `TAG-${idx + 1}`,
                 uom: line.uom || "GMS",
@@ -366,7 +365,6 @@ export const Sales: React.FC = () => {
             : [
                 {
                   ...DEFAULT_LINE_ITEM,
-                  id: `line-${Date.now()}`,
                   itemCode: "ITM-001",
                   tagNo: "TAG-001",
                 },
@@ -500,7 +498,6 @@ export const Sales: React.FC = () => {
     const nextNum = Math.floor(100 + Math.random() * 900);
     const newLine: SaleLineItem = {
       ...DEFAULT_LINE_ITEM,
-      id: `line-${Date.now()}`,
       itemCode: `ITM-${nextNum}`,
       tagNo: `TAG-${nextNum}`,
     };
@@ -519,7 +516,6 @@ export const Sales: React.FC = () => {
           itemLines: [
             {
               ...DEFAULT_LINE_ITEM,
-              id: `line-${Date.now()}`,
               itemCode: "ITM-001",
               tagNo: "TAG-001",
             },
@@ -548,7 +544,6 @@ export const Sales: React.FC = () => {
 
     const newLine: SaleLineItem = {
       ...DEFAULT_LINE_ITEM,
-      id: `line-${Date.now()}`,
       itemCode: searchTag.toUpperCase(),
       tagNo: searchTag.toUpperCase(),
       itemId: matchedItem?.id || 0,
@@ -1004,7 +999,7 @@ export const Sales: React.FC = () => {
       customerCity: "Ahmedabad",
       customerPincode: "380009",
       customerState: "Gujarat",
-      itemLines: [{ ...DEFAULT_LINE_ITEM, id: `line-${Date.now()}` }],
+      itemLines: [{ ...DEFAULT_LINE_ITEM }],
       taxRate: 3,
       cashAmount: 0,
       bankAmount: 0,
@@ -1575,7 +1570,6 @@ export const Sales: React.FC = () => {
                 pagination: false,
                 singleClickEdit: true,
                 onCellValueChanged: handleCellValueChanged,
-                getRowId: (params) => params.data.id,
                 defaultColDef: {
                   filter: false,
                   floatingFilter: false,
@@ -2153,7 +2147,7 @@ export const Sales: React.FC = () => {
                     </td>
                     <td className="p-1.5">{line.purity || "22K"}</td>
                     <td className="p-1.5 text-right ">
-                      {line.netWt?.toFixed(3)}g
+                      {Number(line.netWt || 0).toFixed(3)}g
                     </td>
                     <td className="p-1.5 text-right ">
                       ₹{line.rate?.toLocaleString("en-IN")}
@@ -2270,8 +2264,8 @@ export const Sales: React.FC = () => {
                     {line.itemName || "Item"}
                   </div>
                   <div className="mt-1 flex justify-between  text-[11px] text-slate-700 dark:text-zinc-300">
-                    <span>GW: {line.grossWt?.toFixed(3)}</span>
-                    <span>NW: {line.netWt?.toFixed(3)}</span>
+                    <span>GW: {Number(line.grossWt || 0).toFixed(3)}</span>
+                    <span>NW: {Number(line.netWt || 0).toFixed(3)}</span>
                     <span className="font-semibold text-amber-800 dark:text-amber-300">
                       ₹{line.amount?.toLocaleString("en-IN")}
                     </span>

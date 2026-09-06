@@ -51,7 +51,7 @@ export const calculateLineItemAmount = (
   const labour = Number(current.labourAmount || 0);
   const other = Number(current.otherAmount || 0);
   const discount = Number(current.discountAmount || 0);
-  const pieces = Number((current as any).quantity || current.pcs || 1);
+  const pieces = Number(current.pcs || 1);
 
   let baseAmount = 0;
   if (current.rateType === "Per Piece") {

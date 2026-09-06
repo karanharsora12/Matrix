@@ -131,7 +131,6 @@ const SalesList: React.FC = () => {
     <div className="h-full flex flex-col p-6 space-y-6">
       <ListingHeader
         title="Sales"
-        subtitle="Manage your sales vouchers"
         addText="Add Sales"
         onAdd={() => handleNavigate(0)}
         searchProps={{

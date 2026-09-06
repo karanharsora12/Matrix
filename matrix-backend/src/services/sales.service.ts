@@ -1,4 +1,4 @@
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, and, notInArray } from "drizzle-orm";
 import { db } from "../db";
 import {
   sales,
@@ -6,6 +6,8 @@ import {
   daybooks,
   daybookGroups,
   accounts,
+  itemGroups,
+  items,
 } from "../db/schema";
 
 export class SalesService {
@@ -38,13 +40,24 @@ export class SalesService {
 
     if (!sale) return null;
 
-    const items = await db.query.salesItems.findMany({
-      where: eq(salesItems.saleId, id),
-    });
+    const fetchedItems = await db
+      .select({
+        item: salesItems,
+        itemGroupName: itemGroups.itemGroupName,
+        itemName: items.itemName,
+      })
+      .from(salesItems)
+      .leftJoin(itemGroups, eq(salesItems.itemGroupId, itemGroups.id))
+      .leftJoin(items, eq(salesItems.itemId, items.id))
+      .where(eq(salesItems.saleId, id));
 
     return {
       ...sale,
-      itemLines: items,
+      itemLines: fetchedItems.map(({ item, itemGroupName, itemName }) => ({
+        ...item,
+        itemGroupName,
+        itemName,
+      })),
     };
   }
 
@@ -52,41 +65,37 @@ export class SalesService {
     return await db.transaction(async (tx) => {
       const { itemLines, ...saleData } = data;
 
-      let srNo = saleData.srNo ? Number(saleData.srNo) : undefined;
-      if (!srNo && saleData.daybookId) {
-        const [maxRow] = await tx
-          .select({ maxSr: sql<number>`COALESCE(MAX(sr_no), 0)` })
-          .from(sales)
-          .where(eq(sales.daybookId, saleData.daybookId));
-        srNo = Number(maxRow?.maxSr || 0) + 1;
-      }
-
       // Insert sale header
       const [newSale] = await tx
         .insert(sales)
         .values({
           ...saleData,
-          srNo,
           voucherDate: new Date(saleData.voucherDate),
           dueDate: saleData.dueDate ? new Date(saleData.dueDate) : undefined,
         })
         .returning();
 
-      if (!newSale) {
-        throw new Error("Failed to create sale header");
-      }
-
+      let insertedItems = [];
       if (itemLines && itemLines.length > 0) {
-        const itemsToInsert = itemLines.map((item: any) => ({
-          ...item,
-          saleId: newSale.id,
-          id: undefined,
-        }));
+        const itemsToInsert = itemLines.map((item: any) => {
+          const { createdAt, updatedAt, ...rest } = item;
+          return {
+            ...rest,
+            saleId: newSale.id,
+            id: undefined,
+          };
+        });
 
-        await tx.insert(salesItems).values(itemsToInsert);
+        insertedItems = await tx
+          .insert(salesItems)
+          .values(itemsToInsert)
+          .returning();
       }
 
-      return newSale;
+      return {
+        ...newSale,
+        itemLines: insertedItems,
+      };
     });
   }
 
@@ -112,22 +121,56 @@ export class SalesService {
         return null;
       }
 
-      // Handle line items: For simplicity, delete old and re-insert new
+      // Handle line items efficiently
+      let finalItems: any[] = [];
       if (itemLines) {
-        await tx.delete(salesItems).where(eq(salesItems.saleId, id));
+        const idsToKeep = itemLines
+          .map((i: any) => i.id)
+          .filter((itemId: any) => itemId != null);
 
-        if (itemLines.length > 0) {
-          const itemsToInsert = itemLines.map((item: any) => ({
-            ...item,
-            saleId: id,
-            id: undefined, // Let DB generate new ID
-          }));
-
-          await tx.insert(salesItems).values(itemsToInsert);
+        if (idsToKeep.length > 0) {
+          await tx
+            .delete(salesItems)
+            .where(
+              and(
+                eq(salesItems.saleId, id),
+                notInArray(salesItems.id, idsToKeep),
+              ),
+            );
+        } else {
+          await tx.delete(salesItems).where(eq(salesItems.saleId, id));
         }
+
+        for (const item of itemLines) {
+          const { createdAt, updatedAt, ...rest } = item;
+          if (item.id) {
+            await tx
+              .update(salesItems)
+              .set({
+                ...rest,
+                saleId: id,
+                updatedAt: new Date(),
+              })
+              .where(eq(salesItems.id, item.id));
+          } else {
+            await tx.insert(salesItems).values({
+              ...rest,
+              saleId: id,
+              id: undefined,
+            });
+          }
+        }
+
+        finalItems = await tx
+          .select()
+          .from(salesItems)
+          .where(eq(salesItems.saleId, id));
       }
 
-      return updatedSale;
+      return {
+        ...updatedSale,
+        itemLines: finalItems,
+      };
     });
   }
 

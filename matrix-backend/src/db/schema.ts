@@ -212,13 +212,12 @@ export const salesItems = pgTable("sales_items", {
   ),
 
   tagNo: varchar("tag_no", { length: 256 }),
-  quantity: numeric("quantity").default("1").notNull(),
+  pcs: numeric("pcs").default("1").notNull(),
   uom: varchar("uom", { length: 256 }),
   weight: numeric("weight").default("0"),
   grossWt: numeric("gross_wt").default("0"),
   netWt: numeric("net_wt").default("0"),
   adjustedWt: numeric("adjusted_wt").default("0"),
-  fineWt: numeric("fine_wt").default("0"),
 
   rate: numeric("rate").default("0").notNull(),
   rateType: varchar("rate_type", { length: 256 }),
