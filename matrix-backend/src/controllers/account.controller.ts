@@ -14,6 +14,33 @@ export class AccountController {
 
   async getAccounts(req: Request, res: Response) {
     try {
+      const page = Number.parseInt(req.query.page as string, 10);
+      const limit = Number.parseInt(req.query.limit as string, 10);
+      const isPaginated = Number.isFinite(page) || Number.isFinite(limit);
+
+      if (isPaginated) {
+        const search =
+          typeof req.query.search === "string" ? req.query.search : undefined;
+        const sortField =
+          typeof req.query.sortField === "string"
+            ? req.query.sortField
+            : undefined;
+        const result = await accountService.getAccountsPage({
+          page: Number.isFinite(page) ? page : 1,
+          limit: Number.isFinite(limit) ? limit : 50,
+          sortDirection:
+            req.query.sortDirection === "desc" ? "desc" : "asc",
+          ...(search ? { search } : {}),
+          ...(sortField ? { sortField } : {}),
+        });
+        return res.json({
+          success: true,
+          data: result.data,
+          summary: [{ id: result.pagination.total }],
+          pagination: result.pagination,
+        });
+      }
+
       const data = await accountService.getAccounts();
       const summary = [
         {

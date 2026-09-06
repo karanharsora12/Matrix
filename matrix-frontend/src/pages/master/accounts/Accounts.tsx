@@ -1,29 +1,21 @@
 import React, { useState, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ListingHeader } from "@/components/common/ListingHeader";
 import { DataGrid } from "@/components/common/DataGrid";
 import { GridDeleteCell } from "@/components/common/GridDeleteCell";
 import { useGridActions } from "@/hooks/useGridActions";
 import { confirmAlert } from "@/components/common/AlertModal";
-import {
-  useAccounts,
-  useDeleteAccount,
-  useAccountMasterData,
-} from "@/api/accounts";
+import { useDeleteAccount, useAccountMasterData } from "@/api/accounts";
 import type { Account } from "@/api/accounts";
 import type { ColDef } from "ag-grid-community";
 import { WEB_ROUTES } from "@/config/webRoutes";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 
 const Accounts: React.FC = () => {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { gridRef, onExportExcel, onExportPdf, onPrint } = useGridActions();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: accountsResponse, isLoading } = useAccounts();
-  const accounts = accountsResponse?.data || [];
-  const accountsSummary: any = accountsResponse?.summary || [];
   const { data: masterData } = useAccountMasterData();
   const deleteMutation = useDeleteAccount();
 
@@ -50,7 +42,9 @@ const Accounts: React.FC = () => {
     });
 
     if (isConfirmed) {
-      deleteMutation.mutate(id);
+      deleteMutation.mutate(id, {
+        onSuccess: () => gridRef.current?.api.refreshInfiniteCache(),
+      });
     }
   };
 
@@ -78,7 +72,7 @@ const Accounts: React.FC = () => {
           if (params.node?.rowPinned) return "";
           return (
             masterData?.accountTypes?.find(
-              (t) => t.id === params.data.accountTypeId,
+              (t) => t.id === params.data?.accountTypeId,
             )?.name || ""
           );
         },
@@ -90,7 +84,7 @@ const Accounts: React.FC = () => {
           if (params.node?.rowPinned) return "";
           return (
             masterData?.accountGroups?.find(
-              (g) => g.id === params.data.accountGroupId,
+              (g) => g.id === params.data?.accountGroupId,
             )?.name || ""
           );
         },
@@ -116,12 +110,7 @@ const Accounts: React.FC = () => {
     ];
   }, [masterData]);
 
-  const filteredData = accounts.filter(
-    (account) =>
-      account.accountName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      account.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      account.userName.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const accountApiInput = useMemo(() => ({ search: searchTerm }), [searchTerm]);
 
   return (
     <div className="h-full flex flex-col p-6 space-y-6">
@@ -135,29 +124,24 @@ const Accounts: React.FC = () => {
           onChange: (e) => setSearchTerm(e.target.value),
           placeholder: "Search accounts...",
         }}
-        onRefresh={() =>
-          queryClient.invalidateQueries({ queryKey: ["accounts"] })
-        }
+        onRefresh={() => gridRef.current?.api.refreshInfiniteCache()}
         onExportExcel={() => onExportExcel("Accounts")}
         onExportPdf={() => onExportPdf("Accounts List", "Accounts")}
         onPrint={() => onPrint("Accounts List")}
       />
 
-      {!isLoading && (
-        <DataGrid
-          ref={gridRef}
-          rowData={filteredData}
-          columnDefs={columnDefs}
-          pinnedBottomRowData={accountsSummary}
-          gridOptions={{
-            onRowDoubleClicked: (e) => {
-              if (e.node.rowPinned) return;
-              handleEdit(e.data);
-            },
-            pagination: false,
-          }}
-        />
-      )}
+      <DataGrid
+        ref={gridRef}
+        apiName={API_ENDPOINTS.ACCOUNTS.BASE}
+        apiInput={accountApiInput}
+        columnDefs={columnDefs}
+        gridOptions={{
+          onRowDoubleClicked: (e) => {
+            if (e.node.rowPinned) return;
+            handleEdit(e.data);
+          },
+        }}
+      />
     </div>
   );
 };
