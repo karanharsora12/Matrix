@@ -100,6 +100,17 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
             <div className="flex items-center gap-1.5">{extraButtons}</div>
           )}
 
+          {onAdd && (
+            <Button
+              onClick={onAdd}
+              variant="default"
+              className="h-9 gap-1.5 font-semibold shadow-sm"
+            >
+              <Plus className="h-4 w-4" />
+              {addText}
+            </Button>
+          )}
+
           {onExportExcel && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -149,16 +160,6 @@ export const ListingHeader: React.FC<ListingHeaderProps> = ({
               </TooltipTrigger>
               <TooltipContent>Refresh data</TooltipContent>
             </Tooltip>
-          )}
-          {onAdd && (
-            <Button
-              onClick={onAdd}
-              variant="default"
-              className="h-9 gap-1.5 font-semibold shadow-sm"
-            >
-              <Plus className="h-4 w-4" />
-              {addText}
-            </Button>
           )}
         </div>
       </div>
