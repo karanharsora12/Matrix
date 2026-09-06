@@ -11,7 +11,9 @@
     "seed": "tsx src/db/seed.ts",
     "db:create": "node create-db.js",
     "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "db:export": "node export-data.js",
+    "db:import": "node import-data.js"
   },
   "keywords": [],
   "author": "",
