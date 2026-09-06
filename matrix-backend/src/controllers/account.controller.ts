@@ -12,20 +12,23 @@ export class AccountController {
     }
   }
 
-  async getAccounts(req: Request, res: Response) {
-    try {
-      const data = await accountService.getAccounts();
-      const summary = [
-        {
-          id: data.length,
-        },
-      ];
-      res.json({ success: true, data, summary });
-    } catch (error) {
-      console.error("Error fetching accounts:", error);
-      res.status(500).json({ success: false, error: "Internal server error" });
-    }
+ async getAccounts(req: Request, res: Response) {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100); // cap it
+    const cursor = req.query.cursor ? parseInt(req.query.cursor as string) : undefined;
+
+    const { data, nextCursor, hasMore } = await accountService.getAccounts(limit, cursor);
+
+    res.json({
+      success: true,
+      data,
+      pagination: { nextCursor, hasMore, limit },
+    });
+  } catch (error) {
+    console.error("Error fetching accounts:", error);
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
+}
 
   async getAccountById(req: Request, res: Response) {
     try {
