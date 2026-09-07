@@ -73,7 +73,7 @@ export function PopupTable<T extends Record<string, any>>({
     queryKey: ["popupTable", apiEndpoint],
     queryFn: async () => {
       if (!apiEndpoint) return [];
-      const res = await apiClient.get(apiEndpoint);
+      const res = await apiClient.post(apiEndpoint);
       if (Array.isArray(res.data?.data)) return res.data.data;
       if (Array.isArray(res.data)) return res.data;
       return [];

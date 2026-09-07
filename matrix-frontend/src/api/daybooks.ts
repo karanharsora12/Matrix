@@ -26,7 +26,7 @@ export interface Daybook {
 export const getDaybookGroups = async (): Promise<
   ApiResponse<DaybookGroup[]>
 > => {
-  const { data } = await apiClient.get<ApiResponse<DaybookGroup[]>>(
+  const { data } = await apiClient.post<ApiResponse<DaybookGroup[]>>(
     API_ENDPOINTS.DAYBOOKS.GROUPS,
   );
   return data;
@@ -36,7 +36,7 @@ export const createDaybookGroup = async (
   group: Omit<DaybookGroup, "id">,
 ): Promise<DaybookGroup> => {
   const { data } = await apiClient.post<ApiResponse<DaybookGroup>>(
-    API_ENDPOINTS.DAYBOOKS.GROUPS,
+    "/daybooks/groups/create",
     group,
   );
   return data.data;
@@ -97,7 +97,7 @@ export const useDeleteDaybookGroup = () => {
 
 // --- Daybooks API ---
 export const getDaybooks = async (): Promise<ApiResponse<Daybook[]>> => {
-  const { data } = await apiClient.get<ApiResponse<Daybook[]>>(
+  const { data } = await apiClient.post<ApiResponse<Daybook[]>>(
     API_ENDPOINTS.DAYBOOKS.BASE,
   );
   return data;
@@ -107,7 +107,7 @@ export const createDaybook = async (
   daybook: Omit<Daybook, "id">,
 ): Promise<Daybook> => {
   const { data } = await apiClient.post<ApiResponse<Daybook>>(
-    API_ENDPOINTS.DAYBOOKS.BASE,
+    "/daybooks/create",
     daybook,
   );
   return data.data;

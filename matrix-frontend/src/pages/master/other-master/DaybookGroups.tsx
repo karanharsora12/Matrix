@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import type { ColDef } from "ag-grid-community";
+import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
 
 export default function DaybookGroups() {
   const queryClient = useQueryClient();
@@ -134,8 +135,10 @@ export default function DaybookGroups() {
       },
       {
         field: "isActive",
-        headerName: "Status",
-        width: 70,
+        headerName: "Active",
+        width: 65,
+        cellRenderer: ActiveCellRenderer,
+        cellStyle: { display: "flex", justifyContent: "center", alignItems: "center" },
       },
       {
         headerName: "",

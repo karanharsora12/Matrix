@@ -157,14 +157,12 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
           const sort = params.sortModel[0];
 
           try {
-            const response = await apiClient.get(apiName, {
-              params: {
-                ...apiInput,
-                page: Math.floor(params.startRow / requestedPageSize) + 1,
-                limit: requestedPageSize,
-                sortField: sort?.colId,
-                sortDirection: sort?.sort,
-              },
+            const response = await apiClient.post(apiName, {
+              ...apiInput,
+              page: Math.floor(params.startRow / requestedPageSize) + 1,
+              limit: requestedPageSize,
+              sortField: sort?.colId,
+              sortDirection: sort?.sort,
             });
             if (isDestroyed) return;
 
@@ -190,7 +188,7 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
 
       let isCurrent = true;
       apiClient
-        .get(apiName, { params: apiInput })
+        .post(apiName, apiInput)
         .then((response) => {
           if (!isCurrent) return;
           const result = getGridResponse<any>(response.data);

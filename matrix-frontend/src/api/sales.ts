@@ -89,7 +89,7 @@ export interface ApiResponse<T> {
 }
 
 export const getSales = async (): Promise<ApiResponse<Sale[]>> => {
-  const { data } = await apiClient.get<ApiResponse<Sale[]>>(
+  const { data } = await apiClient.post<ApiResponse<Sale[]>>(
     API_ENDPOINTS.SALES.BASE,
   );
   return data;
@@ -107,7 +107,7 @@ export const getSale = async (id: number): Promise<Sale> => {
 
 export const createSale = async (sale: Omit<Sale, "id">): Promise<Sale> => {
   const { data } = await apiClient.post<ApiResponse<Sale>>(
-    API_ENDPOINTS.SALES.BASE,
+    "/sales/create",
     sale,
   );
   if (data?.data) {

@@ -32,7 +32,7 @@ export function Header() {
   useEffect(() => {
     const fetchMenus = async () => {
       try {
-        const response = await apiClient.get(API_ENDPOINTS.MENUS.BASE);
+        const response = await apiClient.post(API_ENDPOINTS.MENUS.BASE);
         setMenus(response.data);
       } catch (error) {
         console.error("Failed to fetch menus", error);

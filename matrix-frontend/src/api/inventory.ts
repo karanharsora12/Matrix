@@ -71,14 +71,14 @@ export const getMasterData = async (): Promise<{
   daybookGroups: DaybookGroup[];
   daybooks: Daybook[];
 }> => {
-  const { data } = await apiClient.get<ApiResponse<any>>(
+  const { data } = await apiClient.post<ApiResponse<any>>(
     API_ENDPOINTS.INVENTORY.MASTER_DATA,
   );
   return data.data;
 };
 
 export const getItemGroups = async (): Promise<ApiResponse<ItemGroup[]>> => {
-  const { data } = await apiClient.get<ApiResponse<ItemGroup[]>>(
+  const { data } = await apiClient.post<ApiResponse<ItemGroup[]>>(
     API_ENDPOINTS.INVENTORY.ITEM_GROUPS,
   );
   return data;
@@ -88,7 +88,7 @@ export const createItemGroup = async (
   group: Omit<ItemGroup, "id">,
 ): Promise<ItemGroup> => {
   const { data } = await apiClient.post<ApiResponse<ItemGroup>>(
-    API_ENDPOINTS.INVENTORY.ITEM_GROUPS,
+    "/inventory/item-groups/create",
     group,
   );
   return data.data;
@@ -156,7 +156,7 @@ export interface Item {
 }
 
 export const getItems = async (): Promise<ApiResponse<Item[]>> => {
-  const { data } = await apiClient.get<ApiResponse<Item[]>>(
+  const { data } = await apiClient.post<ApiResponse<Item[]>>(
     API_ENDPOINTS.INVENTORY.ITEMS,
   );
   return data;
@@ -164,7 +164,7 @@ export const getItems = async (): Promise<ApiResponse<Item[]>> => {
 
 export const createItem = async (item: Omit<Item, "id">): Promise<Item> => {
   const { data } = await apiClient.post<ApiResponse<Item>>(
-    API_ENDPOINTS.INVENTORY.ITEMS,
+    "/inventory/items/create",
     item,
   );
   return data.data;

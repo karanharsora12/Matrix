@@ -26,6 +26,7 @@ import { useGridActions } from "@/hooks/useGridActions";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import { useMemo, useState } from "react";
+import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
 
 export default function Daybooks() {
   const queryClient = useQueryClient();
@@ -189,7 +190,9 @@ export default function Daybooks() {
       {
         field: "isActive",
         headerName: "Active",
-        width: 70,
+        width: 60,
+        cellRenderer: ActiveCellRenderer,
+        cellStyle: { display: "flex", justifyContent: "center", alignItems: "center" },
       },
       {
         headerName: "",

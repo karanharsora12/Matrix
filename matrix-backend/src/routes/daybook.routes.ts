@@ -3,7 +3,7 @@ import { daybookController } from "../controllers/daybook.controller";
 
 const router = Router();
 
-router.get(
+router.post(
   "/groups",
   daybookController.getDaybookGroups.bind(daybookController),
 );
@@ -12,7 +12,7 @@ router.get(
   daybookController.getDaybookGroupById.bind(daybookController),
 );
 router.post(
-  "/groups",
+  "/groups/create",
   daybookController.createDaybookGroup.bind(daybookController),
 );
 router.put(
@@ -25,7 +25,7 @@ router.delete(
 );
 
 // Daybooks CRUD
-router.get("/", daybookController.getDaybooks.bind(daybookController));
+router.post("/", daybookController.getDaybooks.bind(daybookController));
 router.get("/:id", daybookController.getDaybookById.bind(daybookController));
 router.get(
   "/generate-voucher-no",
@@ -35,7 +35,7 @@ router.post(
   "/generate-voucher-no",
   daybookController.generateVoucherNo.bind(daybookController),
 );
-router.post("/", daybookController.createDaybook.bind(daybookController));
+router.post("/create", daybookController.createDaybook.bind(daybookController));
 router.put("/:id", daybookController.updateDaybook.bind(daybookController));
 router.delete("/:id", daybookController.deleteDaybook.bind(daybookController));
 

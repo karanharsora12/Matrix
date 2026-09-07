@@ -10,6 +10,7 @@ import type { Account } from "@/api/accounts";
 import type { ColDef } from "ag-grid-community";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
+import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
 
 const Accounts: React.FC = () => {
   const navigate = useNavigate();
@@ -93,7 +94,9 @@ const Accounts: React.FC = () => {
       {
         field: "isActive",
         headerName: "Active",
-        width: 70,
+        width: 60,
+        cellRenderer: ActiveCellRenderer,
+        cellStyle: { display: "flex", justifyContent: "center", alignItems: "center" },
       },
       {
         headerName: "",

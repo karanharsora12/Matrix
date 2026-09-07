@@ -19,6 +19,7 @@ import {
   useDeleteItem,
 } from "@/api/inventory";
 import { CommonListType } from "@/constants/enums";
+import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
 import type { ColDef } from "ag-grid-community";
 import type { Item } from "@/api/inventory";
 import { MultiSelect } from "@/components/ui/multi-select";
@@ -118,7 +119,9 @@ const Items: React.FC = () => {
       {
         field: "isActive",
         headerName: "Active",
-        width: 80,
+        width: 65,
+        cellRenderer: ActiveCellRenderer,
+        cellStyle: { display: "flex", justifyContent: "center", alignItems: "center" },
       },
       {
         headerName: "Attributes",

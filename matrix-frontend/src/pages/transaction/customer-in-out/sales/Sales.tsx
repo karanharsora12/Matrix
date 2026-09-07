@@ -646,21 +646,7 @@ export const Sales: React.FC = () => {
           height: 360,
         },
         valueGetter: (p) =>
-          p.node?.rowPinned ? "TOTAL" : p.data?.itemGroupName || "",
-        cellRenderer: (p: ICellRendererParams) => {
-          if (p.node?.rowPinned) {
-            return (
-              <span className="font-bold text-slate-900 dark:text-zinc-100">
-                {p.value || "TOTAL"}
-              </span>
-            );
-          }
-          return (
-            <span className="truncate font-medium text-slate-900 dark:text-zinc-100">
-              {p.value || ""}
-            </span>
-          );
-        },
+          p.node?.rowPinned ? "TOTAL" : p.data?.itemGroupName || ""
       },
       {
         headerName: "Items",
@@ -679,14 +665,6 @@ export const Sales: React.FC = () => {
           height: 360,
         },
         valueGetter: (p) => (p.node?.rowPinned ? "" : p.data?.itemName || ""),
-        cellRenderer: (p: ICellRendererParams) => {
-          if (p.node?.rowPinned) return null;
-          return (
-            <span className="truncate font-medium text-slate-900 dark:text-zinc-100">
-              {p.value || ""}
-            </span>
-          );
-        },
       },
       {
         headerName: "Pcs",

@@ -132,7 +132,7 @@ export default function MenuSetup() {
 
   const fetchMenus = async () => {
     try {
-      const response = await apiClient.get(API_ENDPOINTS.MENUS.BASE);
+      const response = await apiClient.post(API_ENDPOINTS.MENUS.BASE);
       setMenus(response.data);
     } catch (error) {
       console.error("Failed to fetch menus:", error);
@@ -251,7 +251,7 @@ export default function MenuSetup() {
       if (form.id) {
         await apiClient.put(API_ENDPOINTS.MENUS.BY_ID(form.id), payload);
       } else {
-        await apiClient.post(API_ENDPOINTS.MENUS.BASE, payload);
+        await apiClient.post(API_ENDPOINTS.MENUS.BASE + "/create", payload);
       }
       setDialogOpen(false);
       fetchMenus();

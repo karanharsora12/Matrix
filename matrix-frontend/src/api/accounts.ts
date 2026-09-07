@@ -40,7 +40,7 @@ export const getAccountMasterData = async (): Promise<{
   accountTypes: AccountType[];
   accountGroups: AccountGroup[];
 }> => {
-  const { data } = await apiClient.get<
+  const { data } = await apiClient.post<
     ApiResponse<{
       accountTypes: AccountType[];
       accountGroups: AccountGroup[];
@@ -50,7 +50,7 @@ export const getAccountMasterData = async (): Promise<{
 };
 
 export const getAccounts = async (): Promise<ApiResponse<Account[]>> => {
-  const { data } = await apiClient.get<ApiResponse<Account[]>>(
+  const { data } = await apiClient.post<ApiResponse<Account[]>>(
     API_ENDPOINTS.ACCOUNTS.BASE,
   );
   return data;
@@ -67,7 +67,7 @@ export const createAccount = async (
   account: Omit<Account, "id">,
 ): Promise<Account> => {
   const { data } = await apiClient.post<ApiResponse<Account>>(
-    API_ENDPOINTS.ACCOUNTS.BASE,
+    "/accounts/create",
     account,
   );
   return data.data;
