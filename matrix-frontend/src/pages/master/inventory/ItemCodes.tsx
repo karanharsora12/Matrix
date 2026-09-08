@@ -49,7 +49,7 @@ const ItemCodes: React.FC = () => {
   const { commonLists, attributes: allAttributes } = useSelector(
     (state: RootState) => state.inventory,
   );
-  
+
   const { data: itemsResponse } = useItems();
   const items = itemsResponse?.data || [];
 
@@ -65,7 +65,10 @@ const ItemCodes: React.FC = () => {
 
   const handleEdit = (itemCode: ItemCode) => {
     setEditingItemCode(itemCode);
-    setFormData({ ...itemCode, attributeValues: itemCode.attributeValues || [] });
+    setFormData({
+      ...itemCode,
+      attributeValues: itemCode.attributeValues || [],
+    });
     setIsModalOpen(true);
   };
 
@@ -176,17 +179,18 @@ const ItemCodes: React.FC = () => {
     return items.find((i) => i.id === formData.itemId) || null;
   }, [formData.itemId, items]);
 
-  const handleAttributeChange = (attributeCategoryId: number, valueId: number | null) => {
-    // We need to update the attributeValues array in formData.
-    // First, find all attributes that belong to the current category and remove them from the array.
+  const handleAttributeChange = (
+    attributeCategoryId: number,
+    valueId: number | null,
+  ) => {
     const validCategoryAttributes = allAttributes
       .filter((a) => a.attributeNameId === attributeCategoryId)
       .map((a) => a.id);
-      
+
     const newAttributeValues = (formData.attributeValues || []).filter(
-      (val) => !validCategoryAttributes.includes(val)
+      (val) => !validCategoryAttributes.includes(val),
     );
-    
+
     if (valueId !== null) {
       newAttributeValues.push(valueId);
     }
@@ -197,9 +201,9 @@ const ItemCodes: React.FC = () => {
     const validCategoryAttributes = allAttributes
       .filter((a) => a.attributeNameId === categoryId)
       .map((a) => a.id);
-      
+
     const selected = (formData.attributeValues || []).find((val) =>
-      validCategoryAttributes.includes(val)
+      validCategoryAttributes.includes(val),
     );
     return selected ? selected.toString() : "";
   };
@@ -216,7 +220,9 @@ const ItemCodes: React.FC = () => {
           onChange: (e) => setSearchTerm(e.target.value),
           placeholder: "Search item codes...",
         }}
-        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["itemCodes"] })}
+        onRefresh={() =>
+          queryClient.invalidateQueries({ queryKey: ["itemCodes"] })
+        }
         onExportExcel={() => onExportExcel("ItemCodes")}
         onExportPdf={() => onExportPdf("Item Codes List", "ItemCodes")}
         onPrint={() => onPrint("Item Codes List")}
@@ -290,7 +296,11 @@ const ItemCodes: React.FC = () => {
             <Select
               value={formData.itemId ? formData.itemId.toString() : ""}
               onValueChange={(val) =>
-                setFormData({ ...formData, itemId: parseInt(val, 10), attributeValues: [] })
+                setFormData({
+                  ...formData,
+                  itemId: parseInt(val, 10),
+                  attributeValues: [],
+                })
               }
             >
               <SelectTrigger>
@@ -306,45 +316,61 @@ const ItemCodes: React.FC = () => {
             </Select>
           </div>
 
-          {selectedItem && selectedItem.attributes && selectedItem.attributes.length > 0 && (
-            <div className="col-span-2 space-y-4 pt-2 border-t mt-2">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">
-                Attributes for {selectedItem.itemName}
-              </Label>
-              <div className="grid grid-cols-2 gap-4">
-                {selectedItem.attributes.map((attrCategoryId) => {
-                  const category = commonLists.find((c) => c.id === attrCategoryId);
-                  const categoryName = category ? category.listValue : `Category ${attrCategoryId}`;
-                  const options = allAttributes.filter((a) => a.attributeNameId === attrCategoryId);
-                  const selectedVal = getSelectedAttributeValueForCategory(attrCategoryId);
+          {selectedItem &&
+            selectedItem.attributes &&
+            selectedItem.attributes.length > 0 && (
+              <div className="col-span-2 space-y-4 pt-2 border-t mt-2">
+                <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                  Attributes for {selectedItem.itemName}
+                </Label>
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedItem.attributes.map((attrCategoryId) => {
+                    const category = commonLists.find(
+                      (c) => c.id === attrCategoryId,
+                    );
+                    const categoryName = category
+                      ? category.listValue
+                      : `Category ${attrCategoryId}`;
+                    const options = allAttributes.filter(
+                      (a) => a.attributeNameId === attrCategoryId,
+                    );
+                    const selectedVal =
+                      getSelectedAttributeValueForCategory(attrCategoryId);
 
-                  return (
-                    <div key={attrCategoryId} className="space-y-2">
-                      <Label>{categoryName}</Label>
-                      <Select
-                        value={selectedVal}
-                        onValueChange={(val) => handleAttributeChange(attrCategoryId, parseInt(val, 10))}
-                      >
-                        <SelectTrigger
-                          clearable={!!selectedVal}
-                          onClear={() => handleAttributeChange(attrCategoryId, null)}
+                    return (
+                      <div key={attrCategoryId} className="space-y-2">
+                        <Label>{categoryName}</Label>
+                        <Select
+                          value={selectedVal}
+                          onValueChange={(val) =>
+                            handleAttributeChange(
+                              attrCategoryId,
+                              parseInt(val, 10),
+                            )
+                          }
                         >
-                          <SelectValue placeholder={`Select ${categoryName}`} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {options.map((opt) => (
-                            <SelectItem key={opt.id} value={opt.id.toString()}>
-                              {opt.attributeValue}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  );
-                })}
+                          <SelectTrigger>
+                            <SelectValue
+                              placeholder={`Select ${categoryName}`}
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {options.map((opt) => (
+                              <SelectItem
+                                key={opt.id}
+                                value={opt.id.toString()}
+                              >
+                                {opt.attributeValue}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </Modal>
     </div>
