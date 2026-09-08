@@ -9,23 +9,17 @@ export class MenuService {
     // Build hierarchical tree
     const menuMap = new Map();
     allMenus.forEach((menu) => {
-      menuMap.set(menu.id, { ...menu, children: [], fullPath: menu.menuPath });
+      menuMap.set(menu.id, { ...menu, children: [] });
     });
 
     const rootMenus: any[] = [];
 
+    // Step 1: Establish parent-child relationships
     allMenus.forEach((menu) => {
       const mappedMenu = menuMap.get(menu.id);
       if (menu.parentMenuId) {
         const parent = menuMap.get(menu.parentMenuId);
         if (parent) {
-          mappedMenu.fullPath =
-            parent.fullPath === "/"
-              ? `/${mappedMenu.menuPath.replace(/^\//, "")}`
-              : `${parent.fullPath}${mappedMenu.menuPath}`;
-
-          mappedMenu.fullPath = mappedMenu.fullPath.replace(/\/\//g, "/");
-
           parent.children.push(mappedMenu);
         } else {
           rootMenus.push(mappedMenu);
@@ -34,6 +28,19 @@ export class MenuService {
         rootMenus.push(mappedMenu);
       }
     });
+
+    // Step 2: Recursively compute fullPath from root down to all descendants
+    function assignFullPath(node: any, parentPath: string = "") {
+      const nodePath = (node.menuPath || "").replace(/^\//, "");
+      const full = parentPath ? `${parentPath}/${nodePath}` : `/${nodePath}`;
+      node.fullPath = full.replace(/\/+/g, "/");
+
+      if (node.children && node.children.length > 0) {
+        node.children.forEach((child: any) => assignFullPath(child, node.fullPath));
+      }
+    }
+
+    rootMenus.forEach((root) => assignFullPath(root, ""));
 
     return rootMenus;
   }

@@ -35,4 +35,8 @@ export const API_ENDPOINTS = {
     BASE: "/sales",
     BY_ID: (id: string | number) => `/sales/${id}`,
   },
+  PURCHASE: {
+    BASE: "/purchases",
+    BY_ID: (id: string | number) => `/purchases/${id}`,
+  },
 };

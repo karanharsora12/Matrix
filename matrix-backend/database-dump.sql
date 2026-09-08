@@ -1142,7 +1142,7 @@ COPY public.menus (id, menu_name, menu_caption, menu_icon, menu_path, parent_men
 55	Daybooks	Daybooks	BookOpen	/daybooks	36	t	t	t	t	t	t	2026-09-05 09:33:33.443	t
 56	DaybookGroups	Daybook Groups	Folder	/daybook-groups	36	t	t	t	t	t	t	2026-09-05 09:35:01.79	t
 49	CustomerInOut	Customer In Out	Wallet	/customer-in-out	47	t	t	t	t	t	t	2026-09-05 08:31:17.734	t
-50	SuppliorInOut	Supplior In Out	Truck	/supplior-in-out	47	t	t	t	t	t	t	2026-09-05 08:35:04.276	t
+50	SupplierInOut	Supplier In Out	Truck	/supplier-in-out	47	t	t	t	t	t	t	2026-09-05 08:35:04.276	t
 63	Payments	Payments	Wallet	/payments	47	t	t	t	t	t	t	2026-09-05 10:13:37.708	t
 64	Receipt	Receipt	Receipt	/receipt	47	t	t	t	t	t	t	2026-09-05 10:15:19.858	t
 48	Sales	Sales	ShoppingBag	/sales	49	t	t	t	t	t	t	2026-09-05 06:27:52.402	t

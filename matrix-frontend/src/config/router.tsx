@@ -1,21 +1,23 @@
+import Sales from "@/pages/transaction/customer-in-out/sales/Sales";
+import SalesList from "@/pages/transaction/customer-in-out/sales/SalesList";
+import { Purchase } from "@/pages/transaction/supplier-in-out/purchase/Purchase";
+import PurchaseList from "@/pages/transaction/supplier-in-out/purchase/PurchaseList";
 import { createBrowserRouter } from "react-router-dom";
-import { PublicRoute } from "../components/common/PublicRoute";
 import { ProtectedRoute } from "../components/common/ProtectedRoute";
-import Login from "../pages/Login";
-import Dashboard from "../pages/Dashboard";
+import { PublicRoute } from "../components/common/PublicRoute";
 import ERPLaoyut from "../layouts/ERPLaoyut";
 import MenuSetup from "../pages/admin-setup/MenuSetup";
+import Dashboard from "../pages/Dashboard";
+import Login from "../pages/Login";
+import AccountForm from "../pages/master/accounts/AccountForm";
+import Accounts from "../pages/master/accounts/Accounts";
+import ItemCodes from "../pages/master/inventory/ItemCodes";
 import ItemGroups from "../pages/master/inventory/ItemGroups";
 import Items from "../pages/master/inventory/Items";
-import ItemCodes from "../pages/master/inventory/ItemCodes";
-import Accounts from "../pages/master/accounts/Accounts";
-import AccountForm from "../pages/master/accounts/AccountForm";
 import DaybookGroups from "../pages/master/other-master/DaybookGroups";
 import Daybooks from "../pages/master/other-master/Daybooks";
 import NotFound from "../pages/NotFound";
 import { WEB_ROUTES } from "./webRoutes";
-import SalesList from "@/pages/transaction/customer-in-out/sales/SalesList";
-import Sales from "@/pages/transaction/customer-in-out/sales/Sales";
 
 export const router = createBrowserRouter([
   {
@@ -84,6 +86,14 @@ export const router = createBrowserRouter([
           {
             path: WEB_ROUTES.TRANSACTION.SALES,
             element: <Sales />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.PURCHASE_LIST,
+            element: <PurchaseList />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.PURCHASE,
+            element: <Purchase />,
           },
         ],
       },
