@@ -15,4 +15,9 @@ router.post("/items/create", inventoryController.createItem.bind(inventoryContro
 router.put("/items/:id", inventoryController.updateItem.bind(inventoryController));
 router.delete("/items/:id", inventoryController.deleteItem.bind(inventoryController));
 
+router.post("/item-codes", inventoryController.getItemCodes.bind(inventoryController));
+router.post("/item-codes/create", inventoryController.createItemCode.bind(inventoryController));
+router.put("/item-codes/:id", inventoryController.updateItemCode.bind(inventoryController));
+router.delete("/item-codes/:id", inventoryController.deleteItemCode.bind(inventoryController));
+
 export default router;

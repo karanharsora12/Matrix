@@ -25,8 +25,7 @@ import {
 function SubMenuPopup({ item }: { item: any }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  const Icon =
-    (LucideIcons as any)[item.menuIcon || "Circle"] || LucideIcons.Circle;
+  const Icon = (LucideIcons as any)[item.menuIcon || "Dot"] || LucideIcons.Dot;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
@@ -56,8 +55,7 @@ function SubMenuPopup({ item }: { item: any }) {
           <DropdownMenuSeparator />
           {item.children.map((child: any) => {
             const ChildIcon =
-              (LucideIcons as any)[child.menuIcon || "Circle"] ||
-              LucideIcons.Circle;
+              (LucideIcons as any)[child.menuIcon || "Dot"] || LucideIcons.Dot;
             const childActive =
               location.pathname === child.fullPath ||
               location.pathname.startsWith(child.fullPath + "/");
@@ -113,7 +111,7 @@ export function Sidebar() {
     const isExpanded = expanded[item.id];
     const hasChildren = item.children && item.children.length > 0;
     const Icon =
-      (LucideIcons as any)[item.menuIcon || "Circle"] || LucideIcons.Circle;
+      (LucideIcons as any)[item.menuIcon || "Dot"] || LucideIcons.Dot;
 
     if (collapsed && hasChildren) {
       return <SubMenuPopup key={item.id} item={item} />;
@@ -139,7 +137,13 @@ export function Sidebar() {
         }}
       >
         <div className="flex items-center gap-3">
-          <Icon className="h-4 w-4 shrink-0" />
+          <Icon
+            className={cn(
+              "shrink-0",
+              !item.menuIcon ? "h-6 w-6 -ml-1 -mr-1" : "h-4 w-4",
+            )}
+            strokeWidth={!item.menuIcon ? 3 : 2}
+          />
           {!collapsed && <span>{item.menuCaption}</span>}
         </div>
         {!collapsed && hasChildren && (

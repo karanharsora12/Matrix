@@ -1,13 +1,13 @@
 import type { Request, Response } from "express";
 import { daybookService } from "../services/daybook.service";
+import { buildListResponse } from "../utils/pagination";
 
 export class DaybookController {
   // --- Daybook Groups ---
   async getDaybookGroups(req: Request, res: Response) {
     try {
       const groups = await daybookService.getDaybookGroups();
-      const summary = [{ id: groups.length }];
-      res.json({ success: true, data: groups, summary });
+      res.json(buildListResponse(req, "daybookGroups", groups));
     } catch (error) {
       console.error("Error fetching daybook groups:", error);
       res.status(500).json({ success: false, error: "Internal server error" });
@@ -111,8 +111,7 @@ export class DaybookController {
   async getDaybooks(req: Request, res: Response) {
     try {
       const data = await daybookService.getDaybooks();
-      const summary = [{ id: data.length }];
-      res.json({ success: true, data, summary });
+      res.json(buildListResponse(req, "daybooks", data));
     } catch (error) {
       console.error("Error fetching daybooks:", error);
       res.status(500).json({ success: false, error: "Internal server error" });

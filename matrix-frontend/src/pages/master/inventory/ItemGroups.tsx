@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ColDef } from "ag-grid-community";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 
 const ItemGroups: React.FC = () => {
   const queryClient = useQueryClient();
@@ -47,10 +48,6 @@ const ItemGroups: React.FC = () => {
     purchaseRateTypeId: undefined,
     measureUnitCode: "",
   });
-
-  const { data: itemGroupsResponse, isLoading } = useItemGroups();
-  const itemGroups = itemGroupsResponse?.data || [];
-  const itemGroupsSummary = itemGroupsResponse?.summary || [];
 
   const { metals, rateTypes, commonLists } = useSelector(
     (state: RootState) => state.inventory,
@@ -195,10 +192,6 @@ const ItemGroups: React.FC = () => {
     ];
   }, [metals, rateTypes]);
 
-  const filteredData = itemGroups.filter((group) =>
-    group.itemGroupName.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
   return (
     <div className="h-full flex flex-col p-6 space-y-6">
       <ListingHeader
@@ -219,21 +212,19 @@ const ItemGroups: React.FC = () => {
         onPrint={() => onPrint("Item Groups List")}
       />
 
-      {!isLoading && (
-        <DataGrid
-          ref={gridRef}
-          rowData={filteredData}
-          columnDefs={columnDefs}
-          pinnedBottomRowData={itemGroupsSummary}
-          gridOptions={{
-            onRowDoubleClicked: (e) => {
-              if (e.node.rowPinned) return;
-              handleEdit(e.data);
-            },
-            pagination: false,
-          }}
-        />
-      )}
+      <DataGrid
+        ref={gridRef}
+        columnDefs={columnDefs}
+        apiName={API_ENDPOINTS.INVENTORY.ITEM_GROUPS}
+        infiniteScroll={false}
+        gridOptions={{
+          onRowDoubleClicked: (e) => {
+            if (e.node.rowPinned) return;
+            handleEdit(e.data);
+          },
+          pagination: false,
+        }}
+      />
 
       <Modal
         open={isModalOpen}

@@ -94,6 +94,18 @@ export const items = pgTable("items", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const itemCodes = pgTable("item_codes", {
+  id: serial("id").primaryKey(),
+  itemId: integer("item_id")
+    .references((): AnyPgColumn => items.id)
+    .notNull(),
+  itemCodeName: varchar("item_code_name", { length: 256 }).notNull().unique(),
+  attributeValues: integer("attribute_values").array().default([]).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const accountTypes = pgTable("account_types", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 256 }).notNull().unique(),

@@ -1,11 +1,12 @@
 import type { Request, Response } from "express";
 import { inventoryService } from "../services/inventory.service";
+import { buildListResponse, buildMasterResponse, getPaginationOptions } from "../utils/pagination";
 
 export class InventoryController {
   async getMasterData(req: Request, res: Response) {
     try {
       const data = await inventoryService.getMasterData();
-      res.json({ success: true, data });
+      res.json(buildMasterResponse(req, "inventoryMasterData", data));
     } catch (error) {
       console.error("Error fetching master data:", error);
       res.status(500).json({ success: false, error: "Internal server error" });
@@ -15,12 +16,7 @@ export class InventoryController {
   async getItemGroups(req: Request, res: Response) {
     try {
       const groups = await inventoryService.getItemGroups();
-      const summary = [
-        {
-          id: groups.length,
-        },
-      ];
-      res.json({ success: true, data: groups, summary });
+      res.json(buildListResponse(req, "itemGroups", groups));
     } catch (error) {
       console.error("Error fetching item groups:", error);
       res.status(500).json({ success: false, error: "Internal server error" });
@@ -92,12 +88,7 @@ export class InventoryController {
   async getItems(req: Request, res: Response) {
     try {
       const items = await inventoryService.getItems();
-      const summary = [
-        {
-          id: items.length,
-        },
-      ];
-      res.json({ success: true, data: items, summary });
+      res.json(buildListResponse(req, "items", items));
     } catch (error) {
       console.error("Error fetching items:", error);
       res.status(500).json({ success: false, error: "Internal server error" });
@@ -159,6 +150,79 @@ export class InventoryController {
       });
     } catch (error: any) {
       console.error("Error deleting item:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Internal server error",
+      });
+    }
+  }
+
+  // --- Item Codes ---
+  async getItemCodes(req: Request, res: Response) {
+    try {
+      const itemCodes = await inventoryService.getItemCodes();
+      res.json(buildListResponse(req, "itemCodes", itemCodes));
+    } catch (error) {
+      console.error("Error fetching item codes:", error);
+      res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  }
+
+  async createItemCode(req: Request, res: Response) {
+    try {
+      const { id, ...newItemCode } = req.body;
+      const created = await inventoryService.createItemCode(newItemCode);
+      res.status(201).json({ success: true, data: created });
+    } catch (error: any) {
+      console.error("Error creating item code:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Internal server error",
+      });
+    }
+  }
+
+  async updateItemCode(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id as string);
+      if (isNaN(id))
+        return res.status(400).json({ success: false, error: "Invalid ID" });
+
+      const updated = await inventoryService.updateItemCode(id, req.body);
+      if (!updated) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Item code not found" });
+      }
+      res.json({ success: true, data: updated });
+    } catch (error: any) {
+      console.error("Error updating item code:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Internal server error",
+      });
+    }
+  }
+
+  async deleteItemCode(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id as string);
+      if (isNaN(id))
+        return res.status(400).json({ success: false, error: "Invalid ID" });
+
+      const deleted = await inventoryService.deleteItemCode(id);
+      if (!deleted) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Item code not found" });
+      }
+      res.json({
+        success: true,
+        data: deleted,
+        message: "Item code deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting item code:", error);
       res.status(500).json({
         success: false,
         error: error.message || "Internal server error",

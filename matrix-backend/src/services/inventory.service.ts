@@ -9,6 +9,7 @@ import {
   attributes,
   daybookGroups,
   daybooks,
+  itemCodes,
 } from "../db/schema";
 
 export class InventoryService {
@@ -88,6 +89,34 @@ export class InventoryService {
     const [deleted] = await db
       .delete(items)
       .where(eq(items.id, id))
+      .returning();
+    return deleted;
+  }
+
+  // --- Item Codes ---
+  async getItemCodes() {
+    return await db.select().from(itemCodes).orderBy(itemCodes.id);
+  }
+
+  async createItemCode(data: any) {
+    const [created] = await db.insert(itemCodes).values(data).returning();
+    return created;
+  }
+
+  async updateItemCode(id: number, data: any) {
+    const { id: _, createdAt, updatedAt, ...updateData } = data;
+    const [updated] = await db
+      .update(itemCodes)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(itemCodes.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteItemCode(id: number) {
+    const [deleted] = await db
+      .delete(itemCodes)
+      .where(eq(itemCodes.id, id))
       .returning();
     return deleted;
   }

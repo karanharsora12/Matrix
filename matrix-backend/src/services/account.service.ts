@@ -24,9 +24,12 @@ export class AccountService {
     search?: string;
     sortField?: string;
     sortDirection?: "asc" | "desc";
+    fetchAll?: boolean;
   }) {
     const page = Math.max(1, options.page || 1);
-    const limit = Math.min(100, Math.max(1, options.limit || 50));
+    const limit = options.fetchAll
+      ? -1
+      : Math.min(100, Math.max(1, options.limit || 50));
     const search = options.search?.trim();
     const whereClause = search
       ? or(
@@ -36,9 +39,6 @@ export class AccountService {
         )
       : undefined;
 
-    // Only database columns may be selected for sorting. This keeps query
-    // parameters from becoming SQL identifiers and gives computed columns a
-    // predictable fallback order.
     const sortableColumns = {
       id: accounts.id,
       accountName: accounts.accountName,
@@ -57,14 +57,14 @@ export class AccountService {
     const orderBy =
       options.sortDirection === "desc" ? desc(sortColumn) : asc(sortColumn);
 
+    let query = db.select().from(accounts).where(whereClause).orderBy(orderBy);
+
+    if (!options.fetchAll) {
+      query = query.limit(limit).offset((page - 1) * limit) as any;
+    }
+
     const [data, totalResult] = await Promise.all([
-      db
-        .select()
-        .from(accounts)
-        .where(whereClause)
-        .orderBy(orderBy)
-        .limit(limit)
-        .offset((page - 1) * limit),
+      query,
       db.select({ total: count() }).from(accounts).where(whereClause),
     ]);
     const total = Number(totalResult[0]?.total || 0);
@@ -73,10 +73,10 @@ export class AccountService {
       data,
       pagination: {
         page,
-        limit,
+        limit: options.fetchAll ? total : limit,
         total,
-        totalPages: Math.ceil(total / limit),
-        hasNextPage: page * limit < total,
+        totalPages: options.fetchAll ? 1 : Math.ceil(total / limit),
+        hasNextPage: options.fetchAll ? false : page * limit < total,
       },
     };
   }

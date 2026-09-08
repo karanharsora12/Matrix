@@ -222,3 +222,80 @@ export const useDeleteItem = () => {
     },
   });
 };
+
+// --- Item Codes ---
+export interface ItemCode {
+  id: number;
+  itemId: number;
+  itemCodeName: string;
+  attributeValues: number[];
+  isActive: boolean;
+}
+
+export const getItemCodes = async (): Promise<ApiResponse<ItemCode[]>> => {
+  const { data } = await apiClient.post<ApiResponse<ItemCode[]>>(
+    API_ENDPOINTS.INVENTORY.ITEM_CODES,
+  );
+  return data;
+};
+
+export const createItemCode = async (data: Omit<ItemCode, "id">) => {
+  const response = await apiClient.post(
+    `${API_ENDPOINTS.INVENTORY.ITEM_CODES}/create`,
+    data,
+  );
+  return response.data;
+};
+
+export const updateItemCode = async (id: number, data: Partial<ItemCode>) => {
+  const response = await apiClient.put(
+    `${API_ENDPOINTS.INVENTORY.ITEM_CODES}/${id}`,
+    data,
+  );
+  return response.data;
+};
+
+export const deleteItemCode = async (id: number) => {
+  const response = await apiClient.delete(
+    `${API_ENDPOINTS.INVENTORY.ITEM_CODES}/${id}`,
+  );
+  return response.data;
+};
+
+export const useItemCodes = () => {
+  return useQuery({
+    queryKey: ["itemCodes"],
+    queryFn: getItemCodes,
+  });
+};
+
+export const useCreateItemCode = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createItemCode,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["itemCodes"] });
+    },
+  });
+};
+
+export const useUpdateItemCode = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<ItemCode> }) =>
+      updateItemCode(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["itemCodes"] });
+    },
+  });
+};
+
+export const useDeleteItemCode = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteItemCode,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["itemCodes"] });
+    },
+  });
+};

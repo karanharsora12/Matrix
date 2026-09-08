@@ -1,4 +1,4 @@
-import { eq, desc, and, notInArray } from "drizzle-orm";
+import { eq, desc, and, notInArray, count } from "drizzle-orm";
 import { db } from "../db";
 import {
   sales,
@@ -11,8 +11,11 @@ import {
 } from "../db/schema";
 
 export class SalesService {
-  async getSales() {
-    const rows = await db
+  async getSales(options?: { page?: number; limit?: number; fetchAll?: boolean }) {
+    const page = Math.max(1, options?.page || 1);
+    const limit = options?.fetchAll ? -1 : Math.min(100, Math.max(1, options?.limit || 50));
+
+    let query = db
       .select({
         sale: sales,
         daybook: daybooks,
@@ -25,12 +28,33 @@ export class SalesService {
       .leftJoin(accounts, eq(sales.accountId, accounts.id))
       .orderBy(desc(sales.createdAt));
 
-    return rows.map(({ sale, daybook, daybookGroup, account }) => ({
+    if (!options?.fetchAll && limit !== -1) {
+      query = query.limit(limit).offset((page - 1) * limit) as any;
+    }
+
+    const [rows, totalResult] = await Promise.all([
+      query,
+      db.select({ total: count() }).from(sales)
+    ]);
+    const total = Number(totalResult[0]?.total || 0);
+
+    const data = rows.map(({ sale, daybook, daybookGroup, account }) => ({
       ...sale,
       daybookName: daybook?.daybookName || null,
       daybookGroupName: daybookGroup?.groupName || null,
       accountName: account?.accountName || null,
     }));
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit: options?.fetchAll || limit === -1 ? total : limit,
+        total,
+        totalPages: options?.fetchAll || limit === -1 ? 1 : Math.ceil(total / limit),
+        hasNextPage: options?.fetchAll || limit === -1 ? false : page * limit < total,
+      }
+    };
   }
 
   async getSaleById(id: number) {

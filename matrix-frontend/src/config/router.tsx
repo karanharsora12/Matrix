@@ -7,6 +7,7 @@ import ERPLaoyut from "../layouts/ERPLaoyut";
 import MenuSetup from "../pages/admin-setup/MenuSetup";
 import ItemGroups from "../pages/master/inventory/ItemGroups";
 import Items from "../pages/master/inventory/Items";
+import ItemCodes from "../pages/master/inventory/ItemCodes";
 import Accounts from "../pages/master/accounts/Accounts";
 import AccountForm from "../pages/master/accounts/AccountForm";
 import DaybookGroups from "../pages/master/other-master/DaybookGroups";
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
           {
             path: WEB_ROUTES.MASTER.INVENTORY.ITEMS,
             element: <Items />,
+          },
+          {
+            path: WEB_ROUTES.MASTER.INVENTORY.ITEM_CODES,
+            element: <ItemCodes />,
           },
           {
             path: WEB_ROUTES.MASTER.ACCOUNTS_MANAGEMENT.ACCOUNT_MASTER,

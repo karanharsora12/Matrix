@@ -514,8 +514,12 @@ export default function MenuSetup() {
               value={form.menuIcon}
               onValueChange={(v) => set("menuIcon", v)}
             >
-              <SelectTrigger className="h-9">
-                <SelectValue />
+              <SelectTrigger
+                className="h-9"
+                clearable={!!form.menuIcon}
+                onClear={() => set("menuIcon", "")}
+              >
+                <SelectValue placeholder="Select an icon" />
               </SelectTrigger>
               <SelectContent>
                 {iconOptions.map((icon) => {

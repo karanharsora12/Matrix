@@ -11,6 +11,7 @@ export const WEB_ROUTES = {
     INVENTORY: {
       ITEM_GROUPS: "/master/inventory/item-groups",
       ITEMS: "/master/inventory/items",
+      ITEM_CODES: "/master/inventory/item-code",
     },
     ACCOUNTS_MANAGEMENT: {
       ACCOUNT_MASTER: "/master/accounts/account-master",

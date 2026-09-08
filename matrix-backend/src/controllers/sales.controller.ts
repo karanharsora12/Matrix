@@ -1,12 +1,18 @@
 import type { Request, Response } from "express";
 import { salesService } from "../services/sales.service";
+import { getPaginationOptions, buildPaginatedResponse, buildListResponse } from "../utils/pagination";
 
 export class SalesController {
   async getSales(req: Request, res: Response) {
     try {
-      const sales = await salesService.getSales();
-      const summary = [{ id: sales.length }];
-      res.json({ success: true, data: sales, summary });
+      const options = getPaginationOptions(req);
+      if (options.isPaginated) {
+        const result = await salesService.getSales(options);
+        return res.json(buildPaginatedResponse(req, "sales", result));
+      }
+
+      const result = await salesService.getSales();
+      res.json(buildListResponse(req, "sales", result.data));
     } catch (error) {
       console.error("Error fetching sales:", error);
       res.status(500).json({ success: false, error: "Internal server error" });

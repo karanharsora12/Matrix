@@ -337,7 +337,7 @@ export function PopupTable<T extends Record<string, any>>({
         zIndex: 99999,
       }}
       className={cn(
-        "flex flex-col bg-popover text-popover-foreground rounded-lg border border-border shadow-2xl ring-1 ring-black/10 dark:ring-white/10 select-none animate-in fade-in-0 zoom-in-95 duration-100",
+        "flex flex-col bg-popover text-popover-foreground rounded-lg border select-none animate-in fade-in-0 zoom-in-95 duration-100",
         className,
       )}
       onKeyDown={handleKeyDown}

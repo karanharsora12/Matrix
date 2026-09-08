@@ -23,6 +23,7 @@ import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
 import type { ColDef } from "ag-grid-community";
 import type { Item } from "@/api/inventory";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 
 const Items: React.FC = () => {
   const queryClient = useQueryClient();
@@ -39,9 +40,6 @@ const Items: React.FC = () => {
     attributes: [],
   });
 
-  const { data: itemsResponse, isLoading } = useItems();
-  const items = itemsResponse?.data || [];
-  const itemsSummary = itemsResponse?.summary || [];
   const { commonLists } = useSelector((state: RootState) => state.inventory);
   const createMutation = useCreateItem();
   const updateMutation = useUpdateItem();
@@ -121,7 +119,11 @@ const Items: React.FC = () => {
         headerName: "Active",
         width: 65,
         cellRenderer: ActiveCellRenderer,
-        cellStyle: { display: "flex", justifyContent: "center", alignItems: "center" },
+        cellStyle: {
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        },
       },
       {
         headerName: "Attributes",
@@ -151,10 +153,6 @@ const Items: React.FC = () => {
     ];
   }, [commonLists]);
 
-  const filteredData = items.filter((item) =>
-    item.itemName.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
   return (
     <div className="h-full flex flex-col p-6 space-y-6">
       <ListingHeader
@@ -173,21 +171,19 @@ const Items: React.FC = () => {
         onPrint={() => onPrint("Items List")}
       />
 
-      {!isLoading && (
-        <DataGrid
-          ref={gridRef}
-          rowData={filteredData}
-          columnDefs={columnDefs}
-          pinnedBottomRowData={itemsSummary}
-          gridOptions={{
-            onRowDoubleClicked: (e) => {
-              if (e.node.rowPinned) return;
-              handleEdit(e.data);
-            },
-            pagination: false,
-          }}
-        />
-      )}
+      <DataGrid
+        ref={gridRef}
+        apiName={API_ENDPOINTS.INVENTORY.ITEMS}
+        infiniteScroll={false}
+        columnDefs={columnDefs}
+        gridOptions={{
+          onRowDoubleClicked: (e) => {
+            if (e.node.rowPinned) return;
+            handleEdit(e.data);
+          },
+          pagination: false,
+        }}
+      />
 
       <Modal
         open={isModalOpen}

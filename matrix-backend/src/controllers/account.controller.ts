@@ -1,11 +1,12 @@
 import type { Request, Response } from "express";
 import { accountService } from "../services/account.service";
+import { getPaginationOptions, buildPaginatedResponse, buildListResponse, buildMasterResponse } from "../utils/pagination";
 
 export class AccountController {
   async getMasterData(req: Request, res: Response) {
     try {
       const data = await accountService.getMasterData();
-      res.json({ success: true, data });
+      res.json(buildMasterResponse(req, "accountMasterData", data));
     } catch (error) {
       console.error("Error fetching account master data:", error);
       res.status(500).json({ success: false, error: "Internal server error" });
@@ -14,40 +15,15 @@ export class AccountController {
 
   async getAccounts(req: Request, res: Response) {
     try {
-      const page = Number.parseInt(req.body?.page as string, 10);
-      const limit = Number.parseInt(req.body?.limit as string, 10);
-      const isPaginated = Number.isFinite(page) || Number.isFinite(limit);
+      const options = getPaginationOptions(req);
 
-      if (isPaginated) {
-        const search =
-          typeof req.body.search === "string" ? req.body.search : undefined;
-        const sortField =
-          typeof req.body.sortField === "string"
-            ? req.body.sortField
-            : undefined;
-        const result = await accountService.getAccountsPage({
-          page: Number.isFinite(page) ? page : 1,
-          limit: Number.isFinite(limit) ? limit : 50,
-          sortDirection:
-            req.body.sortDirection === "desc" ? "desc" : "asc",
-          ...(search ? { search } : {}),
-          ...(sortField ? { sortField } : {}),
-        });
-        return res.json({
-          success: true,
-          data: result.data,
-          summary: [{ id: result.pagination.total }],
-          pagination: result.pagination,
-        });
+      if (options.isPaginated) {
+        const result = await accountService.getAccountsPage(options);
+        return res.json(buildPaginatedResponse(req, "accounts", result));
       }
 
       const data = await accountService.getAccounts();
-      const summary = [
-        {
-          id: data.length,
-        },
-      ];
-      res.json({ success: true, data, summary });
+      res.json(buildListResponse(req, "accounts", data));
     } catch (error) {
       console.error("Error fetching accounts:", error);
       res.status(500).json({ success: false, error: "Internal server error" });

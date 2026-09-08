@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
     ITEM_GROUP_BY_ID: (id: string | number) => `/inventory/item-groups/${id}`,
     ITEMS: "/inventory/items",
     ITEM_BY_ID: (id: string | number) => `/inventory/items/${id}`,
+    ITEM_CODES: "/inventory/item-codes",
   },
   ACCOUNTS: {
     BASE: "/accounts",
