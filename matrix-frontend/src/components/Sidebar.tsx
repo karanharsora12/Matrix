@@ -1,16 +1,22 @@
 import apiClient from "@/api/client";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
-import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  createContext,
+  useContext,
+} from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import {
@@ -22,10 +28,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const COLLAPSED_WIDTH = 60;
+const EXPANDED_WIDTH = 240;
+
+interface SidebarContextType {
+  collapsed: boolean;
+  toggleCollapsed: () => void;
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
+}
+
+export const SidebarContext = createContext<SidebarContextType>({
+  collapsed: false,
+  toggleCollapsed: () => {},
+  mobileOpen: false,
+  setMobileOpen: () => {},
+});
+
+export function useSidebar() {
+  return useContext(SidebarContext);
+}
+
 function SubMenuPopup({ item }: { item: any }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const Icon = (LucideIcons as any)[item.menuIcon || "Dot"] || LucideIcons.Dot;
+
+  const isActive =
+    location.pathname === item.fullPath ||
+    location.pathname.startsWith(item.fullPath + "/");
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
@@ -34,25 +65,32 @@ function SubMenuPopup({ item }: { item: any }) {
           <Link
             to={item.fullPath}
             className={cn(
-              "flex items-center justify-center rounded-md px-0 py-2 text-sm font-medium transition-colors my-0.5",
-              location.pathname === item.fullPath ||
-                location.pathname.startsWith(item.fullPath + "/")
-                ? "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
-                : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white",
+              "group relative flex items-center justify-center rounded-lg py-2 transition-all duration-200 my-0.5",
+              isActive
+                ? "bg-primary-action/10 text-primary-action dark:bg-primary-action/15 dark:text-primary-action"
+                : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-white",
             )}
           >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon
+              className="h-[18px] w-[18px] shrink-0"
+              strokeWidth={isActive ? 2.2 : 1.8}
+            />
+            {isActive && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary-action" />
+            )}
           </Link>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
           side="right"
           align="start"
-          sideOffset={14}
-          className="w-52 bg-white dark:bg-zinc-950 shadow-xl"
+          sideOffset={10}
+          className="w-52 rounded-xl border-zinc-200 bg-white/95 shadow-xl backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/95"
         >
-          <DropdownMenuLabel>{item.menuCaption}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            {item.menuCaption}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800" />
           {item.children.map((child: any) => {
             const ChildIcon =
               (LucideIcons as any)[child.menuIcon || "Dot"] || LucideIcons.Dot;
@@ -65,11 +103,13 @@ function SubMenuPopup({ item }: { item: any }) {
                 <a
                   href={child.fullPath}
                   className={cn(
-                    "flex w-full cursor-pointer items-center gap-2.5",
-                    childActive ? "text-blue-600 dark:text-blue-400" : "",
+                    "flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
+                    childActive
+                      ? "bg-primary-action/10 text-primary-action dark:bg-primary-action/15 dark:text-primary-action"
+                      : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800",
                   )}
                 >
-                  <ChildIcon className="h-4 w-4" />
+                  <ChildIcon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
                   <span>{child.menuCaption}</span>
                 </a>
               </DropdownMenuItem>
@@ -81,11 +121,11 @@ function SubMenuPopup({ item }: { item: any }) {
   );
 }
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const [menus, setMenus] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const location = useLocation();
+  const { collapsed } = useSidebar();
 
   useEffect(() => {
     const fetchMenus = async () => {
@@ -99,10 +139,11 @@ export function Sidebar() {
     fetchMenus();
   }, []);
 
-  const toggleExpand = (id: string, e: React.MouseEvent) => {
+  const toggleExpand = useCallback((id: string, e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  }, []);
 
   const renderMenu = (item: any, depth = 0): React.ReactNode => {
     const isActive =
@@ -123,33 +164,39 @@ export function Sidebar() {
         onClick={(e) => {
           if (hasChildren) {
             toggleExpand(item.id, e);
+          } else {
+            onNavigate?.();
           }
         }}
         className={cn(
-          "flex items-center justify-between rounded-md px-2.5 py-2 text-sm font-medium transition-colors my-0.5",
-          collapsed && "justify-center px-0",
+          "group relative flex items-center justify-between rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-all duration-200 my-[2px]",
+          collapsed && "justify-center px-0 py-2",
           isActive && !hasChildren
-            ? "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
-            : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white",
+            ? "bg-primary-action/10 text-primary-action dark:bg-primary-action/15 dark:text-primary-action"
+            : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-white",
         )}
         style={{
-          paddingLeft: collapsed ? undefined : `${depth * 1 + 0.625}rem`,
+          paddingLeft: collapsed ? undefined : `${depth * 0.875 + 0.625}rem`,
         }}
       >
-        <div className="flex items-center gap-3">
+        {isActive && !hasChildren && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary-action" />
+        )}
+        <div className="flex items-center gap-2.5 overflow-hidden">
           <Icon
             className={cn(
-              "shrink-0",
-              !item.menuIcon ? "h-6 w-6 -ml-1 -mr-1" : "h-4 w-4",
+              "shrink-0 transition-all duration-200",
+              !item.menuIcon ? "h-5 w-5 -ml-0.5 -mr-0.5" : "h-[18px] w-[18px]",
+              isActive ? "text-primary-action" : "",
             )}
-            strokeWidth={!item.menuIcon ? 3 : 2}
+            strokeWidth={!item.menuIcon ? 2.5 : 1.8}
           />
-          {!collapsed && <span>{item.menuCaption}</span>}
+          {!collapsed && <span className="truncate">{item.menuCaption}</span>}
         </div>
         {!collapsed && hasChildren && (
           <ChevronRight
             className={cn(
-              "h-4 w-4 transition-transform",
+              "h-3.5 w-3.5 shrink-0 transition-transform duration-200 text-zinc-400",
               isExpanded ? "rotate-90" : "",
             )}
           />
@@ -161,7 +208,13 @@ export function Sidebar() {
       collapsed && !hasChildren ? (
         <Tooltip key={item.id}>
           <TooltipTrigger asChild>{link}</TooltipTrigger>
-          <TooltipContent side="right">{item.menuCaption}</TooltipContent>
+          <TooltipContent
+            side="right"
+            sideOffset={8}
+            className="rounded-lg border-zinc-200 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white dark:border-zinc-700 dark:bg-zinc-800"
+          >
+            {item.menuCaption}
+          </TooltipContent>
         </Tooltip>
       ) : (
         <div key={item.id}>{link}</div>
@@ -173,7 +226,7 @@ export function Sidebar() {
         {hasChildren && !collapsed && (
           <div
             className={cn(
-              "flex flex-col overflow-hidden transition-all duration-300",
+              "flex flex-col overflow-hidden transition-all duration-200",
               isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0",
             )}
           >
@@ -185,46 +238,129 @@ export function Sidebar() {
   };
 
   return (
-    <aside
+    <nav className="flex-1 overflow-y-auto px-2 py-1.5">
+      {menus.map((menu) => renderMenu(menu))}
+    </nav>
+  );
+}
+
+function SidebarBrand({ collapsed }: { collapsed: boolean }) {
+  return (
+    <div
       className={cn(
-        "flex flex-col border-r border-zinc-200 bg-white transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-900",
-        collapsed ? "w-[72px]" : "w-[260px]",
+        "flex items-center border-b border-zinc-100 dark:border-zinc-800/80 transition-all duration-300",
+        collapsed ? "h-12 justify-center px-0" : "h-12 px-3.5",
       )}
     >
-      <div
-        className={cn(
-          "relative flex h-14 items-center border-b border-zinc-200 dark:border-zinc-800",
-          collapsed ? "justify-center px-0" : "px-4",
-        )}
-      >
-        <div className="flex items-center gap-2 overflow-hidden">
-          <LucideIcons.Box className="h-6 w-6 shrink-0 text-blue-600" />
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white">
-                MATRIX
-              </span>
-            </div>
-          )}
+      <div className="flex items-center gap-2 overflow-hidden">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-action">
+          <LucideIcons.Box className="h-4 w-4 text-white" strokeWidth={2.5} />
         </div>
-
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute -right-3.5 top-3.5 z-50 h-7 w-7 shrink-0 rounded-full border border-zinc-200 bg-white text-zinc-400 hover:text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-300"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
+        {!collapsed && (
+          <span className="text-[15px] font-bold tracking-tight text-zinc-900 dark:text-white">
+            MATRIX
+          </span>
+        )}
       </div>
+    </div>
+  );
+}
 
-      <nav className="flex-1 overflow-y-auto px-3 py-2">
-        {menus.map((menu) => renderMenu(menu))}
-      </nav>
+function SidebarCollapseButton() {
+  const { collapsed, toggleCollapsed } = useSidebar();
+
+  return (
+    <div className="flex items-center border-t border-zinc-100 dark:border-zinc-800/80 px-2 py-2">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "w-full gap-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors duration-200",
+              collapsed && "justify-center px-0",
+            )}
+            onClick={toggleCollapsed}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+            ) : (
+              <>
+                <PanelLeftClose
+                  className="h-4 w-4 shrink-0"
+                  strokeWidth={1.8}
+                />
+                <span className="text-xs font-medium">Collapse</span>
+              </>
+            )}
+          </Button>
+        </TooltipTrigger>
+        {collapsed && (
+          <TooltipContent
+            side="right"
+            sideOffset={8}
+            className="rounded-lg border-zinc-200 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white dark:border-zinc-700 dark:bg-zinc-800"
+          >
+            Expand sidebar
+          </TooltipContent>
+        )}
+      </Tooltip>
+    </div>
+  );
+}
+
+function SidebarDesktop() {
+  const { collapsed } = useSidebar();
+
+  return (
+    <aside
+      className="hidden md:flex flex-col border-r border-zinc-100 bg-white transition-[width] duration-300 ease-in-out dark:border-zinc-800/80 dark:bg-zinc-900"
+      style={{ width: collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH }}
+    >
+      <SidebarBrand collapsed={collapsed} />
+      <SidebarNav />
+      <SidebarCollapseButton />
     </aside>
+  );
+}
+
+function SidebarMobile() {
+  const { mobileOpen, setMobileOpen } = useSidebar();
+
+  return (
+    <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+      <SheetContent
+        side="left"
+        className="w-[260px] p-0 border-zinc-100 dark:border-zinc-800/80"
+      >
+        <SheetTitle className="sr-only">Navigation</SheetTitle>
+        <SidebarBrand collapsed={false} />
+        <SidebarNav onNavigate={() => setMobileOpen(false)} />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export function Sidebar() {
+  return (
+    <>
+      <SidebarDesktop />
+      <SidebarMobile />
+    </>
+  );
+}
+
+export function MobileSidebarTrigger() {
+  const { setMobileOpen } = useSidebar();
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="md:hidden h-9 w-9"
+      onClick={() => setMobileOpen(true)}
+    >
+      <PanelLeftOpen className="h-5 w-5" strokeWidth={1.8} />
+    </Button>
   );
 }

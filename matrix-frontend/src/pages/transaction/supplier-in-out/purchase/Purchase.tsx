@@ -811,24 +811,21 @@ export const Purchase: React.FC = () => {
   );
 
   // Item Selection for Grid Line Item
-  const handleSelectItemForRow = useCallback(
-    (rowIndex: number, item: any) => {
-      setFormData((prev) => {
-        const lines = [...(prev.itemLines || [])];
-        if (!lines[rowIndex]) return prev;
-        const current = { ...lines[rowIndex] };
-        current.itemId = item.id;
-        current.itemName = item.itemName;
-        if (!current.tagNo || current.tagNo.startsWith("TAG-")) {
-          current.tagNo = item.shortName || item.itemName;
-          current.itemCode = item.shortName || item.itemName;
-        }
-        lines[rowIndex] = current;
-        return { ...prev, itemLines: lines };
-      });
-    },
-    [],
-  );
+  const handleSelectItemForRow = useCallback((rowIndex: number, item: any) => {
+    setFormData((prev) => {
+      const lines = [...(prev.itemLines || [])];
+      if (!lines[rowIndex]) return prev;
+      const current = { ...lines[rowIndex] };
+      current.itemId = item.id;
+      current.itemName = item.itemName;
+      if (!current.tagNo || current.tagNo.startsWith("TAG-")) {
+        current.tagNo = item.shortName || item.itemName;
+        current.itemCode = item.shortName || item.itemName;
+      }
+      lines[rowIndex] = current;
+      return { ...prev, itemLines: lines };
+    });
+  }, []);
 
   // Save / Update
   const isSaving = createMutation.isPending || updateMutation.isPending;
@@ -1729,12 +1726,11 @@ export const Purchase: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* URD / Old Gold */}
                   <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
                     <div className="flex items-center gap-1.5">
                       <Coins className="h-3.5 w-3.5 text-amber-500" />
                       <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        URD / Old Gold
+                        URD
                       </span>
                     </div>
                     <div className="w-28">
@@ -2073,9 +2069,7 @@ export const Purchase: React.FC = () => {
             <div className="flex justify-between items-start text-xs pt-2">
               <div className="max-w-xs text-[11px] text-slate-500 space-y-1">
                 <p className="font-semibold text-slate-700">Remarks / Terms:</p>
-                <p>
-                  {formData.remarks || "Standard purchase terms apply."}
-                </p>
+                <p>{formData.remarks || "Standard purchase terms apply."}</p>
               </div>
               <div className="w-64 space-y-1.5 text-right">
                 <div className="flex justify-between">

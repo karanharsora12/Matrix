@@ -13,6 +13,7 @@ import type { RootState } from "@/store";
 import { logout } from "@/store/authSlice";
 import apiClient from "@/api/client";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
+import { MobileSidebarTrigger } from "@/components/Sidebar";
 import { Bell, HelpCircle, LogOut, Search, Settings, User } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -88,71 +89,81 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-zinc-200 bg-white/80 px-4 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/80 sm:px-6">
-      <div className="hidden sm:block">
-        <div className="relative" ref={searchRef}>
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-          <Input
-            ref={inputRef}
-            placeholder="Search menus..."
-            className="h-9 w-64 pl-9 text-sm"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setIsSearchOpen(true);
-            }}
-            onFocus={() => setIsSearchOpen(true)}
-          />
-          <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800">
-            ⌘K
-          </kbd>
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-primary-action/15 bg-white px-4 dark:border-primary-action/25 dark:bg-[color-mix(in_srgb,var(--primary-action)_22%,black)] sm:px-6">
+      <div className="flex items-center gap-2">
+        <MobileSidebarTrigger />
+        <div className="hidden sm:block">
+          <div className="group relative" ref={searchRef}>
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 transition-colors group-focus-within:text-primary-action" />
+            <Input
+              ref={inputRef}
+              placeholder="Search menus..."
+              className="h-9 w-64 border-zinc-200 bg-white pl-9 text-sm dark:border-zinc-700/60 dark:bg-zinc-800/60 focus-visible:border-primary-action/50 focus-visible:ring-primary-action/30"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearchOpen(true);
+              }}
+              onFocus={() => setIsSearchOpen(true)}
+            />
+            <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800">
+              ⌘K
+            </kbd>
 
-          {isSearchOpen && searchQuery && (
-            <div className="absolute top-full left-0 mt-2 w-64 rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950 max-h-64 overflow-y-auto">
-              {filteredMenus.length > 0 ? (
-                <div className="py-1">
-                  {filteredMenus.map((menu) => (
-                    <button
-                      key={menu.id}
-                      className="w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                      onClick={() => {
-                        navigate(menu.fullPath);
-                        setIsSearchOpen(false);
-                        setSearchQuery("");
-                      }}
-                    >
-                      {menu.menuCaption}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="px-4 py-3 text-sm text-zinc-500 text-center">
-                  No results found.
-                </div>
-              )}
-            </div>
-          )}
+            {isSearchOpen && searchQuery && (
+              <div className="absolute top-full left-0 mt-2 w-64 rounded-xl border border-zinc-200 bg-white/95 shadow-xl backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/95 max-h-64 overflow-y-auto p-1.5">
+                {filteredMenus.length > 0 ? (
+                  <div className="py-1">
+                    {filteredMenus.map((menu) => (
+                      <button
+                        key={menu.id}
+                        className="w-full rounded-lg text-left px-3 py-2 text-[13px] font-medium text-zinc-600 transition-colors hover:bg-primary-action/10 hover:text-primary-action dark:text-zinc-400 dark:hover:bg-primary-action/15 dark:hover:text-primary-action"
+                        onClick={() => {
+                          navigate(menu.fullPath);
+                          setIsSearchOpen(false);
+                          setSearchQuery("");
+                        }}
+                      >
+                        {menu.menuCaption}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="px-4 py-3 text-sm text-zinc-500 text-center">
+                    No results found.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="relative h-9 w-9">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative h-9 w-9 rounded-lg text-zinc-500 hover:bg-primary-action/10 hover:text-primary-action dark:text-zinc-400 dark:hover:bg-primary-action/15 dark:hover:text-primary-action"
+        >
           <Bell className="h-4 w-4" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-active ring-2 ring-white dark:ring-zinc-900" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="hidden h-9 w-9 sm:inline-flex"
+          className="hidden h-9 w-9 rounded-lg text-zinc-500 hover:bg-primary-action/10 hover:text-primary-action dark:text-zinc-400 dark:hover:bg-primary-action/15 dark:hover:text-primary-action sm:inline-flex"
         >
           <HelpCircle className="h-4 w-4" />
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="ml-1 gap-2 px-2 py-1.5">
-              <Avatar className="h-7 w-7">
-                <AvatarFallback className="bg-blue-600 text-xs text-white uppercase">
+            <Button
+              variant="ghost"
+              className="ml-1 gap-2 rounded-lg px-2 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
+            >
+              <Avatar className="h-7 w-7 rounded-lg">
+                <AvatarFallback className="rounded-lg bg-primary-action text-xs font-semibold text-white uppercase">
                   {user?.name?.substring(0, 2) || "U"}
                 </AvatarFallback>
               </Avatar>
@@ -166,7 +177,10 @@ export function Header() {
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent
+            align="end"
+            className="w-48 rounded-xl border-zinc-200 dark:border-zinc-800"
+          >
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col gap-0.5">
                 <span className="text-sm font-medium">
@@ -177,18 +191,18 @@ export function Header() {
                 </span>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800" />
+            <DropdownMenuItem className="rounded-lg focus:bg-primary-action/10 focus:text-primary-action cursor-pointer">
               <User className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="rounded-lg focus:bg-primary-action/10 focus:text-primary-action cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800" />
             <DropdownMenuItem
-              className="text-red-600 focus:text-red-600 cursor-pointer"
+              className="rounded-lg text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/50 cursor-pointer"
               onClick={() => {
                 dispatch(logout());
                 navigate("/login");

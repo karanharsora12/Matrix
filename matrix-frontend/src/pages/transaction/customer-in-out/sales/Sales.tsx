@@ -646,7 +646,7 @@ export const Sales: React.FC = () => {
           height: 360,
         },
         valueGetter: (p) =>
-          p.node?.rowPinned ? "TOTAL" : p.data?.itemGroupName || ""
+          p.node?.rowPinned ? "TOTAL" : p.data?.itemGroupName || "",
       },
       {
         headerName: "Items",
@@ -1800,12 +1800,11 @@ export const Sales: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* URD / Old Gold Purchase Exchange (F3) */}
                   <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
                     <div className="flex items-center gap-1.5">
                       <Coins className="h-3.5 w-3.5 text-amber-500" />
                       <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        URD / Old Gold{" "}
+                        URD
                       </span>
                     </div>
                     <div className="w-28">

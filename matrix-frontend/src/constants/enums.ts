@@ -17,11 +17,51 @@ export const TransactionMenu = {
 export type TransactionMenu =
   (typeof TransactionMenu)[keyof typeof TransactionMenu];
 
+export const TransactionType = {
+  CPAY: "CPAY",
+  CREC: "CREC",
+  BPAY: "BPAY",
+  BREC: "BREC",
+} as const;
+
+export type TransactionType =
+  (typeof TransactionType)[keyof typeof TransactionType];
+
+export const TRANSACTION_TYPE_CONFIG: Record<
+  TransactionType,
+  {
+    label: string;
+    daybookGroupShortName: "CASH" | "BANK";
+    isPayment: boolean;
+  }
+> = {
+  CPAY: {
+    label: "Cash Payment",
+    daybookGroupShortName: "CASH",
+    isPayment: true,
+  },
+  CREC: {
+    label: "Cash Receipt",
+    daybookGroupShortName: "CASH",
+    isPayment: false,
+  },
+  BPAY: {
+    label: "Bank Payment",
+    daybookGroupShortName: "BANK",
+    isPayment: true,
+  },
+  BREC: {
+    label: "Bank Receipt",
+    daybookGroupShortName: "BANK",
+    isPayment: false,
+  },
+};
+
 export const TRANSACTION_MENU_DAYBOOK_GROUP_MAP: Record<string, string[]> = {
   [TransactionMenu.SALES]: ["SAL"],
   [TransactionMenu.PURCHASE]: ["PUR"],
-  [TransactionMenu.PAYMENT]: ["PAY"],
-  [TransactionMenu.RECEIPT]: ["RCT"],
+  [TransactionMenu.PAYMENT]: ["CASH", "BANK", "PAY"],
+  [TransactionMenu.RECEIPT]: ["CASH", "BANK", "RCT"],
   [TransactionMenu.JOURNAL]: ["JRN"],
   [TransactionMenu.CONTRA]: ["CTR"],
   [TransactionMenu.CREDIT_NOTE]: ["SAL"],

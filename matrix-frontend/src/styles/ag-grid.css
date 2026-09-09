@@ -1,12 +1,20 @@
 /* ─── AG Grid Custom Overrides ─── */
 
-/* Floating filter row: subtle background */
+/* Floating filter row: primary tint */
 .ag-grid-custom .ag-floating-filter {
-  background-color: hsl(240 4.8% 97.5%);
+  background-color: color-mix(
+    in srgb,
+    var(--primary-action, #3b82a0) 6%,
+    white
+  );
   padding: 0 !important;
 }
 .dark .ag-grid-custom .ag-floating-filter {
-  background-color: hsl(240 6% 8%);
+  background-color: color-mix(
+    in srgb,
+    var(--primary-action, #4a9bbd) 16%,
+    black
+  );
 }
 
 .ag-grid-custom .ag-floating-filter-body {
@@ -72,10 +80,10 @@
   font-weight: 600;
   font-size: 13px;
   letter-spacing: -0.01em;
-  color: hsl(240 5.9% 10%);
+  color: hsl(240 10% 3.9%);
 }
 .dark .ag-grid-custom .ag-header-cell-label {
-  color: hsl(0 0% 95%);
+  color: color-mix(in srgb, var(--primary-action, #4a9bbd) 45%, white);
 }
 
 .ag-grid-custom .ag-header-cell {
@@ -107,6 +115,18 @@
 .ag-grid-custom .ag-root-wrapper,
 .ag-grid-custom.ag-theme-quartz,
 .ag-theme-quartz {
+  --ag-accent-color: var(--primary-action, #3b82a0) !important;
+  --ag-selected-row-background-color: color-mix(
+    in srgb,
+    var(--primary-action, #3b82a0) 12%,
+    white
+  ) !important;
+  --ag-range-selection-background-color: color-mix(
+    in srgb,
+    var(--primary-action, #3b82a0) 15%,
+    white
+  ) !important;
+  --ag-range-selection-border-color: var(--primary-action, #3b82a0) !important;
   --ag-cell-focus-border: none !important;
   --ag-cell-focused-border: none !important;
   --ag-cell-focused-box-shadow: none !important;
@@ -225,20 +245,28 @@
 
 /* ─── Pinned Bottom Total Row ─── */
 .ag-grid-custom .ag-row-pinned {
-  background-color: hsl(240 4.8% 95.9%) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--primary-action, #3b82a0) 10%,
+    white
+  ) !important;
   font-weight: 600;
   font-size: 13px;
-  border-top: 2px solid hsl(240 5.9% 85%) !important;
 }
 .dark .ag-grid-custom .ag-row-pinned {
-  background-color: hsl(240 5% 12%) !important;
-  border-top: 2px solid hsl(240 3.7% 22%) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--primary-action, #4a9bbd) 26%,
+    black
+  ) !important;
+  border-top: 2px solid
+    color-mix(in srgb, var(--primary-action, #4a9bbd) 45%, black) !important;
 }
 .ag-grid-custom .ag-row-pinned .ag-cell {
-  color: hsl(240 5.9% 10%);
+  color: hsl(240 10% 3.9%);
 }
 .dark .ag-grid-custom .ag-row-pinned .ag-cell {
-  color: hsl(0 0% 95%);
+  color: color-mix(in srgb, var(--primary-action, #4a9bbd) 50%, white);
 }
 
 .ag-grid-custom ::-webkit-scrollbar {
@@ -265,6 +293,37 @@
   background-color: hsl(240 3.7% 28%) !important;
 }
 
+.dark .ag-grid-custom,
+.dark .ag-grid-custom .ag-root-wrapper,
+.dark .ag-grid-custom.ag-theme-quartz {
+  --ag-selected-row-background-color: color-mix(
+    in srgb,
+    var(--primary-action, #4a9bbd) 28%,
+    black
+  ) !important;
+  --ag-range-selection-background-color: color-mix(
+    in srgb,
+    var(--primary-action, #4a9bbd) 22%,
+    black
+  ) !important;
+}
+
 .dark .ag-grid-custom ::-webkit-scrollbar-thumb:hover {
   background-color: hsl(240 3.7% 48%) !important;
+}
+
+.ag-grid-custom .ag-row-selected {
+  box-shadow: inset 3px 0 0 var(--primary-action, #3b82a0);
+}
+.ag-grid-custom .ag-sort-ascending .ag-header-icon,
+.ag-grid-custom .ag-sort-descending .ag-header-icon,
+.ag-grid-custom .ag-sort-none .ag-header-icon.ag-sort-indicator-icon,
+.ag-grid-custom .ag-header-cell-filtered .ag-header-icon,
+.ag-grid-custom .ag-floating-filter-button.ag-filter-active {
+  color: var(--primary-action, #3b82a0) !important;
+}
+
+.ag-grid-custom input[type="checkbox"],
+.ag-grid-custom input[type="radio"] {
+  accent-color: var(--primary-action, #3b82a0);
 }

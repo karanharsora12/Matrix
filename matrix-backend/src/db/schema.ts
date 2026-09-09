@@ -243,3 +243,40 @@ export const salesItems = pgTable("sales_items", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  voucherNo: varchar("voucher_no", { length: 256 }).notNull().unique(),
+  srNo: integer("sr_no"),
+  voucherDate: timestamp("voucher_date").notNull(),
+  transactionType: varchar("transaction_type", { length: 50 }).notNull(),
+  daybookId: integer("daybook_id")
+    .references((): AnyPgColumn => daybooks.id)
+    .notNull(),
+  accountId: integer("account_id")
+    .references((): AnyPgColumn => accounts.id)
+    .notNull(),
+  accountNo: varchar("account_no", { length: 256 }),
+  reference: varchar("reference", { length: 256 }),
+  chequeNo: varchar("cheque_no", { length: 256 }),
+  chequeDate: timestamp("cheque_date"),
+  totalAmount: numeric("total_amount").default("0").notNull(),
+  remarks: varchar("remarks", { length: 1024 }),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const paymentDetails = pgTable("payment_details", {
+  id: serial("id").primaryKey(),
+  paymentId: integer("payment_id")
+    .references((): AnyPgColumn => payments.id, { onDelete: "cascade" })
+    .notNull(),
+  accountId: integer("account_id")
+    .references((): AnyPgColumn => accounts.id)
+    .notNull(),
+  amount: numeric("amount").default("0").notNull(),
+  remarks: varchar("remarks", { length: 1024 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

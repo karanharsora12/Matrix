@@ -2045,10 +2045,12 @@ async function main() {
     const daybookGroupList = [
       { groupName: "Sales", shortName: "SAL", description: "Sales transactions", isActive: true },
       { groupName: "Purchase", shortName: "PUR", description: "Purchase transactions", isActive: true },
-      { groupName: "Payment", shortName: "PAY", description: "Bank and cash payment vouchers", isActive: true },
-      { groupName: "Receipt", shortName: "RCT", description: "Bank and cash receipt vouchers", isActive: true },
+      { groupName: "Payment", shortName: "PAY", description: "General payment vouchers", isActive: true },
+      { groupName: "Receipt", shortName: "RCT", description: "General receipt vouchers", isActive: true },
       { groupName: "Journal", shortName: "JRN", description: "General journal vouchers", isActive: true },
       { groupName: "Contra", shortName: "CTR", description: "Inter-bank and cash transfer vouchers", isActive: true },
+      { groupName: "Cash", shortName: "CASH", description: "Cash transactions and daybooks", isActive: true },
+      { groupName: "Bank", shortName: "BANK", description: "Bank transactions and daybooks", isActive: true },
     ];
 
     for (const grp of daybookGroupList) {
@@ -2065,8 +2067,8 @@ async function main() {
     console.log("Seeding daybooks...");
     const salGroupId = daybookGroupMap.get("SAL") || 1;
     const purGroupId = daybookGroupMap.get("PUR") || 2;
-    const payGroupId = daybookGroupMap.get("PAY") || 3;
-    const rctGroupId = daybookGroupMap.get("RCT") || 4;
+    const cashGroupId = daybookGroupMap.get("CASH") || 3;
+    const bankGroupId = daybookGroupMap.get("BANK") || 4;
     const jrnGroupId = daybookGroupMap.get("JRN") || 5;
 
     const daybooksList = [
@@ -2118,28 +2120,37 @@ async function main() {
       {
         daybookName: "Bank Payment",
         shortName: "BNKPAY",
-        daybookGroupId: payGroupId,
-        voucherPrefix: "BP-VCH",
+        daybookGroupId: bankGroupId,
+        voucherPrefix: "BP-",
         allowManualNumber: false,
         description: "Vendor & expense bank payments",
         isActive: true,
       },
       {
-        daybookName: "Cash Payment",
-        shortName: "CSHPAY",
-        daybookGroupId: payGroupId,
-        voucherPrefix: "CP-VCH",
-        allowManualNumber: true,
-        description: "Petty cash expenses",
+        daybookName: "Bank Receipt",
+        shortName: "BNKRCT",
+        daybookGroupId: bankGroupId,
+        voucherPrefix: "BR-",
+        allowManualNumber: false,
+        description: "Customer bank receipts",
         isActive: true,
       },
       {
-        daybookName: "Bank Receipt",
-        shortName: "BNKRCT",
-        daybookGroupId: rctGroupId,
-        voucherPrefix: "BR-VCH",
-        allowManualNumber: false,
-        description: "Customer bank receipts",
+        daybookName: "Cash Payment",
+        shortName: "CSHPAY",
+        daybookGroupId: cashGroupId,
+        voucherPrefix: "CP-",
+        allowManualNumber: true,
+        description: "Petty cash payments",
+        isActive: true,
+      },
+      {
+        daybookName: "Cash Receipt",
+        shortName: "CSHRCT",
+        daybookGroupId: cashGroupId,
+        voucherPrefix: "CR-",
+        allowManualNumber: true,
+        description: "Petty cash receipts",
         isActive: true,
       },
       {

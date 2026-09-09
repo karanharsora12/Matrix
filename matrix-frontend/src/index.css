@@ -33,6 +33,24 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  /* ERP Color Palette Theme Tokens */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-header: var(--header);
+  --color-header-foreground: var(--header-foreground);
+  --color-main-background: var(--main-background);
+  --color-main-bg: var(--main-background);
+  --color-cards: var(--cards);
+  --color-cards-foreground: var(--cards-foreground);
+  --color-primary-action: var(--primary-action);
+  --color-primary-action-foreground: var(--primary-action-foreground);
+  --color-active: var(--active);
+  --color-active-foreground: var(--active-foreground);
+  --color-important: var(--important);
+  --color-important-foreground: var(--important-foreground);
+  --color-headings: var(--headings);
+  --color-secondary-text: var(--secondary-text);
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -40,48 +58,84 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    /* ─── ERP Explicit Palette Variables ─── */
+    --sidebar: #172027;
+    --sidebar-foreground: #FFFFFF;
+    --header: #FFFFFF;
+    --header-foreground: #1F2933;
+    --main-background: #F3F5F6;
+    --cards: #FFFFFF;
+    --cards-foreground: #1F2933;
+    --primary-action: #3B82A0;
+    --primary-action-foreground: #FFFFFF;
+    --active: #F97316;
+    --active-foreground: #FFFFFF;
+    --important: #F97316;
+    --important-foreground: #FFFFFF;
+    --headings: #1F2933;
+    --secondary-text: #66737D;
+
+    /* ─── Shadcn / Tailwind Theme System (HSL Values) ─── */
+    --background: 200 11.5% 95.9%;        /* #F3F5F6 MAIN BACKGROUND */
+    --foreground: 210 24.4% 16.1%;        /* #1F2933 HEADINGS */
+    --card: 0 0% 100%;                    /* #FFFFFF CARDS */
+    --card-foreground: 210 24.4% 16.1%;   /* #1F2933 HEADINGS */
+    --popover: 0 0% 100%;                 /* #FFFFFF HEADER / POPOVER */
+    --popover-foreground: 210 24.4% 16.1%;
+    --primary: 198 46.1% 42.9%;           /* #3B82A0 PRIMARY ACTION */
+    --primary-foreground: 0 0% 100%;      /* #FFFFFF */
+    --secondary: 200 12% 91%;
+    --secondary-foreground: 206 10.1% 44.5%; /* #66737D SECONDARY TEXT */
+    --muted: 200 12% 92%;
+    --muted-foreground: 206 10.1% 44.5%;  /* #66737D SECONDARY TEXT */
+    --accent: 200 12% 92%;
+    --accent-foreground: 210 24.4% 16.1%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
+    --border: 204 12% 88%;
+    --input: 204 12% 88%;
+    --ring: 198 46.1% 42.9%;              /* #3B82A0 PRIMARY ACTION */
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    /* ─── ERP Explicit Palette Variables (Dark Mode) ─── */
+    --sidebar: #0f161c;
+    --sidebar-foreground: #F3F5F6;
+    --header: #172027;
+    --header-foreground: #F3F5F6;
+    --main-background: #0f1418;
+    --cards: #172027;
+    --cards-foreground: #F3F5F6;
+    --primary-action: #4a9bbd;
+    --primary-action-foreground: #FFFFFF;
+    --active: #FB923C;
+    --active-foreground: #FFFFFF;
+    --important: #FB923C;
+    --important-foreground: #FFFFFF;
+    --headings: #F3F5F6;
+    --secondary-text: #94A3B8;
+
+    /* ─── Shadcn / Tailwind Theme System (HSL Values) ─── */
+    --background: 206 25% 8%;
+    --foreground: 200 11.5% 95.9%;
+    --card: 206 26% 12%;                  /* #172027 */
+    --card-foreground: 200 11.5% 95.9%;
+    --popover: 206 26% 12%;
+    --popover-foreground: 200 11.5% 95.9%;
+    --primary: 198 46.1% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 206 20% 16%;
+    --secondary-foreground: 200 11.5% 95.9%;
+    --muted: 206 20% 16%;
+    --muted-foreground: 206 10.1% 65%;
+    --accent: 206 20% 18%;
+    --accent-foreground: 200 11.5% 95.9%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 206 20% 18%;
+    --input: 206 20% 18%;
+    --ring: 198 46.1% 52%;
   }
 }
 
