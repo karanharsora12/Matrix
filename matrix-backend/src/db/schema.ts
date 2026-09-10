@@ -257,9 +257,6 @@ export const payments = pgTable("payments", {
     .references((): AnyPgColumn => accounts.id)
     .notNull(),
   accountNo: varchar("account_no", { length: 256 }),
-  reference: varchar("reference", { length: 256 }),
-  chequeNo: varchar("cheque_no", { length: 256 }),
-  chequeDate: timestamp("cheque_date"),
   totalAmount: numeric("total_amount").default("0").notNull(),
   remarks: varchar("remarks", { length: 1024 }),
   isActive: boolean("is_active").default(true).notNull(),
@@ -271,9 +268,6 @@ export const paymentDetails = pgTable("payment_details", {
   id: serial("id").primaryKey(),
   paymentId: integer("payment_id")
     .references((): AnyPgColumn => payments.id, { onDelete: "cascade" })
-    .notNull(),
-  accountId: integer("account_id")
-    .references((): AnyPgColumn => accounts.id)
     .notNull(),
   amount: numeric("amount").default("0").notNull(),
   remarks: varchar("remarks", { length: 1024 }),

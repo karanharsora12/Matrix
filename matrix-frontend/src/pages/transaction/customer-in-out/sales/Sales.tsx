@@ -1,4 +1,4 @@
-import { useAccountMasterData, useAccounts } from "@/api/accounts";
+﻿import { useAccountMasterData, useAccounts } from "@/api/accounts";
 import {
   generateVoucherNo,
   useDaybookGroups,
@@ -79,18 +79,23 @@ import {
   Building2,
   Calendar,
   CheckCircle2,
+  ChevronDown,
   Coins,
   CreditCard,
+  Download,
   FileText,
+  Paperclip,
   Percent,
   Plus,
   Printer,
   Receipt,
   Search,
+  Settings2,
   Sparkles,
   Tag,
   UploadCloud,
   User,
+  UserPlus,
   Wallet,
 } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -296,11 +301,23 @@ export const Sales: React.FC = () => {
   const [settlementTab, setSettlementTab] = useState<"receipt" | "remarks">(
     "receipt",
   );
+  const [rightTab, setRightTab] = useState<"additional" | "shipping" | "notes">(
+    "additional",
+  );
+  const [paymentTab, setPaymentTab] = useState<
+    "cash" | "bank" | "card" | "upi"
+  >("cash");
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [quickBarcode, setQuickBarcode] = useState("");
   const [taxMode, setTaxMode] = useState<"GST" | "IGST">("GST");
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
+  const [priceList, setPriceList] = useState("Default Price List");
+  const [currency, setCurrency] = useState("INR - Indian Rupee (₹)");
+  const [salesTypeLocal, setSalesTypeLocal] = useState("Local Sale");
+  const [placeOfSupply, setPlaceOfSupply] = useState("Gujarat (24)");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<Partial<Sale>>({
     voucherNo: "",
@@ -1039,504 +1056,467 @@ export const Sales: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full flex flex-col bg-slate-50/60 dark:bg-zinc-950">
-      <div className="flex-1 space-y-4 p-5 md:p-6">
-        {/* ── SECTION 1: VOUCHER DETAILS & CUSTOMER PROFILE ── */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          {/* LEFT 4 COLS: Daybook & Voucher Details */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4">
-            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <Receipt className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                  Voucher Information
-                </h2>
-              </div>
+    <div className="min-h-full flex flex-col bg-[#f5f6fa] dark:bg-zinc-950">
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          PAGE HEADER â€” title, document selector, invoice number, settings
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      <div className="bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Left: cart icon + title */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-action/10 border border-primary-action/25">
+              <Receipt className="h-5 w-5 text-primary-action" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-slate-900 dark:text-zinc-100 leading-tight">
+                Sales Invoice
+              </h1>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                Create and manage your sales transactions
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Invoice type selector + invoice number + settings */}
+          <div className="flex items-center gap-2">
+            {/* Daybook / Invoice type selector */}
+            <Select
+              value={formData.daybookId ? String(formData.daybookId) : ""}
+              onValueChange={handleSelectDaybook}
+            >
+              <SelectTrigger className="h-8 w-36 text-xs font-medium border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+                <SelectValue placeholder="Invoice" />
+              </SelectTrigger>
+              <SelectContent>
+                {daybooks.length > 0 ? (
+                  daybooks.map((db) => (
+                    <SelectItem key={db.id} value={String(db.id)}>
+                      {db.daybookName}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>
+                    No sales daybook
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Invoice Number display */}
+            <div className="flex h-8 min-w-[130px] items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+              {formData.voucherNo || "INV-2025-0001"}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {/* Daybook */}
-              <div className="col-span-2 space-y-1">
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                  Daybook <span className="text-rose-500">*</span>
-                </Label>
-                <Select
-                  value={formData.daybookId ? String(formData.daybookId) : ""}
-                  onValueChange={handleSelectDaybook}
-                >
-                  <SelectTrigger className="h-8 text-xs font-medium">
-                    <SelectValue placeholder="Select Daybook" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {daybooks.length > 0 ? (
-                      daybooks.map((db) => (
-                        <SelectItem key={db.id} value={String(db.id)}>
-                          {db.daybookName} ({db.voucherPrefix || "INV"})
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="none" disabled>
-                        No sales daybook found
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Settings icon */}
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400"
+            >
+              <Settings2 className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
 
-              {/* Bill / Voucher No. */}
+      <div className="flex-1 space-y-3 p-4 md:p-5">
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            ROW 1: Customer Details | Invoice Details | Additional Info Tabs
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+          {/* â”€â”€ CARD: Customer Details (4 cols) â”€â”€ */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <User className="h-4 w-4 text-primary-action" />
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Customer Details
+              </h2>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {/* Customer search field */}
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                  Bill No. <span className="text-rose-500">*</span>
+                <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                  Customer <span className="text-rose-500">*</span>
                 </Label>
-                <Input
-                  value={formData.voucherNo || ""}
-                  disabled
-                  className="h-8 text-xs  font-medium"
-                  placeholder="e.g. HRIA-215"
-                />
-              </div>
-
-              {/* Date */}
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                  Date
-                </Label>
-                <DatePicker
-                  value={formData.voucherDate}
-                  onChange={(val) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      voucherDate: val,
-                    }))
-                  }
-                  className="h-8 text-xs"
-                />
-              </div>
-
-              {/* Salesman */}
-              <div className="space-y-1">
-                <Label className="text-xs  text-slate-600 dark:text-zinc-400">
-                  Salesman
-                </Label>
-                <Input
-                  value={formData.salesmanName || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      salesmanName: e.target.value,
-                    }))
-                  }
-                  className="h-8 text-xs"
-                  placeholder="e.g. Amit Verma"
-                />
-              </div>
-
-              {/* Reference / Inquiry Info */}
-              <div className="space-y-1">
-                <Label className="text-xs  text-slate-600 dark:text-zinc-400">
-                  Inquiry / Ref
-                </Label>
-                <Input
-                  value={formData.reference || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      reference: e.target.value,
-                    }))
-                  }
-                  className="h-8 text-xs"
-                  placeholder="e.g. INQ-9812"
-                />
-              </div>
-
-              {/* Quick Barcode Scanner Input */}
-              <div className="col-span-2 mt-1 rounded-lg border border-amber-200 bg-amber-50/50 p-2 dark:border-amber-900/40 dark:bg-amber-950/20">
-                <div className="mb-1 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
-                    <Barcode className="h-3.5 w-3.5" />
-                    <span>Barcode / Tag Scanner</span>
-                  </div>
-                  <span className="text-[10px] text-amber-600 dark:text-amber-400">
-                    Press Enter
-                  </span>
-                </div>
-                <form onSubmit={handleQuickBarcodeAdd} className="flex gap-1.5">
-                  <Input
-                    value={quickBarcode}
-                    onChange={(e) => setQuickBarcode(e.target.value)}
-                    placeholder="Scan or type Tag # (e.g. TAG-GLD-101)"
-                    className="h-7 bg-white text-xs dark:bg-zinc-900"
+                <div className="flex gap-1.5">
+                  <PopupTable
+                    trigger={
+                      <button
+                        type="button"
+                        className="flex flex-1 h-8 items-center justify-between rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                          <span className="truncate font-medium">
+                            {formData.accountName || "Walk-in Customer"}
+                          </span>
+                        </div>
+                        <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0 ml-1" />
+                      </button>
+                    }
+                    placement="bottom-start"
+                    apiEndpoint={API_ENDPOINTS.ACCOUNTS.BASE}
+                    columns={accountDropdownColumns}
+                    onSelect={handleSelectCustomer}
+                    searchPlaceholder="Search customer..."
                   />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="h-7 bg-amber-600 px-2.5 text-xs text-white hover:bg-amber-700 dark:bg-amber-600"
+                  <button
+                    type="button"
+                    className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-primary-action/10 hover:text-primary-action hover:border-primary-action/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 shrink-0"
+                    title="Add new customer"
                   >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </form>
+                    <UserPlus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Customer info card */}
+              <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-850">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 dark:text-zinc-100 truncate">
+                      {formData.accountName || "Walk-in Customer"}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
+                      {formData.customerCity || "Ahmedabad"},{" "}
+                      {formData.customerState || "Gujarat"}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                      GST:{" "}
+                      {formData.customerGstNo
+                        ? formData.customerGstNo
+                        : "Unregistered"}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setCustomerTab("general")}
+                      className="text-[11px] font-medium text-primary-action hover:underline mt-0.5"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* MIDDLE 5 COLS: Customer Details */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-5">
-            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                  Customer / Party Details
-                </h2>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <PopupTable
-                  trigger={
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-6 px-2.5 text-[11px]  border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 gap-1.5 shadow-2xs"
-                      title="Search Party in Dropdown Table"
-                    >
-                      <Search className="h-3 w-3 text-slate-500" />
-                      Find Party
-                    </Button>
-                  }
-                  placement="bottom-end"
-                  apiEndpoint={API_ENDPOINTS.ACCOUNTS.BASE}
-                  columns={accountDropdownColumns}
-                  onSelect={handleSelectCustomer}
-                  searchPlaceholder="Search accounts..."
-                />
-              </div>
+          {/* â”€â”€ CARD: Invoice Details (5 cols) â”€â”€ */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <FileText className="h-4 w-4 text-primary-action" />
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Invoice Details
+              </h2>
             </div>
 
-            <div className="space-y-2.5">
-              {/* Customer Name & Phone */}
-              <div className="grid grid-cols-12 gap-2">
-                <div className="col-span-12 sm:col-span-7 space-y-1">
-                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
-                    Customer Full Name <span className="text-rose-500">*</span>
-                  </Label>
-                  <Input
-                    value={formData.accountName || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        accountName: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. Rahul Sharma"
-                    className="h-8 text-xs "
-                  />
-                </div>
-                <div className="col-span-12 sm:col-span-5 space-y-1">
-                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
-                    Mobile No.
-                  </Label>
-                  <Input
-                    value={formData.customerPhone || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerPhone: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. 9876543210"
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Address Line 1 & Line 2 */}
-              <div className="grid grid-cols-12 gap-2">
-                <div className="col-span-12 sm:col-span-7 space-y-1">
-                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
-                    Address Line 1
-                  </Label>
-                  <Input
-                    value={formData.customerAddress1 || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerAddress1: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. B-402, Shivalik Heights"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div className="col-span-12 sm:col-span-5 space-y-1">
-                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
-                    Alternate No.
-                  </Label>
-                  <Input
-                    value={formData.customerAltPhone || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerAltPhone: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. 9123456780"
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* City, Pincode, State */}
+            <div className="p-4 space-y-3">
+              {/* Row 1: Invoice Date, Due Date, Invoice No */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
-                    City
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Invoice Date <span className="text-rose-500">*</span>
                   </Label>
-                  <Input
-                    value={formData.customerCity || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerCity: e.target.value,
-                      }))
+                  <DatePicker
+                    value={formData.voucherDate}
+                    onChange={(val) =>
+                      setFormData((prev) => ({ ...prev, voucherDate: val }))
                     }
-                    placeholder="Ahmedabad"
                     className="h-8 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
-                    Pincode
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Due Date
                   </Label>
-                  <Input
-                    value={formData.customerPincode || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerPincode: e.target.value,
-                      }))
+                  <DatePicker
+                    value={formData.dueDate}
+                    onChange={(val) =>
+                      setFormData((prev) => ({ ...prev, dueDate: val }))
                     }
-                    placeholder="380009"
                     className="h-8 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs  text-slate-600 dark:text-zinc-400">
-                    State
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Invoice No.
                   </Label>
                   <Input
-                    value={formData.customerState || ""}
+                    value={formData.voucherNo || ""}
+                    disabled
+                    className="h-8 text-xs font-medium bg-slate-50 dark:bg-zinc-800/50"
+                    placeholder="INV-2025-0001"
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Reference No, Sales Person */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Reference No.
+                  </Label>
+                  <Input
+                    value={formData.reference || ""}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        customerState: e.target.value,
+                        reference: e.target.value,
                       }))
                     }
-                    placeholder="Gujarat"
                     className="h-8 text-xs"
+                    placeholder="e.g. PO/Ref No."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Sales Person
+                  </Label>
+                  <Input
+                    value={formData.salesmanName || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        salesmanName: e.target.value,
+                      }))
+                    }
+                    className="h-8 text-xs"
+                    placeholder="Select Sales Person"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* RIGHT 3 COLS: Customer Tabs (General Info / Tax / KYC Upload) */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
-            <div className="mb-2.5 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex gap-1">
+          {/* â”€â”€ CARD: Additional Info / Shipping / Notes Tabs (4 cols) â”€â”€ */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            {/* Tab Header */}
+            <div className="flex items-center border-b border-slate-100 dark:border-zinc-800 px-4">
+              {(["additional", "shipping", "notes"] as const).map((tab) => (
                 <button
+                  key={tab}
                   type="button"
-                  onClick={() => setCustomerTab("general")}
-                  className={`rounded-md px-2 py-1 text-xs  transition-all ${
-                    customerTab === "general"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                  onClick={() => setRightTab(tab)}
+                  className={`relative py-2.5 px-0 mr-5 text-xs font-medium transition-colors ${
+                    rightTab === tab
+                      ? "text-primary-action"
+                      : "text-slate-500 hover:text-slate-700 dark:text-zinc-400"
                   }`}
                 >
-                  General Info
+                  {tab === "additional"
+                    ? "Additional Info"
+                    : tab === "shipping"
+                      ? "Shipping"
+                      : "Notes"}
+                  {rightTab === tab && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary-action" />
+                  )}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setCustomerTab("shipping")}
-                  className={`rounded-md px-2 py-1 text-xs  transition-all ${
-                    customerTab === "shipping"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  Shipping
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCustomerTab("kyc")}
-                  className={`rounded-md px-2 py-1 text-xs  transition-all ${
-                    customerTab === "kyc"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  KYC Docs
-                </button>
-              </div>
+              ))}
             </div>
 
-            {/* General Info Tab */}
-            {customerTab === "general" && (
-              <div className="space-y-2">
-                <div className="space-y-1">
-                  <Label className="text-[11px]  text-slate-500">
-                    GSTIN / Tax No.
-                  </Label>
-                  <Input
-                    value={formData.customerGstNo || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerGstNo: e.target.value,
-                      }))
-                    }
-                    placeholder="24AAACH7409R1ZZ"
-                    className="h-7 text-xs "
-                  />
+            <div className="p-4">
+              {/* Additional Info tab */}
+              {rightTab === "additional" && (
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                      Price List
+                    </Label>
+                    <Select value={priceList} onValueChange={setPriceList}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Default Price List">
+                          Default Price List
+                        </SelectItem>
+                        <SelectItem value="Wholesale">Wholesale</SelectItem>
+                        <SelectItem value="Retail">Retail</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                      Currency
+                    </Label>
+                    <Select value={currency} onValueChange={setCurrency}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="INR - Indian Rupee (₹)">
+                          INR - Indian Rupee (₹)
+                        </SelectItem>
+                        <SelectItem value="USD ($)">USD ($)</SelectItem>
+                        <SelectItem value="AED">AED</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                      Sales Type
+                    </Label>
+                    <Select
+                      value={salesTypeLocal}
+                      onValueChange={setSalesTypeLocal}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Local Sale">Local Sale</SelectItem>
+                        <SelectItem value="Interstate">
+                          Interstate Sale
+                        </SelectItem>
+                        <SelectItem value="Export">Export</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                      Place of Supply
+                    </Label>
+                    <Select
+                      value={placeOfSupply}
+                      onValueChange={setPlaceOfSupply}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Gujarat (24)">
+                          Gujarat (24)
+                        </SelectItem>
+                        <SelectItem value="Maharashtra (27)">
+                          Maharashtra (27)
+                        </SelectItem>
+                        <SelectItem value="Delhi (07)">Delhi (07)</SelectItem>
+                        <SelectItem value="Rajasthan (08)">
+                          Rajasthan (08)
+                        </SelectItem>
+                        <SelectItem value="Karnataka (29)">
+                          Karnataka (29)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-[11px]  text-slate-500">
-                    PAN Card No.
-                  </Label>
-                  <Input
-                    value={formData.customerPanNo || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerPanNo: e.target.value,
-                      }))
-                    }
-                    placeholder="ABCDE1234F"
-                    className="h-7 text-xs  uppercase"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[11px]  text-slate-500">
-                    Aadhar Card No.
-                  </Label>
-                  <Input
-                    value={formData.customerAadharNo || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerAadharNo: e.target.value,
-                      }))
-                    }
-                    placeholder="4532 8901 2341"
-                    className="h-7 text-xs "
-                  />
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* Shipping Info Tab */}
-            {customerTab === "shipping" && (
-              <div className="space-y-2">
-                <div className="space-y-1">
-                  <Label className="text-[11px]  text-slate-500">
-                    Recipient Email
-                  </Label>
-                  <Input
-                    type="email"
-                    value={formData.customerEmail || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerEmail: e.target.value,
-                      }))
-                    }
-                    placeholder="customer@example.com"
-                    className="h-7 text-xs"
-                  />
+              {/* Shipping tab */}
+              {rightTab === "shipping" && (
+                <div className="space-y-2.5">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500">
+                      Recipient Email
+                    </Label>
+                    <Input
+                      type="email"
+                      value={formData.customerEmail || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerEmail: e.target.value,
+                        }))
+                      }
+                      placeholder="customer@example.com"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500">
+                      Delivery Landmark
+                    </Label>
+                    <Input
+                      value={formData.customerAddress2 || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerAddress2: e.target.value,
+                        }))
+                      }
+                      placeholder="Near City Center"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="deliveryPendingCheck"
+                      checked={formData.deliveryPending || false}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          deliveryPending: e.target.checked,
+                        }))
+                      }
+                      className="h-3.5 w-3.5 rounded accent-primary-action"
+                    />
+                    <Label
+                      htmlFor="deliveryPendingCheck"
+                      className="text-xs cursor-pointer"
+                    >
+                      Pending Store Delivery
+                    </Label>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-[11px]  text-slate-500">
-                    Landmark / Delivery
-                  </Label>
-                  <Input
-                    value={formData.customerAddress2 || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerAddress2: e.target.value,
-                      }))
-                    }
-                    placeholder="Near City Center"
-                    className="h-7 text-xs"
-                  />
-                </div>
-                <div className="flex items-center gap-2 pt-1">
-                  <Checkbox
-                    id="delivery-pending-box"
-                    checked={formData.deliveryPending || false}
-                    onCheckedChange={(c) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        deliveryPending: Boolean(c),
-                      }))
-                    }
-                  />
-                  <Label
-                    htmlFor="delivery-pending-box"
-                    className="text-xs cursor-pointer"
-                  >
-                    Pending Store Delivery
-                  </Label>
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* KYC & Media Upload Tab */}
-            {customerTab === "kyc" && (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50/50 p-4 text-center dark:border-zinc-700 dark:bg-zinc-800/50">
-                <UploadCloud className="h-7 w-7 text-slate-400" />
-                <p className="mt-1 text-xs  text-slate-700 dark:text-zinc-200">
-                  KYC & Document Media
-                </p>
-                <p className="text-[10px] text-slate-500">
-                  Aadhar, PAN, or Photo (PDF / JPG)
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 h-6 text-[10px]"
-                >
-                  Attach File
-                </Button>
-              </div>
-            )}
+              {/* Notes tab */}
+              {rightTab === "notes" && (
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-500">
+                    Voucher Notes
+                  </Label>
+                  <textarea
+                    rows={4}
+                    value={formData.remarks || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        remarks: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter any notes or terms..."
+                    className="w-full rounded-md border border-slate-200 bg-transparent p-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary-action dark:border-zinc-800 dark:text-zinc-100 resize-none"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* ── SECTION 2: TRANSACTION LINE ITEMS GRID ── */}
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="flex flex-wrap items-center justify-between border-b border-slate-200 bg-slate-50/70 px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-900/80">
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            ROW 2: Item Details â€” Toolbar + AG Grid + Add Row
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
+          {/* Item Details Header + Toolbar */}
+          <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 gap-2">
             <div className="flex items-center gap-2">
-              <Coins className="h-4 w-4 text-amber-600" />
+              <Coins className="h-4 w-4 text-primary-action" />
               <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                Item Line Details
+                Item Details
               </h3>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Button
-                variant="outline"
+                type="button"
                 size="sm"
                 onClick={handleAddLineItem}
-                className="h-7 gap-1.5 border-amber-300 bg-amber-50 text-xs  text-amber-800 hover:bg-amber-100 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300"
+                className="h-7 gap-1.5 bg-primary-action hover:bg-primary-action/90 text-primary-action-foreground text-xs font-medium px-3"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>Add Item Row</span>
+                Add Item
               </Button>
             </div>
           </div>
 
+          {/* AG Grid */}
           <div
-            className="w-full"
             style={{
-              height: `${Math.min(520, Math.max(260, ((formData.itemLines?.length || 1) + 2) * 38 + 48))}px`,
+              height: `${Math.min(520, Math.max(240, ((formData.itemLines?.length || 1) + 2) * 38 + 48))}px`,
             }}
           >
             <DataGrid
@@ -1557,422 +1537,305 @@ export const Sales: React.FC = () => {
               }}
             />
           </div>
+
+          {/* Add New Row button */}
+          <div className="border-t border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2">
+            <button
+              type="button"
+              onClick={handleAddLineItem}
+              className="flex items-center gap-1.5 text-xs font-medium text-primary-action hover:text-primary-action/80"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add New Row
+            </button>
+          </div>
         </div>
 
-        {/* ── SECTION 3: FINANCIAL SUMMARY & MULTI-TENDER SETTLEMENT ── */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          {/* CARD 1 (3 COLS): SUMMARY & TAXES */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
-            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                  Tax & Grand Summary
-                </h3>
-              </div>
-              <div className="flex rounded bg-slate-100 p-0.5 text-[10px] font-semibold dark:bg-zinc-800">
-                <button
-                  type="button"
-                  onClick={() => setTaxMode("GST")}
-                  className={`rounded px-1.5 py-0.5 ${taxMode === "GST" ? "bg-white shadow-xs text-slate-900 dark:bg-zinc-700 dark:text-zinc-100" : "text-slate-500"}`}
-                >
-                  GST
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTaxMode("IGST")}
-                  className={`rounded px-1.5 py-0.5 ${taxMode === "IGST" ? "bg-white shadow-xs text-slate-900 dark:bg-zinc-700 dark:text-zinc-100" : "text-slate-500"}`}
-                >
-                  IGST
-                </button>
-              </div>
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            ROW 3: Terms & Conditions | Summary | Payment Details + Attachments
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+          {/* â”€â”€ CARD: Terms & Conditions (4 cols) â”€â”€ */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <FileText className="h-4 w-4 text-primary-action" />
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Remarks
+              </h3>
             </div>
-
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between py-1 border-b border-slate-50 dark:border-zinc-800/60">
-                <span className="text-slate-600 dark:text-zinc-400">
-                  Gross Subtotal:
-                </span>
-                <span className="  text-slate-900 dark:text-zinc-100">
-                  ₹
-                  {calculatedTotals.subtotal.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
-
-              {/* Coupon / Bill Discount */}
-              <div className="flex items-center justify-between py-1 border-b border-slate-50 dark:border-zinc-800/60">
-                <span className="text-slate-600 dark:text-zinc-400">
-                  Special Coupon / Disc:
-                </span>
-                <div className="w-24">
-                  <AmountInput
-                    value={couponDiscount}
-                    onChange={(val) => setCouponDiscount(val)}
-                    className="h-6 text-xs text-right "
-                  />
-                </div>
-              </div>
-
-              {/* Tax Rate & Amount */}
-              <div className="flex items-center justify-between py-1 border-b border-slate-50 dark:border-zinc-800/60">
-                <div className="flex items-center gap-1">
-                  <span className="text-slate-600 dark:text-zinc-400">
-                    {taxMode === "GST" ? "CGST + SGST" : "IGST"}
-                  </span>
-                  <span className="rounded bg-slate-100 px-1 text-[10px] text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
-                    {formData.taxRate || 3}%
-                  </span>
-                </div>
-                <span className=" font-medium text-slate-900 dark:text-zinc-100">
-                  ₹
-                  {calculatedTotals.taxAmount.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
-
-              {/* Round Off */}
-              <div className="flex items-center justify-between py-1 border-b border-slate-50 dark:border-zinc-800/60">
-                <span className="text-slate-600 dark:text-zinc-400">
-                  Round Off:
-                </span>
-                <span className=" text-slate-500">
-                  {calculatedTotals.roundOff >= 0
-                    ? `+₹${calculatedTotals.roundOff}`
-                    : `-₹${Math.abs(calculatedTotals.roundOff)}`}
-                </span>
-              </div>
-
-              {/* Net Grand Total Card */}
-              <div className="mt-3 rounded-lg border border-emerald-300 bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-3 shadow-xs dark:border-emerald-800 dark:from-emerald-950/40 dark:to-emerald-900/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-                    Net Payable
-                  </span>
-                  <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">
-                    Dr
-                  </Badge>
-                </div>
-                <div className="mt-1 text-2xl font-black tracking-tight text-emerald-900 dark:text-emerald-100 ">
-                  ₹
-                  {calculatedTotals.grandTotal.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
-                </div>
-              </div>
+            <div className="p-4">
+              <textarea
+                rows={6}
+                value={formData.remarks || ""}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, remarks: e.target.value }))
+                }
+                placeholder="Enter remarks..."
+                className="w-full rounded-md border border-slate-200 bg-transparent p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary-action dark:border-zinc-800 dark:text-zinc-100 resize-none"
+              />
             </div>
           </div>
 
-          {/* CARD 2 (6 COLS): PAYMENT SETTLEMENT MODES */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-6">
-            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => setSettlementTab("receipt")}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
-                    settlementTab === "receipt"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  Receipt / Tender Modes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSettlementTab("remarks")}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
-                    settlementTab === "remarks"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  Notes & Remarks
-                </button>
-              </div>
-
-              {/* Bill Mode Selector */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-medium text-slate-500">
-                  Mode:
-                </span>
-                <Select
-                  value={formData.billMode || "Debit Memo"}
-                  onValueChange={(val) =>
-                    setFormData((prev) => ({ ...prev, billMode: val }))
-                  }
-                >
-                  <SelectTrigger className="h-6 w-36 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BILL_MODES.map((bm) => (
-                      <SelectItem key={bm} value={bm}>
-                        {bm}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <Receipt className="h-4 w-4 text-primary-action" />
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Summary
+              </h3>
             </div>
-
-            {settlementTab === "receipt" ? (
-              <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2.5">
-                  {/* Cash (F7) */}
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <Wallet className="h-3.5 w-3.5 text-emerald-600" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        Cash{" "}
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.cashAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, cashAmount: val }))
-                        }
-                        className="h-7 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Bank / UPI (F8) */}
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <Building2 className="h-3.5 w-3.5 text-blue-600" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        Bank / UPI{" "}
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.bankAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, bankAmount: val }))
-                        }
-                        className="h-7 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Credit / Debit Card (F5) */}
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <CreditCard className="h-3.5 w-3.5 text-purple-600" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        Card{" "}
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.cardAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, cardAmount: val }))
-                        }
-                        className="h-7 text-xs "
-                      />
-                    </div>
-                  </div>
-
-                  {/* Advance Adjusted (F4) */}
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        Advance{" "}
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.advanceAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            advanceAmount: val,
-                          }))
-                        }
-                        className="h-7 text-xs "
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <Coins className="h-3.5 w-3.5 text-amber-500" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        URD
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.urdAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, urdAmount: val }))
-                        }
-                        className="h-7 text-xs "
-                      />
-                    </div>
-                  </div>
-
-                  {/* Kasar / Roundoff Discount */}
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <Percent className="h-3.5 w-3.5 text-rose-500" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        Kasar (Disc.)
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.kasarAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, kasarAmount: val }))
-                        }
-                        className="h-7 text-xs "
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-2 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-2.5 dark:border-zinc-800 dark:bg-zinc-800/60">
-                  <div>
-                    <span className="text-[11px] text-slate-500">
-                      Total Tender Received:{" "}
-                    </span>
-                    <span className=" text-xs font-semibold text-slate-900 dark:text-zinc-100">
-                      ₹
-                      {calculatedTotals.totalPaid.toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-slate-500">Balance:</span>
-                    {calculatedTotals.balanceDue <= 0 ? (
-                      <Badge className="bg-emerald-600 text-white">
-                        <CheckCircle2 className="mr-1 h-3 w-3" /> Fully Settled
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300"
-                      >
-                        ₹
-                        {calculatedTotals.balanceDue.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}{" "}
-                        Due
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                  Invoice Remarks & Customer Notes
-                </Label>
-                <textarea
-                  rows={4}
-                  value={formData.remarks || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      remarks: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter any voucher remarks, terms & conditions, hallmarking certificate details, warranty notes..."
-                  className="w-full rounded-md border border-slate-200 bg-transparent p-2 text-xs text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-500 dark:border-zinc-800 dark:text-zinc-100"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* CARD 3 (3 COLS): OTHER SUMMARY & DUE DETAILS */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
-            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                  Terms & Delivery
-                </h3>
-              </div>
-              <span className="text-[10px] text-slate-400">Details</span>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              <div className="space-y-1">
-                <Label className="text-[11px] font-medium text-slate-500">
-                  Rate Fix Type
-                </Label>
-                <Select
-                  value={formData.rateFixType || "Fix"}
-                  onValueChange={(val) =>
-                    setFormData((prev) => ({ ...prev, rateFixType: val }))
-                  }
-                >
-                  <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Fix">Fixed Rate</SelectItem>
-                    <SelectItem value="Floating">
-                      Floating / Market Rate
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-[11px] font-medium text-slate-500">
-                  Payment Due Date
-                </Label>
-                <DatePicker
-                  value={formData.dueDate}
-                  onChange={(val) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      dueDate: val,
-                    }))
-                  }
-                  className="h-7 text-xs"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-[11px] font-medium text-slate-500">
-                  TDS Amount (₹)
-                </Label>
-                <AmountInput
-                  value={formData.tdsAmount ?? 0}
-                  onChange={(val) =>
-                    setFormData((prev) => ({ ...prev, tdsAmount: val }))
-                  }
-                  className="h-7 text-xs "
-                />
-              </div>
-
-              <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-2 text-[11px] text-slate-500 dark:border-zinc-800 dark:bg-zinc-800/40">
-                <div className="flex justify-between">
-                  <span>Customer Ledger OS:</span>
-                  <span className=" font-medium text-slate-900 dark:text-zinc-100">
-                    ₹0.00
+            <div className="p-4">
+              <div className="space-y-0">
+                {/* Total Items */}
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Total Items
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                    {formData.itemLines?.length || 0}
                   </span>
                 </div>
-                <div className="mt-1 flex justify-between">
-                  <span>Bill OS:</span>
-                  <span className=" font-medium text-amber-600">
+                {/* Total Quantity */}
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Total Quantity
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                    {calculatedTotals.pcs}
+                  </span>
+                </div>
+                {/* Total Amount */}
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Total Amount
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
                     ₹
-                    {calculatedTotals.balanceDue.toLocaleString("en-IN", {
+                    {(
+                      calculatedTotals.subtotal +
+                      calculatedTotals.totalLineDiscount
+                    ).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                {/* Total Discount */}
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Total Discount
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                    ₹
+                    {calculatedTotals.totalLineDiscount.toLocaleString(
+                      "en-IN",
+                      { minimumFractionDigits: 2 },
+                    )}
+                  </span>
+                </div>
+                {/* Taxable Amount */}
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Taxable Amount
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                    ₹
+                    {calculatedTotals.subtotal.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                     })}
                   </span>
                 </div>
+                {/* Tax Rows: CGST + SGST or IGST */}
+                {taxMode === "GST" ? (
+                  <>
+                    <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                      <span className="text-xs text-slate-600 dark:text-zinc-400">
+                        CGST ({((formData.taxRate || 3) / 2).toFixed(1)}%)
+                      </span>
+                      <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                        ₹
+                        {(calculatedTotals.taxAmount / 2).toLocaleString(
+                          "en-IN",
+                          { minimumFractionDigits: 2 },
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                      <span className="text-xs text-slate-600 dark:text-zinc-400">
+                        SGST ({((formData.taxRate || 3) / 2).toFixed(1)}%)
+                      </span>
+                      <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                        ₹
+                        {(calculatedTotals.taxAmount / 2).toLocaleString(
+                          "en-IN",
+                          { minimumFractionDigits: 2 },
+                        )}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                    <span className="text-xs text-slate-600 dark:text-zinc-400">
+                      IGST ({formData.taxRate || 3}%)
+                    </span>
+                    <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                      ₹
+                      {calculatedTotals.taxAmount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Grand Total Highlight Row */}
+              <div className="mt-3 flex items-center justify-between rounded-lg border border-primary-action/25 bg-primary-action/10 px-3 py-2.5">
+                <span className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                  Grand Total
+                </span>
+                <span className="text-base font-extrabold text-primary-action tracking-tight">
+                  ₹
+                  {calculatedTotals.grandTotal.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* â”€â”€ CARD: Payment Details + Attachments (4 cols) â”€â”€ */}
+          <div className="lg:col-span-4 space-y-3">
+            {/* Payment Details */}
+            <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+                <CreditCard className="h-4 w-4 text-primary-action" />
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                  Payment Details
+                </h3>
+              </div>
+              <div className="p-4 space-y-3">
+                {/* Payment Type Pills */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                    Payment Type
+                  </span>
+                  <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-zinc-800 dark:bg-zinc-850">
+                    {(["cash", "bank", "card", "upi"] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setPaymentTab(tab)}
+                        className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                          paymentTab === tab
+                            ? "bg-primary-action text-primary-action-foreground shadow-sm"
+                            : "text-slate-600 hover:bg-slate-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                        }`}
+                      >
+                        {tab === "cash"
+                          ? "Cash"
+                          : tab === "bank"
+                            ? "Bank"
+                            : tab === "card"
+                              ? "Card"
+                              : "UPI"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Received Amount + Balance */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                      Received Amount
+                    </Label>
+                    <AmountInput
+                      value={
+                        paymentTab === "cash"
+                          ? (formData.cashAmount ?? 0)
+                          : paymentTab === "card"
+                            ? (formData.cardAmount ?? 0)
+                            : (formData.bankAmount ?? 0)
+                      }
+                      onChange={(val) => {
+                        if (paymentTab === "cash")
+                          setFormData((prev) => ({ ...prev, cashAmount: val }));
+                        else if (paymentTab === "card")
+                          setFormData((prev) => ({ ...prev, cardAmount: val }));
+                        else
+                          setFormData((prev) => ({ ...prev, bankAmount: val }));
+                      }}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                      Balance
+                    </Label>
+                    <div className="flex h-8 items-center px-2 rounded-md border border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-850">
+                      <span
+                        className={`text-sm font-bold ${
+                          calculatedTotals.balanceDue <= 0
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-amber-600 dark:text-amber-400"
+                        }`}
+                      >
+                        ₹{" "}
+                        {calculatedTotals.balanceDue.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Attachments */}
+            <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+                <Paperclip className="h-4 w-4 text-primary-action" />
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                  Attachments
+                </h3>
+              </div>
+              <div className="p-4">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setUploadedFiles((prev) => [
+                        ...prev,
+                        ...Array.from(e.target.files!).map((f) => f.name),
+                      ]);
+                    }
+                  }}
+                />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 py-4 text-center hover:border-primary-action/40 hover:bg-primary-action/10 transition-colors dark:border-zinc-700 dark:hover:border-primary-action"
+                >
+                  <UploadCloud className="h-6 w-6 text-slate-400 dark:text-zinc-500 mb-1" />
+                  <p className="text-xs font-medium text-slate-700 dark:text-zinc-300">
+                    Drag & drop files here or{" "}
+                    <span className="text-primary-action">click to upload</span>
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    PDF, Image (Max 5MB)
+                  </p>
+                </div>
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {uploadedFiles.map((f, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-zinc-400"
+                      >
+                        <Paperclip className="h-3 w-3" />
+                        <span className="truncate">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1992,14 +1855,14 @@ export const Sales: React.FC = () => {
         onClear={handleClear}
         clearText="Clear"
         onBack={() => navigate(WEB_ROUTES.TRANSACTION.SALES_LIST)}
-        backText="Back"
+        backText="Cancel"
         onSave={handleSave}
-        saveText={isEditing ? "Update" : "Save"}
+        saveText={isEditing ? "Update" : "Save & Print"}
         isSaving={isSaving}
         isSaveDisabled={isSaving}
       />
 
-      {/* ── PRINT TAX INVOICE PREVIEW MODAL ── */}
+      {/* â”€â”€ PRINT TAX INVOICE PREVIEW MODAL â”€â”€ */}
       <Dialog open={isPrintModalOpen} onOpenChange={setIsPrintModalOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6">
           <DialogHeader>
@@ -2213,7 +2076,7 @@ export const Sales: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── TAG PRINT PREVIEW MODAL ── */}
+      {/* â”€â”€ TAG PRINT PREVIEW MODAL â”€â”€ */}
       <Dialog open={isTagModalOpen} onOpenChange={setIsTagModalOpen}>
         <DialogContent className="max-w-md p-5">
           <DialogHeader>

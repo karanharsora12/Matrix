@@ -99,20 +99,19 @@ export const FormFooter: React.FC<FormFooterProps> = ({
   return (
     <div
       className={cn(
-        "sticky bottom-0 z-20 mt-auto border-t border-slate-200/80 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80",
-        "dark:border-zinc-800 dark:bg-zinc-900/95 dark:supports-[backdrop-filter]:bg-zinc-900/80",
+        "sticky bottom-0 z-20 mt-auto border-t border-zinc-100 bg-white dark:border-zinc-800/80 dark:bg-zinc-900",
         className,
       )}
     >
-      <div className="flex w-full flex-col gap-3 px-6 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="flex w-full flex-col gap-2 px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
           {(showVoucherNavigation || onNavigatePrev || onNavigateNext) && (
             <div className="flex items-center gap-1">
               <Button
                 variant="outline"
                 size="icon"
                 type="button"
-                className="h-7 w-7"
+                className="h-7 w-7 rounded-lg"
                 onClick={onNavigatePrev}
                 disabled={!onNavigatePrev || isPrevDisabled}
                 title="Previous Record"
@@ -123,7 +122,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
                 variant="outline"
                 size="icon"
                 type="button"
-                className="h-7 w-7"
+                className="h-7 w-7 rounded-lg"
                 onClick={onNavigateNext}
                 disabled={!onNavigateNext || isNextDisabled}
                 title="Next Record"
@@ -140,11 +139,11 @@ export const FormFooter: React.FC<FormFooterProps> = ({
                 id="footer-is-active"
                 checked={isActive}
                 onChange={(e) => onIsActiveChange?.(Boolean(e.target.value))}
-                className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 text-white"
+                className="h-4 w-4 rounded border-zinc-300 data-[state=checked]:bg-primary-action data-[state=checked]:border-primary-action"
               />
               <Label
                 htmlFor="footer-is-active"
-                className="cursor-pointer select-none text-xs font-medium text-slate-700 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                className="cursor-pointer select-none text-xs font-medium text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
               >
                 {isActiveLabel}
               </Label>
@@ -155,7 +154,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
         </div>
 
         {/* Right side: Action buttons */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {/* Tag Print */}
           {onTagPrint && (
             <Button
@@ -163,21 +162,21 @@ export const FormFooter: React.FC<FormFooterProps> = ({
               type="button"
               variant="outline"
               onClick={onTagPrint}
-              className="gap-1.5 text-xs text-slate-700 dark:text-zinc-300"
+              className="h-8 gap-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400"
             >
               <Tag className="h-3.5 w-3.5 text-amber-600" />
               <span>{tagPrintText}</span>
             </Button>
           )}
 
-          {/* Print Invoice */}
+          {/* Print */}
           {onPrint && (
             <Button
               size="sm"
               type="button"
               variant="outline"
               onClick={onPrint}
-              className="gap-1.5 text-xs text-slate-700 dark:text-zinc-300"
+              className="h-8 gap-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400"
             >
               <Printer className="h-3.5 w-3.5" />
               <span>{printText}</span>
@@ -195,7 +194,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
               variant="outline"
               disabled={isDeleteDisabled || isDeleting}
               onClick={onDelete}
-              className="gap-1.5 border-rose-200 text-xs text-rose-600 hover:bg-rose-50 hover:border-rose-300 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+              className="h-8 gap-1.5 rounded-lg border-rose-200 text-xs text-rose-600 hover:bg-rose-50 hover:border-rose-300 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/30"
             >
               {isDeleting ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -206,14 +205,14 @@ export const FormFooter: React.FC<FormFooterProps> = ({
             </Button>
           )}
 
-          {/* Destructive/Reset action - Clear */}
+          {/* Reset action - Clear */}
           {onClear && (
             <Button
               size="sm"
               type="button"
               variant="outline"
               onClick={onClear}
-              className="gap-1.5 text-xs text-slate-700 dark:text-zinc-300"
+              className="h-8 gap-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>{clearText}</span>
@@ -227,7 +226,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
               type="button"
               variant="outline"
               onClick={onBack}
-              className="gap-1.5 text-xs text-slate-700 dark:text-zinc-300"
+              className="h-8 gap-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               <span>{backText}</span>
@@ -242,7 +241,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
               onClick={onSave}
               disabled={isSaveDisabled || isSaving}
               className={cn(
-                "min-w-[130px] gap-2 bg-zinc-900 text-xs font-semibold text-white shadow-xs hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200",
+                "h-8 min-w-[120px] gap-1.5 rounded-lg bg-primary-action text-xs font-semibold text-primary-action-foreground shadow-sm hover:bg-primary-action/90",
                 saveButtonClassName,
               )}
             >

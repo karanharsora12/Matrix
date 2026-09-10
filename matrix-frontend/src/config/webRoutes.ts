@@ -28,5 +28,13 @@ export const WEB_ROUTES = {
     SALES: "/transactions/customer-in-out/sales/:token",
     PURCHASE_LIST: "/transactions/supplier-in-out/purchase",
     PURCHASE: "/transactions/supplier-in-out/purchase/:token",
+    PAYMENTS_LIST: "/transactions/payments",
+    PAYMENTS: "/transactions/payments/:token",
+    CASH_PAYMENT_LIST: "/transactions/payments/cash-payment",
+    CASH_PAYMENT: "/transactions/payments/cash-payment/:token",
+    RECEIPT_LIST: "/transactions/receipt",
+    RECEIPT: "/transactions/receipt/:token",
+    CASH_RECEIPT_LIST: "/transactions/receipt/cash-receipt",
+    CASH_RECEIPT: "/transactions/receipt/cash-receipt/:token",
   },
 };

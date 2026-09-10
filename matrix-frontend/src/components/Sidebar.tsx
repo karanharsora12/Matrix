@@ -249,7 +249,7 @@ function SidebarBrand({ collapsed }: { collapsed: boolean }) {
     <div
       className={cn(
         "flex items-center border-b border-zinc-100 dark:border-zinc-800/80 transition-all duration-300",
-        collapsed ? "h-12 justify-center px-0" : "h-12 px-3.5",
+        collapsed ? "h-14 justify-center px-0" : "h-14 px-3.5",
       )}
     >
       <div className="flex items-center gap-2 overflow-hidden">

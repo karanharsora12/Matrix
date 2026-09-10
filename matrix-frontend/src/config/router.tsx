@@ -1,5 +1,9 @@
 import Sales from "@/pages/transaction/customer-in-out/sales/Sales";
 import SalesList from "@/pages/transaction/customer-in-out/sales/SalesList";
+import CashPayment from "@/pages/transaction/payments/cash-payment/CashPayment";
+import CashPaymentList from "@/pages/transaction/payments/cash-payment/CashPaymentList";
+import CashReceipt from "@/pages/transaction/receipt/cash-receipt/CashReceipt";
+import CashReceiptList from "@/pages/transaction/receipt/cash-receipt/CashReceiptList";
 import { Purchase } from "@/pages/transaction/supplier-in-out/purchase/Purchase";
 import PurchaseList from "@/pages/transaction/supplier-in-out/purchase/PurchaseList";
 import { createBrowserRouter } from "react-router-dom";
@@ -94,6 +98,22 @@ export const router = createBrowserRouter([
           {
             path: WEB_ROUTES.TRANSACTION.PURCHASE,
             element: <Purchase />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.CASH_PAYMENT_LIST,
+            element: <CashPaymentList />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.CASH_PAYMENT,
+            element: <CashPayment />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.CASH_RECEIPT_LIST,
+            element: <CashReceiptList />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.CASH_RECEIPT,
+            element: <CashReceipt />,
           },
         ],
       },
