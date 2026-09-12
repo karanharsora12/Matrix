@@ -1044,22 +1044,8 @@ export const Sales: React.FC = () => {
     }
   };
 
-  if (isEditing && isLoadingSale) {
-    return (
-      <div className="flex h-96 flex-col items-center justify-center gap-3">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-          Loading sales voucher #{saleId}...
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-full flex flex-col bg-[#f5f6fa] dark:bg-zinc-950">
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          PAGE HEADER â€” title, document selector, invoice number, settings
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div className="bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 px-5 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Left: cart icon + title */}
@@ -1488,11 +1474,7 @@ export const Sales: React.FC = () => {
           </div>
         </div>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            ROW 2: Item Details â€” Toolbar + AG Grid + Add Row
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
-          {/* Item Details Header + Toolbar */}
           <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 gap-2">
             <div className="flex items-center gap-2">
               <Coins className="h-4 w-4 text-primary-action" />
@@ -1514,11 +1496,7 @@ export const Sales: React.FC = () => {
           </div>
 
           {/* AG Grid */}
-          <div
-            style={{
-              height: `${Math.min(520, Math.max(240, ((formData.itemLines?.length || 1) + 2) * 38 + 48))}px`,
-            }}
-          >
+          <div className="h-80">
             <DataGrid
               ref={gridRef}
               rowData={formData.itemLines || []}
@@ -1538,7 +1516,6 @@ export const Sales: React.FC = () => {
             />
           </div>
 
-          {/* Add New Row button */}
           <div className="border-t border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2">
             <button
               type="button"

@@ -136,24 +136,6 @@ const ItemGroups: React.FC = () => {
         width: 100,
       },
       {
-        field: "salesRate",
-        headerName: "Sales Rate",
-        width: 100,
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          return params.data.salesRate;
-        },
-      },
-      {
-        field: "purchaseRate",
-        headerName: "Purchase Rate",
-        width: 120,
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          return params.data.purchaseRate;
-        },
-      },
-      {
         field: "salesRateTypeId",
         headerName: "Sales Rate Type",
         valueGetter: (params) => {
@@ -166,6 +148,16 @@ const ItemGroups: React.FC = () => {
         width: 120,
       },
       {
+        field: "salesRate",
+        type: "numericColumn",
+        headerName: "Sales Rate",
+        width: 100,
+        valueGetter: (params) => {
+          if (params.node?.rowPinned) return "";
+          return params.data.salesRate;
+        },
+      },
+      {
         field: "purchaseRateTypeId",
         headerName: "Purchase Rate Type",
         valueGetter: (params) => {
@@ -176,6 +168,16 @@ const ItemGroups: React.FC = () => {
           return rt ? rt.name : "";
         },
         width: 140,
+      },
+      {
+        field: "purchaseRate",
+        type: "numericColumn",
+        headerName: "Purchase Rate",
+        width: 100,
+        valueGetter: (params) => {
+          if (params.node?.rowPinned) return "";
+          return params.data.purchaseRate;
+        },
       },
       { field: "measureUnitCode", headerName: "Unit Code", width: 100 },
       {
