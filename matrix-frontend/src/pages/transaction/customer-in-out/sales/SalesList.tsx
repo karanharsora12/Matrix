@@ -4,6 +4,7 @@ import { DataGrid } from "@/components/common/DataGrid";
 import { ListingHeader } from "@/components/common/ListingHeader";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import { useGridActions } from "@/hooks/useGridActions";
+import { MenuList, getListingColumns } from "@/lib/defaults";
 import { buildRoute, encodeURL } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
@@ -48,70 +49,25 @@ const SalesList: React.FC = () => {
   });
 
   const columnDefs = useMemo<ColDef[]>(() => {
-    return [
-      { field: "voucherNo", headerName: "Voucher No.", width: 120 },
-      {
-        field: "voucherDate",
-        headerName: "Voucher Date",
-        width: 110,
-        valueGetter: (p) =>
-          p.node?.rowPinned ? "" : p.data?.voucherDate?.slice(0, 10),
+    return getListingColumns(MenuList.SALES, {
+      overrides: {
+        voucherDate: {
+          valueGetter: (p) =>
+            p.node?.rowPinned ? "" : p.data?.voucherDate?.slice(0, 10),
+        },
+        grandTotal: {
+          valueFormatter: (p) =>
+            p.node?.rowPinned
+              ? p.value
+              : (p.value || 0).toLocaleString("en-IN", {
+                  style: "currency",
+                  currency: "INR",
+                  minimumFractionDigits: 2,
+                }),
+        },
       },
-      { field: "daybookGroupName", headerName: "Daybook Group", width: 120 },
-      { field: "daybookName", headerName: "Daybook", width: 160 },
-      {
-        field: "accountName",
-        headerName: "Account Name",
-        width: 250,
-      },
-      {
-        field: "discountAmount",
-        headerName: "Disc. Amount",
-        width: 100,
-        type: "numericColumn",
-      },
-      {
-        field: "kasarAmount",
-        headerName: "Kasar Amount",
-        width: 100,
-        type: "numericColumn",
-      },
-      {
-        field: "roundOff",
-        headerName: "ROF Amount",
-        width: 100,
-        type: "numericColumn",
-      },
-      {
-        field: "taxAmount",
-        headerName: "Tax Amount",
-        width: 100,
-        type: "numericColumn",
-      },
-      {
-        field: "tdsAmount",
-        headerName: "TDS Amount",
-        width: 100,
-        type: "numericColumn",
-      },
-      {
-        field: "grandTotal",
-        headerName: "Amount",
-        width: 100,
-        type: "numericColumn",
-        valueFormatter: (p) =>
-          p.node?.rowPinned
-            ? p.value
-            : (p.value || 0).toLocaleString("en-IN", {
-                style: "currency",
-                currency: "INR",
-                minimumFractionDigits: 2,
-              }),
-      },
-      { field: "salesmanName", headerName: "Salesman", width: 150 },
-      { field: "remarks", headerName: "Remarks", width: 150 },
-    ];
-  }, [handleDelete]);
+    });
+  }, []);
 
   const summary = useMemo(() => {
     const total = sales.reduce((s, x) => s + (x.grandTotal || 0), 0);
@@ -144,21 +100,19 @@ const SalesList: React.FC = () => {
         onPrint={() => onPrint("Sales List")}
       />
 
-      {!isLoading && (
-        <DataGrid
-          ref={gridRef}
-          rowData={filteredData}
-          columnDefs={columnDefs}
-          pinnedBottomRowData={summary}
-          gridOptions={{
-            onRowDoubleClicked: (e) => {
-              if (e.node.rowPinned) return;
-              handleNavigate(e.data.id);
-            },
-            pagination: false,
-          }}
-        />
-      )}
+      <DataGrid
+        ref={gridRef}
+        rowData={filteredData}
+        columnDefs={columnDefs}
+        pinnedBottomRowData={summary}
+        gridOptions={{
+          onRowDoubleClicked: (e) => {
+            if (e.node.rowPinned) return;
+            handleNavigate(e.data.id);
+          },
+          pagination: false,
+        }}
+      />
     </div>
   );
 };

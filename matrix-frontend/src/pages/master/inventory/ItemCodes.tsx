@@ -1,28 +1,20 @@
-import React, { useState, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/store";
-import { ListingHeader } from "@/components/common/ListingHeader";
-import { DataGrid } from "@/components/common/DataGrid";
-import { GridDeleteCell } from "@/components/common/GridDeleteCell";
-import { useGridActions } from "@/hooks/useGridActions";
-import { Modal } from "@/components/common/Modal";
-import { confirmAlert } from "@/components/common/AlertModal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
-  useItemCodes,
   useCreateItemCode,
-  useUpdateItemCode,
   useDeleteItemCode,
   useItems,
+  useUpdateItemCode,
+  type ItemCode,
 } from "@/api/inventory";
-import type { ItemCode, Item } from "@/api/inventory";
 import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
-import type { ColDef } from "ag-grid-community";
-import { API_ENDPOINTS } from "@/config/apiEndpoints";
+import { confirmAlert } from "@/components/common/AlertModal";
+import { DataGrid } from "@/components/common/DataGrid";
+import { GridDeleteCell } from "@/components/common/GridDeleteCell";
+import { ListingHeader } from "@/components/common/ListingHeader";
+import { Modal } from "@/components/common/Modal";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -30,6 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
+import { useGridActions } from "@/hooks/useGridActions";
+import { MenuList, getListingColumns } from "@/lib/defaults";
+import type { RootState } from "@/store";
+import { useQueryClient } from "@tanstack/react-query";
+import type { ColDef } from "ag-grid-community";
+import React, { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 
 const ItemCodes: React.FC = () => {
   const queryClient = useQueryClient();
@@ -121,47 +121,41 @@ const ItemCodes: React.FC = () => {
   };
 
   const columnDefs = useMemo<ColDef[]>(() => {
-    return [
-      { field: "id", headerName: "ID", width: 60, type: "numericColumn" },
-      { field: "itemCodeName", headerName: "Item Code", width: 200 },
-      {
-        headerName: "Item",
-        width: 200,
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          const item = items.find((i) => i.id === params.data.itemId);
-          return item ? item.itemName : "";
+    return getListingColumns(MenuList.ITEM_CODES, {
+      overrides: {
+        itemName: {
+          headerName: "Item",
+          valueGetter: (params) => {
+            if (params.node?.rowPinned) return "";
+            const item = items.find((i) => i.id === params.data.itemId);
+            return item ? item.itemName : "";
+          },
+        },
+        attributeValues: {
+          headerName: "Attribute Values",
+          valueGetter: (params) => {
+            if (params.node?.rowPinned) return "";
+            const attrValues = params.data.attributeValues || [];
+            return attrValues
+              .map((attrId: number) => {
+                const attr = allAttributes.find((a) => a.id === attrId);
+                return attr ? attr.attributeValue : "";
+              })
+              .filter(Boolean)
+              .join(", ");
+          },
+        },
+        isActive: {
+          width: 65,
+          cellRenderer: ActiveCellRenderer,
+          cellStyle: {
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          },
         },
       },
-      {
-        headerName: "Attribute Values",
-        width: 300,
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          const attrValues = params.data.attributeValues || [];
-          return attrValues
-            .map((attrId: number) => {
-              const attr = allAttributes.find((a) => a.id === attrId);
-              return attr ? attr.attributeValue : "";
-            })
-            .filter(Boolean)
-            .join(", ");
-        },
-      },
-      {
-        field: "isActive",
-        headerName: "Active",
-        width: 65,
-        cellRenderer: ActiveCellRenderer,
-        cellStyle: {
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        },
-      },
-      {
-        headerName: "",
-        width: 60,
+      actionColumn: {
         cellRenderer: (params: any) => {
           if (params.node?.rowPinned) return null;
           return <GridDeleteCell {...params} />;
@@ -170,8 +164,8 @@ const ItemCodes: React.FC = () => {
           onDelete: handleDelete,
         },
       },
-    ];
-  }, [items, allAttributes]);
+    });
+  }, [items, allAttributes, handleDelete]);
 
   // Handle dynamic dropdowns based on selected item
   const selectedItem = useMemo(() => {

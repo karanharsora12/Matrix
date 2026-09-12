@@ -27,13 +27,29 @@ export interface DatePickerProps {
 
 function parseISODate(value?: string): Date | undefined {
   if (!value) return undefined;
+  if (value.includes("/")) {
+    const parts = value.split("/");
+    if (parts.length === 3) {
+      const d = Number(parts[0]);
+      const m = Number(parts[1]);
+      const y = Number(parts[2]);
+      if (y && m && d) {
+        const date = new Date(y, m - 1, d);
+        if (isValid(date)) return date;
+      }
+    }
+  }
   const parts = value.split("-");
-  if (parts.length !== 3) return undefined;
-  const y = Number(parts[0]);
-  const m = Number(parts[1]);
-  const d = Number(parts[2]);
-  if (!y || !m || !d) return undefined;
-  const date = new Date(y, m - 1, d);
+  if (parts.length >= 3) {
+    const y = Number(parts[0]);
+    const m = Number(parts[1]);
+    const d = Number(parts[2].slice(0, 2));
+    if (y && m && d) {
+      const date = new Date(y, m - 1, d);
+      return isValid(date) ? date : undefined;
+    }
+  }
+  const date = new Date(value);
   return isValid(date) ? date : undefined;
 }
 

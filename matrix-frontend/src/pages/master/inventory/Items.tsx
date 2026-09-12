@@ -1,29 +1,25 @@
-import React, { useState, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/store";
-import { ListingHeader } from "@/components/common/ListingHeader";
+import type { Item } from "@/api/inventory";
+import { useCreateItem, useDeleteItem, useUpdateItem } from "@/api/inventory";
+import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
+import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { GridDeleteCell } from "@/components/common/GridDeleteCell";
-import { useGridActions } from "@/hooks/useGridActions";
+import { ListingHeader } from "@/components/common/ListingHeader";
 import { Modal } from "@/components/common/Modal";
-import { confirmAlert } from "@/components/common/AlertModal";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  useItems,
-  useCreateItem,
-  useUpdateItem,
-  useDeleteItem,
-} from "@/api/inventory";
-import { CommonListType } from "@/constants/enums";
-import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
-import type { ColDef } from "ag-grid-community";
-import type { Item } from "@/api/inventory";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
+import { CommonListType } from "@/constants/enums";
+import { useGridActions } from "@/hooks/useGridActions";
+import { MenuList, getListingColumns } from "@/lib/defaults";
+import type { RootState } from "@/store";
+import { useQueryClient } from "@tanstack/react-query";
+import type { ColDef } from "ag-grid-community";
+import React, { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 
 const Items: React.FC = () => {
   const queryClient = useQueryClient();
@@ -110,38 +106,32 @@ const Items: React.FC = () => {
   };
 
   const columnDefs = useMemo<ColDef[]>(() => {
-    return [
-      { field: "id", headerName: "ID", width: 60, type: "numericColumn" },
-      { field: "itemName", headerName: "Item Name", width: 200 },
-      { field: "shortName", headerName: "Short Name", width: 120 },
-      {
-        field: "isActive",
-        headerName: "Active",
-        width: 65,
-        cellRenderer: ActiveCellRenderer,
-        cellStyle: {
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+    return getListingColumns(MenuList.ITEMS, {
+      overrides: {
+        isActive: {
+          width: 65,
+          cellRenderer: ActiveCellRenderer,
+          cellStyle: {
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          },
+        },
+        attributes: {
+          valueGetter: (params) => {
+            if (params.node?.rowPinned) return "";
+            const itemAttrs = params.data.attributes || [];
+            return itemAttrs
+              .map((attrId: number) => {
+                const attr = commonLists.find((a) => a.id === attrId);
+                return attr ? attr.listValue : "";
+              })
+              .filter(Boolean)
+              .join(", ");
+          },
         },
       },
-      {
-        headerName: "Attributes",
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          const itemAttrs = params.data.attributes || [];
-          return itemAttrs
-            .map((attrId: number) => {
-              const attr = commonLists.find((a) => a.id === attrId);
-              return attr ? attr.listValue : "";
-            })
-            .filter(Boolean)
-            .join(", ");
-        },
-      },
-      {
-        headerName: "",
-        width: 60,
+      actionColumn: {
         cellRenderer: (params: any) => {
           if (params.node?.rowPinned) return null;
           return <GridDeleteCell {...params} />;
@@ -150,8 +140,8 @@ const Items: React.FC = () => {
           onDelete: handleDelete,
         },
       },
-    ];
-  }, [commonLists]);
+    });
+  }, [commonLists, handleDelete]);
 
   return (
     <div className="h-full flex flex-col p-6 space-y-6">

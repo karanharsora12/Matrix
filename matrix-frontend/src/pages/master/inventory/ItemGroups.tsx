@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import type { ColDef } from "ag-grid-community";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
+import { MenuList, getListingColumns } from "@/lib/defaults";
 
 const ItemGroups: React.FC = () => {
   const queryClient = useQueryClient();
@@ -121,68 +122,53 @@ const ItemGroups: React.FC = () => {
   };
 
   const columnDefs = useMemo<ColDef[]>(() => {
-    return [
-      { field: "id", headerName: "ID", width: 60, type: "numericColumn" },
-      { field: "itemGroupName", headerName: "Item Group Name", width: 180 },
-      { field: "shortName", headerName: "Short Name", width: 100 },
-      {
-        field: "metalTypeId",
-        headerName: "Metal",
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          const metal = metals.find((m) => m.id === params.data.metalTypeId);
-          return metal ? metal.name : "";
+    return getListingColumns(MenuList.ITEM_GROUP, {
+      overrides: {
+        metalName: {
+          field: "metalTypeId",
+          headerName: "Metal",
+          valueGetter: (params) => {
+            if (params.node?.rowPinned) return "";
+            const metal = metals.find((m) => m.id === params.data.metalTypeId);
+            return metal ? metal.name : "";
+          },
         },
-        width: 100,
-      },
-      {
-        field: "salesRateTypeId",
-        headerName: "Sales Rate Type",
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          const rt = rateTypes.find(
-            (r) => r.id === params.data.salesRateTypeId,
-          );
-          return rt ? rt.name : "";
+        salesRateTypeName: {
+          field: "salesRateTypeId",
+          headerName: "Sales Rate Type",
+          valueGetter: (params) => {
+            if (params.node?.rowPinned) return "";
+            const rt = rateTypes.find(
+              (r) => r.id === params.data.salesRateTypeId,
+            );
+            return rt ? rt.name : "";
+          },
         },
-        width: 120,
-      },
-      {
-        field: "salesRate",
-        type: "numericColumn",
-        headerName: "Sales Rate",
-        width: 100,
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          return params.data.salesRate;
+        salesRate: {
+          valueGetter: (params) => {
+            if (params.node?.rowPinned) return "";
+            return params.data.salesRate;
+          },
         },
-      },
-      {
-        field: "purchaseRateTypeId",
-        headerName: "Purchase Rate Type",
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          const rt = rateTypes.find(
-            (r) => r.id === params.data.purchaseRateTypeId,
-          );
-          return rt ? rt.name : "";
+        purchaseRateTypeName: {
+          field: "purchaseRateTypeId",
+          headerName: "Purchase Rate Type",
+          valueGetter: (params) => {
+            if (params.node?.rowPinned) return "";
+            const rt = rateTypes.find(
+              (r) => r.id === params.data.purchaseRateTypeId,
+            );
+            return rt ? rt.name : "";
+          },
         },
-        width: 140,
-      },
-      {
-        field: "purchaseRate",
-        type: "numericColumn",
-        headerName: "Purchase Rate",
-        width: 100,
-        valueGetter: (params) => {
-          if (params.node?.rowPinned) return "";
-          return params.data.purchaseRate;
+        purchaseRate: {
+          valueGetter: (params) => {
+            if (params.node?.rowPinned) return "";
+            return params.data.purchaseRate;
+          },
         },
       },
-      { field: "measureUnitCode", headerName: "Unit Code", width: 100 },
-      {
-        headerName: "",
-        width: 60,
+      actionColumn: {
         cellRenderer: (params: any) => {
           if (params.node?.rowPinned) return null;
           return <GridDeleteCell {...params} />;
@@ -191,8 +177,8 @@ const ItemGroups: React.FC = () => {
           onDelete: handleDelete,
         },
       },
-    ];
-  }, [metals, rateTypes]);
+    });
+  }, [metals, rateTypes, handleDelete]);
 
   return (
     <div className="h-full flex flex-col p-6 space-y-6">

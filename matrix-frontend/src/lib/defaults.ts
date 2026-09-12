@@ -1,51 +1,39 @@
-export enum MenuList {
+import type { ColDef } from "ag-grid-community";
+
+export const MenuList = {
   // Inventory
-  INVENTORY = "Inventory",
-  ITEM_GROUP = "ItemGroup",
-  ITEMS = "Items",
-  ITEM_CODES = "ItemCodes",
+  INVENTORY: "Inventory",
+  ITEM_GROUP: "ItemGroup",
+  ITEMS: "Items",
+  ITEM_CODES: "ItemCodes",
 
   // Accounts
-  ACCOUNTS = "Accounts",
-  ACCOUNT_GROUPS = "AccountGroups",
-  ACCOUNT_TYPES = "AccountTypes",
+  ACCOUNTS: "Accounts",
+  ACCOUNT_GROUPS: "AccountGroups",
+  ACCOUNT_TYPES: "AccountTypes",
 
   // Master / Other Master
-  DAYBOOKS = "Daybooks",
-  DAYBOOK_GROUPS = "DaybookGroups",
-  METALS = "Metals",
-  RATE_TYPES = "RateTypes",
+  DAYBOOKS: "Daybooks",
+  DAYBOOK_GROUPS: "DaybookGroups",
+  METALS: "Metals",
+  RATE_TYPES: "RateTypes",
 
   // Transactions
-  SALES = "Sales",
-  PURCHASE = "Purchase",
-  CASH_PAYMENT = "CashPayment",
-  CASH_RECEIPT = "CashReceipt",
-  BANK_PAYMENT = "BankPayment",
-  BANK_RECEIPT = "BankReceipt",
-  JOURNAL = "Journal",
-  CONTRA = "Contra",
+  SALES: "Sales",
+  PURCHASE: "Purchase",
+  CASH_PAYMENT: "CashPayment",
+  CASH_RECEIPT: "CashReceipt",
+  BANK_PAYMENT: "BankPayment",
+  BANK_RECEIPT: "BankReceipt",
+  JOURNAL: "Journal",
+  CONTRA: "Contra",
 
   // Admin Setup
-  MENU_SETUP = "MenuSetup",
-  USERS = "Users",
-}
+  MENU_SETUP: "MenuSetup",
+  USERS: "Users",
+} as const;
 
-export interface ListingColumn {
-  field: string;
-  headerName: string;
-  width?: number;
-  minWidth?: number;
-  flex?: number;
-  type?: "numericColumn" | "text" | "date" | "boolean" | string;
-  align?: "left" | "center" | "right";
-  sortable?: boolean;
-  filter?: boolean;
-  hide?: boolean;
-  [key: string]: any;
-}
-
-export const ADD_EDIT_COLUMNS: ListingColumn[] = [
+export const ADD_EDIT_COLUMNS: ColDef[] = [
   {
     field: "addBy",
     headerName: "Add By",
@@ -68,16 +56,30 @@ export const ADD_EDIT_COLUMNS: ListingColumn[] = [
   },
 ];
 
-export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
+export const BASE_LISTING_COLUMNS_MAP: Record<string, ColDef[]> = {
   [MenuList.ITEM_GROUP]: [
     { field: "id", headerName: "ID", width: 60, type: "numericColumn" },
     { field: "itemGroupName", headerName: "Item Group Name", width: 180 },
     { field: "shortName", headerName: "Short Name", width: 100 },
     { field: "metalName", headerName: "Metal", width: 100 },
     { field: "salesRateTypeName", headerName: "Sales Rate Type", width: 120 },
-    { field: "salesRate", headerName: "Sales Rate", width: 100, type: "numericColumn" },
-    { field: "purchaseRateTypeName", headerName: "Purchase Rate Type", width: 140 },
-    { field: "purchaseRate", headerName: "Purchase Rate", width: 100, type: "numericColumn" },
+    {
+      field: "salesRate",
+      headerName: "Sales Rate",
+      width: 100,
+      type: "numericColumn",
+    },
+    {
+      field: "purchaseRateTypeName",
+      headerName: "Purchase Rate Type",
+      width: 140,
+    },
+    {
+      field: "purchaseRate",
+      headerName: "Purchase Rate",
+      width: 100,
+      type: "numericColumn",
+    },
     { field: "measureUnitCode", headerName: "MU", width: 80 },
   ],
 
@@ -135,12 +137,42 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "daybookGroupName", headerName: "Daybook Group", width: 140 },
     { field: "daybookName", headerName: "Daybook", width: 160 },
     { field: "accountName", headerName: "Account Name", width: 250 },
-    { field: "discountAmount", headerName: "Disc. Amount", width: 120, type: "numericColumn" },
-    { field: "kasarAmount", headerName: "Kasar Amount", width: 120, type: "numericColumn" },
-    { field: "roundOff", headerName: "ROF Amount", width: 100, type: "numericColumn" },
-    { field: "taxAmount", headerName: "Tax Amount", width: 120, type: "numericColumn" },
-    { field: "tdsAmount", headerName: "TDS Amount", width: 120, type: "numericColumn" },
-    { field: "grandTotal", headerName: "Grand Total", width: 140, type: "numericColumn" },
+    {
+      field: "discountAmount",
+      headerName: "Disc. Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "kasarAmount",
+      headerName: "Kasar Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "roundOff",
+      headerName: "ROF Amount",
+      width: 100,
+      type: "numericColumn",
+    },
+    {
+      field: "taxAmount",
+      headerName: "Tax Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "tdsAmount",
+      headerName: "TDS Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "grandTotal",
+      headerName: "Grand Total",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "salesmanName", headerName: "Salesman", width: 150 },
     { field: "remarks", headerName: "Remarks", width: 200 },
   ],
@@ -151,10 +183,30 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "daybookGroupName", headerName: "Daybook Group", width: 140 },
     { field: "daybookName", headerName: "Daybook", width: 160 },
     { field: "accountName", headerName: "Account Name", width: 250 },
-    { field: "discountAmount", headerName: "Disc. Amount", width: 120, type: "numericColumn" },
-    { field: "taxAmount", headerName: "Tax Amount", width: 120, type: "numericColumn" },
-    { field: "roundOff", headerName: "ROF Amount", width: 100, type: "numericColumn" },
-    { field: "grandTotal", headerName: "Grand Total", width: 140, type: "numericColumn" },
+    {
+      field: "discountAmount",
+      headerName: "Disc. Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "taxAmount",
+      headerName: "Tax Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "roundOff",
+      headerName: "ROF Amount",
+      width: 100,
+      type: "numericColumn",
+    },
+    {
+      field: "grandTotal",
+      headerName: "Grand Total",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "remarks", headerName: "Remarks", width: 200 },
   ],
 
@@ -163,7 +215,12 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "voucherDate", headerName: "Voucher Date", width: 120 },
     { field: "daybookName", headerName: "Daybook", width: 180 },
     { field: "accountName", headerName: "Account", width: 250 },
-    { field: "totalAmount", headerName: "Amount", width: 140, type: "numericColumn" },
+    {
+      field: "totalAmount",
+      headerName: "Amount",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "reference", headerName: "Type", width: 130 },
     { field: "remarks", headerName: "Narration", width: 200 },
   ],
@@ -173,7 +230,12 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "voucherDate", headerName: "Voucher Date", width: 120 },
     { field: "daybookName", headerName: "Daybook", width: 180 },
     { field: "accountName", headerName: "Account", width: 250 },
-    { field: "totalAmount", headerName: "Amount", width: 140, type: "numericColumn" },
+    {
+      field: "totalAmount",
+      headerName: "Amount",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "reference", headerName: "Type", width: 130 },
     { field: "remarks", headerName: "Narration", width: 200 },
   ],
@@ -183,7 +245,12 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "voucherDate", headerName: "Voucher Date", width: 120 },
     { field: "daybookName", headerName: "Daybook", width: 180 },
     { field: "accountName", headerName: "Account", width: 250 },
-    { field: "totalAmount", headerName: "Amount", width: 140, type: "numericColumn" },
+    {
+      field: "totalAmount",
+      headerName: "Amount",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "reference", headerName: "Type", width: 130 },
     { field: "remarks", headerName: "Narration", width: 200 },
   ],
@@ -193,7 +260,12 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "voucherDate", headerName: "Voucher Date", width: 120 },
     { field: "daybookName", headerName: "Daybook", width: 180 },
     { field: "accountName", headerName: "Account", width: 250 },
-    { field: "totalAmount", headerName: "Amount", width: 140, type: "numericColumn" },
+    {
+      field: "totalAmount",
+      headerName: "Amount",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "reference", headerName: "Type", width: 130 },
     { field: "remarks", headerName: "Narration", width: 200 },
   ],
@@ -214,28 +286,51 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
   ],
 };
 
+export interface ListingColumnOptions {
+  includeAddEdit?: boolean;
+  overrides?: Record<string, Partial<ColDef>>;
+  actionColumn?: Partial<ColDef>;
+}
+
 /**
- * Returns the listing columns for a given menu, automatically appending ADD_EDIT_COLUMNS by default.
- * @param menu The MenuList enum value or menu name string (case-insensitive)
- * @param options.includeAddEdit Whether to include addBy, editBy, createdAt, updatedAt columns (default true)
+ * Returns listing columns for a given menu, with options for overrides, ADD_EDIT_COLUMNS, and action column.
  */
 export function getListingColumns(
-  menu: MenuList | string,
-  options: { includeAddEdit?: boolean } = { includeAddEdit: true },
-): ListingColumn[] {
-  if (!menu) return options.includeAddEdit !== false ? [...ADD_EDIT_COLUMNS] : [];
+  menu: string,
+  options: ListingColumnOptions = { includeAddEdit: true },
+): ColDef[] {
+  if (!menu)
+    return options.includeAddEdit !== false ? [...ADD_EDIT_COLUMNS] : [];
 
-  // Find exact or case-insensitive match in BASE_LISTING_COLUMNS_MAP
   const lower = String(menu).toLowerCase();
   const matchedKey = Object.keys(BASE_LISTING_COLUMNS_MAP).find(
     (k) => k.toLowerCase() === lower,
   );
 
-  const baseColumns = matchedKey ? BASE_LISTING_COLUMNS_MAP[matchedKey] : [];
+  let columns = matchedKey
+    ? BASE_LISTING_COLUMNS_MAP[matchedKey].map((col) => ({ ...col }))
+    : [];
 
-  if (options.includeAddEdit !== false) {
-    return [...baseColumns, ...ADD_EDIT_COLUMNS];
+  if (options.overrides) {
+    columns = columns.map((col) => {
+      const override =
+        (col.field ? options.overrides?.[col.field] : undefined) ??
+        (col.headerName ? options.overrides?.[col.headerName] : undefined);
+      return override ? { ...col, ...override } : col;
+    });
   }
 
-  return [...baseColumns];
+  if (options.includeAddEdit !== false) {
+    columns = [...columns, ...ADD_EDIT_COLUMNS];
+  }
+
+  if (options.actionColumn) {
+    columns.push({
+      headerName: "",
+      width: 60,
+      ...options.actionColumn,
+    });
+  }
+
+  return columns;
 }

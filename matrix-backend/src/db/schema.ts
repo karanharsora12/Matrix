@@ -14,7 +14,10 @@ export const users = pgTable("users", {
   name: varchar("name", { length: 256 }).notNull(),
   email: varchar("email", { length: 256 }).notNull().unique(),
   password: varchar("password", { length: 256 }).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const menus = pgTable("menus", {
@@ -35,17 +38,28 @@ export const menus = pgTable("menus", {
     .notNull(),
   exportRight: boolean("export_right").default(false).notNull(),
   printRight: boolean("print_right").default(false).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const metals = pgTable("metals", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 256 }).notNull().unique(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const rateTypes = pgTable("rate_types", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 256 }).notNull().unique(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const itemGroups = pgTable("item_groups", {
@@ -64,6 +78,8 @@ export const itemGroups = pgTable("item_groups", {
     .references((): AnyPgColumn => rateTypes.id)
     .notNull(),
   measureUnitCode: varchar("measure_unit_code", { length: 256 }).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -72,7 +88,10 @@ export const commonLists = pgTable("common_lists", {
   id: serial("id").primaryKey(),
   listType: varchar("list_type", { length: 256 }).notNull(),
   listValue: varchar("list_value", { length: 256 }).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const attributes = pgTable("attributes", {
@@ -81,7 +100,10 @@ export const attributes = pgTable("attributes", {
     .references((): AnyPgColumn => commonLists.id)
     .notNull(),
   attributeValue: varchar("attribute_value", { length: 256 }).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const items = pgTable("items", {
@@ -90,6 +112,8 @@ export const items = pgTable("items", {
   shortName: varchar("short_name", { length: 256 }).notNull().unique(),
   isActive: boolean("is_active").default(true).notNull(),
   attributes: integer("attributes").array().default([]).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -102,6 +126,8 @@ export const itemCodes = pgTable("item_codes", {
   itemCodeName: varchar("item_code_name", { length: 256 }).notNull().unique(),
   attributeValues: integer("attribute_values").array().default([]).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -110,6 +136,8 @@ export const accountTypes = pgTable("account_types", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 256 }).notNull().unique(),
   description: varchar("description", { length: 256 }),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -121,6 +149,8 @@ export const accountGroups = pgTable("account_groups", {
   accountTypeId: integer("account_type_id")
     .references((): AnyPgColumn => accountTypes.id)
     .notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -140,6 +170,8 @@ export const accounts = pgTable("accounts", {
     .references((): AnyPgColumn => accountGroups.id)
     .notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -150,6 +182,8 @@ export const daybookGroups = pgTable("daybook_groups", {
   shortName: varchar("short_name", { length: 256 }).notNull().unique(),
   description: varchar("description", { length: 256 }),
   isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -165,6 +199,8 @@ export const daybooks = pgTable("daybooks", {
   allowManualNumber: boolean("allow_manual_number").default(false).notNull(),
   description: varchar("description", { length: 256 }),
   isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -207,6 +243,8 @@ export const sales = pgTable("sales", {
 
   isActive: boolean("is_active").default(true).notNull(),
 
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -240,6 +278,8 @@ export const salesItems = pgTable("sales_items", {
   discountAmount: numeric("discount_amount").default("0"),
   amount: numeric("amount").default("0").notNull(),
 
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -260,6 +300,8 @@ export const payments = pgTable("payments", {
   totalAmount: numeric("total_amount").default("0").notNull(),
   remarks: varchar("remarks", { length: 1024 }),
   isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -271,6 +313,8 @@ export const paymentDetails = pgTable("payment_details", {
     .notNull(),
   amount: numeric("amount").default("0").notNull(),
   remarks: varchar("remarks", { length: 1024 }),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

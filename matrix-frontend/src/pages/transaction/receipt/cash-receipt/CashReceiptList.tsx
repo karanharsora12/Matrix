@@ -1,3 +1,4 @@
+import { MenuList, getListingColumns } from "@/lib/defaults";
 import { usePayments } from "@/api/payments";
 import { DataGrid } from "@/components/common/DataGrid";
 import { ListingHeader } from "@/components/common/ListingHeader";
@@ -37,34 +38,25 @@ const CashReceiptList: React.FC = () => {
   });
 
   const columnDefs = useMemo<ColDef[]>(
-    () => [
-      { field: "voucherNo", headerName: "Voucher No.", width: 130 },
-      {
-        field: "voucherDate",
-        headerName: "Voucher Date",
-        width: 120,
-        valueGetter: (p) =>
-          p.node?.rowPinned ? "" : p.data?.voucherDate?.slice(0, 10),
-      },
-      { field: "daybookName", headerName: "Daybook", width: 180 },
-      { field: "accountName", headerName: "Account", width: 250 },
-      {
-        field: "totalAmount",
-        headerName: "Amount",
-        width: 140,
-        type: "numericColumn",
-        valueFormatter: (p) =>
-          p.node?.rowPinned
-            ? p.value
-            : (p.value || 0).toLocaleString("en-IN", {
-                style: "currency",
-                currency: "INR",
-                minimumFractionDigits: 2,
-              }),
-      },
-      { field: "reference", headerName: "Type", width: 130 },
-      { field: "remarks", headerName: "Narration", width: 200 },
-    ],
+    () =>
+      getListingColumns(MenuList.CASH_RECEIPT, {
+        overrides: {
+          voucherDate: {
+            valueGetter: (p) =>
+              p.node?.rowPinned ? "" : p.data?.voucherDate?.slice(0, 10),
+          },
+          totalAmount: {
+            valueFormatter: (p) =>
+              p.node?.rowPinned
+                ? p.value
+                : (p.value || 0).toLocaleString("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                    minimumFractionDigits: 2,
+                  }),
+          },
+        },
+      }),
     [],
   );
 

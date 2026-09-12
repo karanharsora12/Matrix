@@ -1,4 +1,5 @@
-import { eq, desc, and, notInArray, count, or, ilike, sql } from "drizzle-orm";
+import { eq, desc, and, notInArray, count, or, ilike } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "../db";
 import {
   payments,
@@ -6,7 +7,31 @@ import {
   daybooks,
   daybookGroups,
   accounts,
+  users,
 } from "../db/schema";
+import { formatDate, formatDateTime, parseDate } from "../utils/date";
+
+const addByUser = alias(users, "payments_add_by_user");
+const editByUser = alias(users, "payments_edit_by_user");
+
+function formatPaymentRow(p: any) {
+  if (!p) return p;
+  return {
+    ...p,
+    voucherDate: formatDate(p.voucherDate),
+    createdAt: formatDateTime(p.createdAt),
+    updatedAt: formatDateTime(p.updatedAt),
+  };
+}
+
+function formatPaymentDetailRow(d: any) {
+  if (!d) return d;
+  return {
+    ...d,
+    createdAt: formatDateTime(d.createdAt),
+    updatedAt: formatDateTime(d.updatedAt),
+  };
+}
 
 export class PaymentService {
   async getPayments(options?: {
@@ -46,11 +71,15 @@ export class PaymentService {
         daybook: daybooks,
         daybookGroup: daybookGroups,
         account: accounts,
+        addByUserName: addByUser.name,
+        editByUserName: editByUser.name,
       })
       .from(payments)
       .leftJoin(daybooks, eq(payments.daybookId, daybooks.id))
       .leftJoin(daybookGroups, eq(daybooks.daybookGroupId, daybookGroups.id))
       .leftJoin(accounts, eq(payments.accountId, accounts.id))
+      .leftJoin(addByUser, eq(payments.addBy, addByUser.id))
+      .leftJoin(editByUser, eq(payments.editBy, editByUser.id))
       .where(whereClause)
       .orderBy(desc(payments.createdAt));
 
@@ -69,12 +98,23 @@ export class PaymentService {
 
     const total = Number(totalResult[0]?.total || 0);
 
-    const data = rows.map(({ payment, daybook, daybookGroup, account }) => ({
-      ...payment,
-      daybookName: daybook?.daybookName || null,
-      daybookGroupName: daybookGroup?.groupName || null,
-      accountName: account?.accountName || null,
-    }));
+    const data = rows.map(
+      ({
+        payment,
+        daybook,
+        daybookGroup,
+        account,
+        addByUserName,
+        editByUserName,
+      }) => ({
+        ...formatPaymentRow(payment),
+        daybookName: daybook?.daybookName || null,
+        daybookGroupName: daybookGroup?.groupName || null,
+        accountName: account?.accountName || null,
+        addBy: addByUserName || null,
+        editBy: editByUserName || null,
+      }),
+    );
 
     return {
       data,
@@ -113,11 +153,11 @@ export class PaymentService {
       .orderBy(paymentDetails.id);
 
     return {
-      ...row.payment,
+      ...formatPaymentRow(row.payment),
       daybookName: row.daybook?.daybookName || null,
       daybookGroupName: row.daybookGroup?.groupName || null,
       accountName: row.account?.accountName || null,
-      details: fetchedDetails,
+      details: fetchedDetails.map(formatPaymentDetailRow),
     };
   }
 
@@ -154,7 +194,7 @@ export class PaymentService {
         .values({
           srNo,
           voucherNo: paymentData.voucherNo,
-          voucherDate: new Date(paymentData.voucherDate || new Date()),
+          voucherDate: parseDate(paymentData.voucherDate) || new Date(),
           transactionType: paymentData.transactionType || "Cash Payment",
           daybookId: Number(paymentData.daybookId),
           accountId: Number(paymentData.accountId),
@@ -164,6 +204,8 @@ export class PaymentService {
           totalAmount,
           remarks: paymentData.remarks ? String(paymentData.remarks) : null,
           isActive: paymentData.isActive ?? true,
+          addBy: paymentData.addBy ? Number(paymentData.addBy) : null,
+          editBy: paymentData.editBy ? Number(paymentData.editBy) : null,
         })
         .returning();
 
@@ -173,6 +215,8 @@ export class PaymentService {
           paymentId: newPayment.id,
           amount: String(item.amount || 0),
           remarks: item.remarks ? String(item.remarks) : null,
+          addBy: item.addBy ? Number(item.addBy) : null,
+          editBy: item.editBy ? Number(item.editBy) : null,
         }));
 
         insertedDetails = await tx
@@ -182,8 +226,8 @@ export class PaymentService {
       }
 
       return {
-        ...newPayment,
-        details: insertedDetails,
+        ...formatPaymentRow(newPayment),
+        details: insertedDetails.map(formatPaymentDetailRow),
       };
     });
   }
@@ -210,7 +254,8 @@ export class PaymentService {
       if (paymentData.srNo !== undefined)
         updatePayload.srNo = Number(paymentData.srNo);
       if (paymentData.voucherDate !== undefined)
-        updatePayload.voucherDate = new Date(paymentData.voucherDate);
+        updatePayload.voucherDate =
+          parseDate(paymentData.voucherDate) || new Date();
       if (paymentData.transactionType !== undefined)
         updatePayload.transactionType = paymentData.transactionType;
       if (paymentData.daybookId !== undefined)
@@ -227,6 +272,8 @@ export class PaymentService {
           : null;
       if (paymentData.isActive !== undefined)
         updatePayload.isActive = Boolean(paymentData.isActive);
+      if (paymentData.editBy !== undefined)
+        updatePayload.editBy = Number(paymentData.editBy);
 
       const [updatedPayment] = await tx
         .update(payments)
@@ -264,6 +311,7 @@ export class PaymentService {
               .set({
                 amount: String(item.amount || 0),
                 remarks: item.remarks ? String(item.remarks) : null,
+                editBy: item.editBy ? Number(item.editBy) : null,
                 updatedAt: new Date(),
               })
               .where(eq(paymentDetails.id, item.id));
@@ -272,6 +320,8 @@ export class PaymentService {
               paymentId: id,
               amount: String(item.amount || 0),
               remarks: item.remarks ? String(item.remarks) : null,
+              addBy: item.addBy ? Number(item.addBy) : null,
+              editBy: item.editBy ? Number(item.editBy) : null,
             });
           }
         }
@@ -284,8 +334,8 @@ export class PaymentService {
       }
 
       return {
-        ...updatedPayment,
-        details: finalDetails,
+        ...formatPaymentRow(updatedPayment),
+        details: finalDetails.map(formatPaymentDetailRow),
       };
     });
   }

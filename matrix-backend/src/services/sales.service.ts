@@ -1,4 +1,5 @@
 import { eq, desc, and, notInArray, count } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "../db";
 import {
   sales,
@@ -8,12 +9,43 @@ import {
   accounts,
   itemGroups,
   items,
+  users,
 } from "../db/schema";
+import { formatDate, formatDateTime, parseDate } from "../utils/date";
+
+const addByUser = alias(users, "sales_add_by_user");
+const editByUser = alias(users, "sales_edit_by_user");
+
+function formatSaleRow(s: any) {
+  if (!s) return s;
+  return {
+    ...s,
+    voucherDate: formatDate(s.voucherDate),
+    dueDate: s.dueDate ? formatDate(s.dueDate) : null,
+    createdAt: formatDateTime(s.createdAt),
+    updatedAt: formatDateTime(s.updatedAt),
+  };
+}
+
+function formatSaleItemRow(item: any) {
+  if (!item) return item;
+  return {
+    ...item,
+    createdAt: formatDateTime(item.createdAt),
+    updatedAt: formatDateTime(item.updatedAt),
+  };
+}
 
 export class SalesService {
-  async getSales(options?: { page?: number; limit?: number; fetchAll?: boolean }) {
+  async getSales(options?: {
+    page?: number;
+    limit?: number;
+    fetchAll?: boolean;
+  }) {
     const page = Math.max(1, options?.page || 1);
-    const limit = options?.fetchAll ? -1 : Math.min(100, Math.max(1, options?.limit || 50));
+    const limit = options?.fetchAll
+      ? -1
+      : Math.min(100, Math.max(1, options?.limit || 50));
 
     let query = db
       .select({
@@ -21,11 +53,15 @@ export class SalesService {
         daybook: daybooks,
         daybookGroup: daybookGroups,
         account: accounts,
+        addByUserName: addByUser.name,
+        editByUserName: editByUser.name,
       })
       .from(sales)
       .leftJoin(daybooks, eq(sales.daybookId, daybooks.id))
       .leftJoin(daybookGroups, eq(daybooks.daybookGroupId, daybookGroups.id))
       .leftJoin(accounts, eq(sales.accountId, accounts.id))
+      .leftJoin(addByUser, eq(sales.addBy, addByUser.id))
+      .leftJoin(editByUser, eq(sales.editBy, editByUser.id))
       .orderBy(desc(sales.createdAt));
 
     if (!options?.fetchAll && limit !== -1) {
@@ -34,16 +70,27 @@ export class SalesService {
 
     const [rows, totalResult] = await Promise.all([
       query,
-      db.select({ total: count() }).from(sales)
+      db.select({ total: count() }).from(sales),
     ]);
     const total = Number(totalResult[0]?.total || 0);
 
-    const data = rows.map(({ sale, daybook, daybookGroup, account }) => ({
-      ...sale,
-      daybookName: daybook?.daybookName || null,
-      daybookGroupName: daybookGroup?.groupName || null,
-      accountName: account?.accountName || null,
-    }));
+    const data = rows.map(
+      ({
+        sale,
+        daybook,
+        daybookGroup,
+        account,
+        addByUserName,
+        editByUserName,
+      }) => ({
+        ...formatSaleRow(sale),
+        daybookName: daybook?.daybookName || null,
+        daybookGroupName: daybookGroup?.groupName || null,
+        accountName: account?.accountName || null,
+        addBy: addByUserName || null,
+        editBy: editByUserName || null,
+      }),
+    );
 
     return {
       data,
@@ -51,9 +98,11 @@ export class SalesService {
         page,
         limit: options?.fetchAll || limit === -1 ? total : limit,
         total,
-        totalPages: options?.fetchAll || limit === -1 ? 1 : Math.ceil(total / limit),
-        hasNextPage: options?.fetchAll || limit === -1 ? false : page * limit < total,
-      }
+        totalPages:
+          options?.fetchAll || limit === -1 ? 1 : Math.ceil(total / limit),
+        hasNextPage:
+          options?.fetchAll || limit === -1 ? false : page * limit < total,
+      },
     };
   }
 
@@ -76,9 +125,9 @@ export class SalesService {
       .where(eq(salesItems.saleId, id));
 
     return {
-      ...sale,
+      ...formatSaleRow(sale),
       itemLines: fetchedItems.map(({ item, itemGroupName, itemName }) => ({
-        ...item,
+        ...formatSaleItemRow(item),
         itemGroupName,
         itemName,
       })),
@@ -94,19 +143,24 @@ export class SalesService {
         .insert(sales)
         .values({
           ...saleData,
-          voucherDate: new Date(saleData.voucherDate),
-          dueDate: saleData.dueDate ? new Date(saleData.dueDate) : undefined,
+          voucherDate: parseDate(saleData.voucherDate) || new Date(),
+          dueDate: saleData.dueDate
+            ? parseDate(saleData.dueDate) || undefined
+            : undefined,
+          addBy: saleData.addBy ? Number(saleData.addBy) : null,
+          editBy: saleData.editBy ? Number(saleData.editBy) : null,
         })
         .returning();
 
-      let insertedItems = [];
+      let insertedItems: any[] = [];
       if (itemLines && itemLines.length > 0) {
         const itemsToInsert = itemLines.map((item: any) => {
-          const { createdAt, updatedAt, ...rest } = item;
+          const { createdAt, updatedAt, id, ...rest } = item;
           return {
             ...rest,
             saleId: newSale.id,
-            id: undefined,
+            addBy: item.addBy ? Number(item.addBy) : null,
+            editBy: item.editBy ? Number(item.editBy) : null,
           };
         });
 
@@ -117,8 +171,8 @@ export class SalesService {
       }
 
       return {
-        ...newSale,
-        itemLines: insertedItems,
+        ...formatSaleRow(newSale),
+        itemLines: insertedItems.map(formatSaleItemRow),
       };
     });
   }
@@ -133,9 +187,12 @@ export class SalesService {
         .set({
           ...saleData,
           voucherDate: saleData.voucherDate
-            ? new Date(saleData.voucherDate)
+            ? parseDate(saleData.voucherDate) || new Date()
             : undefined,
-          dueDate: saleData.dueDate ? new Date(saleData.dueDate) : undefined,
+          dueDate: saleData.dueDate
+            ? parseDate(saleData.dueDate) || undefined
+            : undefined,
+          editBy: saleData.editBy ? Number(saleData.editBy) : undefined,
           updatedAt: new Date(),
         })
         .where(eq(sales.id, id))
@@ -173,6 +230,7 @@ export class SalesService {
               .set({
                 ...rest,
                 saleId: id,
+                editBy: item.editBy ? Number(item.editBy) : undefined,
                 updatedAt: new Date(),
               })
               .where(eq(salesItems.id, item.id));
@@ -181,6 +239,8 @@ export class SalesService {
               ...rest,
               saleId: id,
               id: undefined,
+              addBy: item.addBy ? Number(item.addBy) : null,
+              editBy: item.editBy ? Number(item.editBy) : null,
             });
           }
         }
@@ -192,8 +252,8 @@ export class SalesService {
       }
 
       return {
-        ...updatedSale,
-        itemLines: finalItems,
+        ...formatSaleRow(updatedSale),
+        itemLines: finalItems.map(formatSaleItemRow),
       };
     });
   }
