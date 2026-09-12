@@ -1,4 +1,4 @@
-import { eq, desc, and, notInArray, count, or, ilike } from "drizzle-orm";
+import { eq, desc, and, notInArray, count, or, ilike, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   payments,
@@ -32,7 +32,6 @@ export class PaymentService {
       conditions.push(
         or(
           ilike(payments.voucherNo, s),
-          ilike(payments.reference, s),
           ilike(payments.remarks, s),
           ilike(accounts.accountName, s),
         ),
@@ -108,12 +107,8 @@ export class PaymentService {
     if (!row) return null;
 
     const fetchedDetails = await db
-      .select({
-        detail: paymentDetails,
-        accountName: accounts.accountName,
-      })
+      .select()
       .from(paymentDetails)
-      .leftJoin(accounts, eq(paymentDetails.accountId, accounts.id))
       .where(eq(paymentDetails.paymentId, id))
       .orderBy(paymentDetails.id);
 
@@ -122,10 +117,7 @@ export class PaymentService {
       daybookName: row.daybook?.daybookName || null,
       daybookGroupName: row.daybookGroup?.groupName || null,
       accountName: row.account?.accountName || null,
-      details: fetchedDetails.map(({ detail, accountName }) => ({
-        ...detail,
-        accountName: accountName || null,
-      })),
+      details: fetchedDetails,
     };
   }
 
@@ -143,29 +135,45 @@ export class PaymentService {
         totalAmount = String(sum);
       }
 
+      let srNo = 1;
+
+      if (paymentData.daybookId) {
+        const [latest] = await tx
+          .select({ srNo: payments.srNo })
+          .from(payments)
+          .where(eq(payments.daybookId, Number(paymentData.daybookId)))
+          .orderBy(desc(payments.id))
+          .limit(1);
+
+        srNo = (Number(latest?.srNo) || 0) + 1;
+      }
+
       // Insert payment header
       const [newPayment] = await tx
         .insert(payments)
         .values({
-          ...paymentData,
+          srNo,
+          voucherNo: paymentData.voucherNo,
+          voucherDate: new Date(paymentData.voucherDate || new Date()),
+          transactionType: paymentData.transactionType || "Cash Payment",
+          daybookId: Number(paymentData.daybookId),
+          accountId: Number(paymentData.accountId),
+          accountNo: paymentData.accountNo
+            ? String(paymentData.accountNo)
+            : null,
           totalAmount,
-          voucherDate: new Date(paymentData.voucherDate),
-          chequeDate: paymentData.chequeDate
-            ? new Date(paymentData.chequeDate)
-            : undefined,
+          remarks: paymentData.remarks ? String(paymentData.remarks) : null,
+          isActive: paymentData.isActive ?? true,
         })
         .returning();
 
       let insertedDetails: any[] = [];
       if (details && Array.isArray(details) && details.length > 0) {
-        const detailsToInsert = details.map((item: any) => {
-          const { createdAt, updatedAt, id, ...rest } = item;
-          return {
-            ...rest,
-            paymentId: newPayment.id,
-            amount: String(rest.amount || 0),
-          };
-        });
+        const detailsToInsert = details.map((item: any) => ({
+          paymentId: newPayment.id,
+          amount: String(item.amount || 0),
+          remarks: item.remarks ? String(item.remarks) : null,
+        }));
 
         insertedDetails = await tx
           .insert(paymentDetails)
@@ -193,19 +201,36 @@ export class PaymentService {
         totalAmount = String(sum);
       }
 
+      const updatePayload: any = {
+        updatedAt: new Date(),
+      };
+      if (totalAmount !== undefined) updatePayload.totalAmount = totalAmount;
+      if (paymentData.voucherNo !== undefined)
+        updatePayload.voucherNo = paymentData.voucherNo;
+      if (paymentData.srNo !== undefined)
+        updatePayload.srNo = Number(paymentData.srNo);
+      if (paymentData.voucherDate !== undefined)
+        updatePayload.voucherDate = new Date(paymentData.voucherDate);
+      if (paymentData.transactionType !== undefined)
+        updatePayload.transactionType = paymentData.transactionType;
+      if (paymentData.daybookId !== undefined)
+        updatePayload.daybookId = Number(paymentData.daybookId);
+      if (paymentData.accountId !== undefined)
+        updatePayload.accountId = Number(paymentData.accountId);
+      if (paymentData.accountNo !== undefined)
+        updatePayload.accountNo = paymentData.accountNo
+          ? String(paymentData.accountNo)
+          : null;
+      if (paymentData.remarks !== undefined)
+        updatePayload.remarks = paymentData.remarks
+          ? String(paymentData.remarks)
+          : null;
+      if (paymentData.isActive !== undefined)
+        updatePayload.isActive = Boolean(paymentData.isActive);
+
       const [updatedPayment] = await tx
         .update(payments)
-        .set({
-          ...paymentData,
-          totalAmount,
-          voucherDate: paymentData.voucherDate
-            ? new Date(paymentData.voucherDate)
-            : undefined,
-          chequeDate: paymentData.chequeDate
-            ? new Date(paymentData.chequeDate)
-            : undefined,
-          updatedAt: new Date(),
-        })
+        .set(updatePayload)
         .where(eq(payments.id, id))
         .returning();
 
@@ -233,44 +258,34 @@ export class PaymentService {
         }
 
         for (const item of details) {
-          const { createdAt, updatedAt, ...rest } = item;
           if (item.id) {
             await tx
               .update(paymentDetails)
               .set({
-                accountId: rest.accountId,
-                amount: String(rest.amount || 0),
-                remarks: rest.remarks || null,
+                amount: String(item.amount || 0),
+                remarks: item.remarks ? String(item.remarks) : null,
                 updatedAt: new Date(),
               })
               .where(eq(paymentDetails.id, item.id));
           } else {
             await tx.insert(paymentDetails).values({
               paymentId: id,
-              accountId: rest.accountId,
-              amount: String(rest.amount || 0),
-              remarks: rest.remarks || null,
+              amount: String(item.amount || 0),
+              remarks: item.remarks ? String(item.remarks) : null,
             });
           }
         }
 
         finalDetails = await tx
-          .select({
-            detail: paymentDetails,
-            accountName: accounts.accountName,
-          })
+          .select()
           .from(paymentDetails)
-          .leftJoin(accounts, eq(paymentDetails.accountId, accounts.id))
           .where(eq(paymentDetails.paymentId, id))
           .orderBy(paymentDetails.id);
       }
 
       return {
         ...updatedPayment,
-        details: finalDetails.map(({ detail, accountName }) => ({
-          ...detail,
-          accountName: accountName || null,
-        })),
+        details: finalDetails,
       };
     });
   }

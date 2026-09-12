@@ -53,11 +53,22 @@ import {
 
 // Icons
 import {
+  NumericalCellEditor,
+  formatNumericalValue,
+  parseNumericalValue,
+} from "@/components/common/NumericalCell";
+import {
   Banknote,
+  ChevronDown,
   ClipboardList,
+  FileText,
+  MessageSquareText,
+  Plus,
+  Receipt,
   ReceiptText,
-  RefreshCw,
   Search,
+  User,
+  UserPlus,
 } from "lucide-react";
 
 export type CashVoucherMode = "payment" | "receipt";
@@ -110,15 +121,11 @@ const VOUCHER_TYPES = [
   "Supplier Outstanding",
 ];
 
-interface VoucherLine extends PaymentDetail {
-  /** local row key (server id when editing, temp-otherwise) */
-  rowKey: string;
-}
+interface VoucherLine extends PaymentDetail {}
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const emptyLine = (): VoucherLine => ({
-  rowKey: `temp-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
   accountId: 0,
   accountName: "",
   amount: 0,
@@ -150,7 +157,6 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
   const voucherId = tokenData?.id ? Number(tokenData.id) : 0;
   const isEditing = voucherId > 0;
 
-  // --- Master data ---
   const { data: daybooksResp } = useDaybooks();
   const { data: daybookGroupsResp } = useDaybookGroups();
   const { data: accountsResp } = useAccounts();
@@ -197,41 +203,70 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
     return map;
   }, [accountMasterResp]);
 
-  // --- Voucher header state ---
-  const [daybookId, setDaybookId] = useState<number>(0);
-  const [voucherNo, setVoucherNo] = useState("");
-  const [voucherDate, setVoucherDate] = useState<string>(todayISO());
-  const [paymentMode, setPaymentMode] = useState<string>(VOUCHER_TYPES[0]);
-  const [narration, setNarration] = useState("");
+  const initialFormData = useMemo(
+    () => ({
+      daybookId: 0,
+      voucherNo: "",
+      srNo: 0,
+      voucherDate: todayISO(),
+      transactionType: meta.transactionType,
+      reference: VOUCHER_TYPES[0],
+      accountId: 0,
+      accountName: "",
+      remarks: "",
+    }),
+    [meta.transactionType],
+  );
 
-  // Voucher-level account (top)
-  const [voucherAccountId, setVoucherAccountId] = useState<number>(0);
-  const [voucherAccountName, setVoucherAccountName] = useState("");
+  const [formData, setFormData] = useState(initialFormData);
   const accountSearchBtnRef = useRef<HTMLButtonElement>(null);
-
   const [lines, setLines] = useState<VoucherLine[]>([emptyLine()]);
 
-  const selectedDaybook = cashDaybooks.find((d) => d.id === daybookId);
+  const selectedDaybook = useMemo(
+    () => cashDaybooks.find((d) => d.id === formData.daybookId),
+    [cashDaybooks, formData.daybookId],
+  );
 
-  // --- Voucher number ---
+  const selectedAccount = useMemo(
+    () => accounts.find((a) => a.id === formData.accountId),
+    [accounts, formData.accountId],
+  );
+
+  // --- Voucher number generation ---
   const handleSelectDaybook = useCallback(
     async (val: string) => {
       const dbId = Number(val);
       if (!dbId) return;
       const db = cashDaybooks.find((d) => d.id === dbId);
-      setDaybookId(dbId);
       try {
         const resp = await generateVoucherNo({
           daybookId: dbId,
           daybookGroupId: db?.daybookGroupId,
           tableName: "payments",
         });
-        if (resp.success && resp.data?.voucherNo) {
-          setVoucherNo(resp.data.voucherNo);
+        if (resp.success && resp.data) {
+          setFormData((prev) => ({
+            ...prev,
+            daybookId: dbId,
+            voucherNo: resp.data.voucherNo,
+            srNo: Number(resp.data.srNo) || 1,
+          }));
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            daybookId: dbId,
+            voucherNo: `${db?.voucherPrefix || meta.voucherPrefixFallback}-1`,
+            srNo: 1,
+          }));
         }
       } catch (err) {
         console.error("Failed to generate voucher number:", err);
-        setVoucherNo(`${db?.voucherPrefix || meta.voucherPrefixFallback}-1`);
+        setFormData((prev) => ({
+          ...prev,
+          daybookId: dbId,
+          voucherNo: `${db?.voucherPrefix || meta.voucherPrefixFallback}-1`,
+          srNo: 1,
+        }));
       }
     },
     [cashDaybooks, meta.voucherPrefixFallback],
@@ -239,35 +274,37 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
 
   // Default daybook for new vouchers
   useEffect(() => {
-    if (!isEditing && cashDaybooks.length > 0 && !daybookId) {
+    if (!isEditing && cashDaybooks.length > 0 && !formData.daybookId) {
       handleSelectDaybook(String(cashDaybooks[0].id));
     }
-  }, [isEditing, cashDaybooks, daybookId, handleSelectDaybook]);
+  }, [isEditing, cashDaybooks, formData.daybookId, handleSelectDaybook]);
 
   // Load existing voucher in edit mode
   useEffect(() => {
     if (isEditing && existingVoucher) {
-      setDaybookId(existingVoucher.daybookId || 0);
-      setVoucherNo(existingVoucher.voucherNo || "");
-      setVoucherDate(existingVoucher.voucherDate?.slice(0, 10) || todayISO());
-      setPaymentMode(
-        VOUCHER_TYPES.includes(existingVoucher.reference || "")
+      setFormData({
+        daybookId: existingVoucher.daybookId || 0,
+        voucherNo: existingVoucher.voucherNo || "",
+        srNo: existingVoucher.srNo || 0,
+        voucherDate: existingVoucher.voucherDate?.slice(0, 10) || todayISO(),
+        transactionType:
+          existingVoucher.transactionType || meta.transactionType,
+        reference: VOUCHER_TYPES.includes(existingVoucher.reference || "")
           ? existingVoucher.reference!
           : VOUCHER_TYPES[0],
-      );
-      setNarration(existingVoucher.remarks || "");
-      setVoucherAccountId(existingVoucher.accountId || 0);
-      setVoucherAccountName(existingVoucher.accountName || "");
+        accountId: existingVoucher.accountId || 0,
+        accountName: existingVoucher.accountName || "",
+        remarks: existingVoucher.remarks || "",
+      });
       setLines([
-        ...(existingVoucher.details || []).map((d, i) => ({
+        ...(existingVoucher.details || []).map((d) => ({
           ...d,
           amount: Number(d.amount) || 0,
-          rowKey: d.id ? `server-${d.id}` : `temp-${i}`,
         })),
         emptyLine(),
       ]);
     }
-  }, [isEditing, existingVoucher]);
+  }, [isEditing, existingVoucher, meta.transactionType]);
 
   // F2 opens the voucher-level account lookup
   useEffect(() => {
@@ -295,32 +332,41 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
     return rows;
   }, []);
 
+  const handleAddLine = useCallback(() => {
+    setLines((prev) => appendTrailingRow([...prev, emptyLine()]));
+  }, [appendTrailingRow]);
+
   const handleSelectVoucherAccount = useCallback((account: any) => {
     const name =
       account?.accountName ||
       `${account?.firstName || ""} ${account?.lastName || ""}`.trim();
     const id = Number(account?.id) || 0;
     if (!id) return;
-    setVoucherAccountId(id);
-    setVoucherAccountName(name);
+    setFormData((prev) => ({
+      ...prev,
+      accountId: id,
+      accountName: name,
+    }));
   }, []);
 
-  const handleDeleteLine = useCallback((rowKey: string) => {
+  const handleDeleteLine = useCallback((index?: number | null) => {
+    if (index == null) return;
     setLines((prev) => {
-      if (prev.length <= 1) return [emptyLine()];
-      return prev.filter((l) => l.rowKey !== rowKey);
+      const next = prev.filter((_, i) => i !== index);
+      if (next.length === 0) return [emptyLine()];
+      return next;
     });
   }, []);
 
   const handleCellValueChanged = useCallback(
     (e: CellValueChangedEvent) => {
       const field = e.colDef?.field;
-      if (!field || !e.data) return;
-      const rowKey = e.data.rowKey;
+      if (!field || !e.data || e.node?.rowIndex == null) return;
+      const rowIndex = e.node.rowIndex;
       setLines((prev) =>
         appendTrailingRow(
-          prev.map((l) =>
-            l.rowKey === rowKey
+          prev.map((l, idx) =>
+            idx === rowIndex
               ? {
                   ...l,
                   [field]:
@@ -335,7 +381,7 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
   );
 
   const pinnedTotal = useMemo(
-    () => [{ amount: formatINR(totalAmount), remarks: "TOTAL" }],
+    () => [{ amount: totalAmount, id: "Total" }],
     [totalAmount],
   );
 
@@ -383,29 +429,37 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
   const lineColumns = useMemo<ColDef[]>(
     () => [
       {
-        headerName: "Sr",
-        width: 60,
+        field: "id",
+        headerName: "#",
+        width: 50,
+        pinned: "left",
+        sortable: false,
+        filter: false,
+        resizable: false,
         valueGetter: (p) =>
-          p.node?.rowPinned ? "" : (p.node?.rowIndex ?? 0) + 1,
+          p.node?.rowPinned ? p.data?.id : (p.node?.rowIndex ?? 0) + 1,
       },
       {
         headerName: "Amount",
         field: "amount",
-        width: 170,
+        width: 120,
         type: "numericColumn",
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "amount",
+          decimals: 2,
+        },
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueParser: (params) =>
+          parseNumericalValue(params.newValue, { type: "amount", decimals: 2 }),
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "amount", decimals: 2 },
+            Boolean(params.node?.rowPinned),
+          ),
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellEditorParams: { min: 0, step: 0.01, precision: 2 },
-        valueParser: (params) => {
-          if (params.newValue === "" || params.newValue == null) return 0;
-          const n = parseFloat(params.newValue);
-          return isNaN(n) ? 0 : n;
-        },
-        valueFormatter: (p) => {
-          if (p.node?.rowPinned) return p.value;
-          const n = Number(p.value);
-          return n > 0 ? n.toFixed(2) : "";
-        },
       },
       {
         headerName: "Remarks",
@@ -415,10 +469,16 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
       },
       {
         headerName: "",
-        width: 52,
-        cellRenderer: (p: ICellRendererParams) => (
-          <GridDeleteCell {...p} onDelete={handleDeleteLine} />
-        ),
+        width: 60,
+        cellRenderer: (p: ICellRendererParams) => {
+          if (p.node?.rowPinned) return null;
+          return (
+            <GridDeleteCell
+              {...p}
+              onDelete={() => handleDeleteLine(p.node?.rowIndex)}
+            />
+          );
+        },
         sortable: false,
       },
     ],
@@ -427,26 +487,17 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
 
   // --- Save / clear / delete / navigate ---
   const isValid =
-    daybookId > 0 && voucherAccountId > 0 && completeLines.length > 0;
+    formData.daybookId > 0 &&
+    formData.accountId > 0 &&
+    completeLines.length > 0;
 
   const handleSave = useCallback(() => {
     if (!isValid) return;
     const payload = {
-      voucherNo,
-      voucherDate,
-      transactionType: meta.transactionType,
-      daybookId,
-      daybookName: selectedDaybook?.daybookName,
-      accountId: voucherAccountId,
-      accountName: voucherAccountName,
-      reference: paymentMode,
+      ...formData,
       totalAmount,
-      remarks: narration.trim() || undefined,
-      isActive: true,
       details: completeLines.map((l) => ({
         id: l.id,
-        accountId: voucherAccountId,
-        accountName: voucherAccountName,
         amount: Number(l.amount) || 0,
         remarks: l.remarks,
       })),
@@ -463,39 +514,30 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
     }
   }, [
     isValid,
-    completeLines,
-    voucherNo,
-    voucherDate,
-    meta,
-    daybookId,
-    selectedDaybook,
-    voucherAccountId,
-    voucherAccountName,
-    paymentMode,
+    formData,
     totalAmount,
-    narration,
+    completeLines,
     isEditing,
     voucherId,
     updateMutation,
     createMutation,
     navigate,
+    meta.listRoute,
   ]);
 
   const handleClear = useCallback(() => {
-    setVoucherDate(todayISO());
-    setPaymentMode(VOUCHER_TYPES[0]);
-    setNarration("");
-    setVoucherAccountId(0);
-    setVoucherAccountName("");
+    setFormData(initialFormData);
     setLines([emptyLine()]);
-    if (daybookId) handleSelectDaybook(String(daybookId));
-  }, [daybookId, handleSelectDaybook]);
+    if (formData.daybookId) {
+      handleSelectDaybook(String(formData.daybookId));
+    }
+  }, [formData.daybookId, handleSelectDaybook, initialFormData]);
 
   const handleDelete = useCallback(async () => {
     if (!isEditing) return;
     const confirmed = await confirmAlert({
       title: `Delete ${meta.title}?`,
-      description: `Are you sure you want to delete voucher ${voucherNo}? This action cannot be undone.`,
+      description: `Are you sure you want to delete voucher ${formData.voucherNo}? This action cannot be undone.`,
       confirmText: "Delete",
       variant: "danger",
     });
@@ -504,7 +546,14 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
         onSuccess: () => navigate(meta.listRoute),
       });
     }
-  }, [isEditing, meta.title, voucherNo, voucherId, deleteMutation, navigate]);
+  }, [
+    isEditing,
+    meta.title,
+    formData.voucherNo,
+    voucherId,
+    deleteMutation,
+    navigate,
+  ]);
 
   const handleNavigateRecord = useCallback(
     (direction: "prev" | "next") => {
@@ -525,220 +574,328 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
   );
 
   return (
-    <div className="flex h-full flex-col bg-slate-50/60 dark:bg-zinc-950">
-      <div className="flex min-h-0 flex-1 flex-col gap-2.5 p-3">
-        {/* ── VOUCHER CARD: title + fields ── */}
-        <div className="shrink-0 rounded-xl border border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-zinc-800">
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-action/10 text-primary-action">
-                {meta.icon}
-              </div>
-              <div>
-                <h1 className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-white">
-                  {isEditing ? `Edit ${meta.title}` : meta.title}
-                </h1>
-                <p className="text-[11px] leading-tight text-zinc-500 dark:text-zinc-400">
-                  {meta.subtitle}
-                </p>
-              </div>
+    <div className="min-h-full flex flex-col bg-[#f5f6fa] dark:bg-zinc-950">
+      {/* ── PAGE HEADER ── */}
+      <div className="bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-action/10 border border-primary-action/25 text-primary-action">
+              {meta.icon}
             </div>
-            {voucherNo && (
-              <span className="shrink-0 rounded-md bg-primary-action/10 px-2 py-1 text-xs font-semibold text-primary-action">
-                {voucherNo}
-              </span>
-            )}
+            <div>
+              <h1 className="text-lg font-bold text-slate-900 dark:text-zinc-100 leading-tight">
+                {isEditing ? `Edit ${meta.title}` : meta.title}
+              </h1>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                {meta.subtitle}
+              </p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-12 gap-2">
-            {/* Daybook */}
-            <div className="col-span-12 space-y-1 sm:col-span-6 lg:col-span-3">
-              <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                Daybook <span className="text-rose-500">*</span>
-              </Label>
-              <Select
-                value={daybookId ? String(daybookId) : ""}
-                onValueChange={handleSelectDaybook}
-              >
-                <SelectTrigger className="h-8 text-xs font-medium">
-                  <SelectValue placeholder="Select Daybook" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cashDaybooks.length > 0 ? (
-                    cashDaybooks.map((db) => (
-                      <SelectItem key={db.id} value={String(db.id)}>
-                        {db.daybookName} (
-                        {db.voucherPrefix || meta.voucherPrefixFallback})
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="none" disabled>
-                      No cash daybook found
+          <div className="flex items-center gap-2">
+            <Select
+              value={formData.daybookId ? String(formData.daybookId) : ""}
+              onValueChange={handleSelectDaybook}
+            >
+              <SelectTrigger className="h-8 w-44 text-xs font-medium border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+                <SelectValue placeholder="Select Daybook" />
+              </SelectTrigger>
+              <SelectContent>
+                {cashDaybooks.length > 0 ? (
+                  cashDaybooks.map((db) => (
+                    <SelectItem key={db.id} value={String(db.id)}>
+                      {db.daybookName}
                     </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>
+                    No cash daybook found
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+
+            <div className="flex h-8 min-w-[130px] items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+              {formData.voucherNo || "Auto"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 space-y-3 p-4 md:p-5">
+        {/* ── ROW 1: Account Details | Voucher Details | Narration ── */}
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+          {/* ── CARD: Account Details ── */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <User className="h-4 w-4 text-primary-action" />
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Account Details
+              </h2>
             </div>
 
-            {/* Voucher No. */}
-            <div className="col-span-12 space-y-1 sm:col-span-6 lg:col-span-3">
-              <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                Voucher No. <span className="text-rose-500">*</span>
-              </Label>
-              <div className="flex items-stretch gap-1.5">
-                <span className="inline-flex h-8 shrink-0 items-center rounded-md border border-primary-action/25 bg-primary-action/10 px-2 text-xs font-bold text-primary-action">
-                  {selectedDaybook?.shortName ||
-                    selectedDaybook?.voucherPrefix ||
-                    meta.voucherPrefixFallback}
-                </span>
-                <Input
-                  value={voucherNo}
-                  disabled
-                  className="h-8 text-xs font-medium"
-                  placeholder="Auto"
-                />
+            <div className="p-4 space-y-3">
+              <div className="space-y-1">
+                <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                  Account <span className="text-rose-500">*</span>
+                </Label>
+                <div className="flex gap-1.5">
+                  <PopupTable
+                    trigger={
+                      <button
+                        ref={accountSearchBtnRef}
+                        type="button"
+                        title="Search Account (F2)"
+                        className="flex flex-1 h-8 items-center justify-between rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                          <span className="truncate font-medium">
+                            {formData.accountName || "Select account (F2)"}
+                          </span>
+                        </div>
+                        <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0 ml-1" />
+                      </button>
+                    }
+                    placement="bottom-start"
+                    apiEndpoint={API_ENDPOINTS.ACCOUNTS.BASE}
+                    columns={accountPopupColumns}
+                    onSelect={handleSelectVoucherAccount}
+                    searchPlaceholder="Search accounts..."
+                  />
+                  <button
+                    type="button"
+                    className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-primary-action/10 hover:text-primary-action hover:border-primary-action/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 shrink-0"
+                    title="Add new account"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Voucher Date */}
-            <div className="col-span-12 space-y-1 sm:col-span-6 lg:col-span-3">
-              <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                Voucher Date <span className="text-rose-500">*</span>
-              </Label>
-              <DatePicker
-                value={voucherDate}
-                onChange={setVoucherDate}
-                className="h-8 text-xs"
-              />
-            </div>
-
-            {/* Payment Type */}
-            <div className="col-span-12 space-y-1 sm:col-span-6 lg:col-span-3">
-              <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                {mode === "payment" ? "Payment Type" : "Receipt Type"}{" "}
-                <span className="text-rose-500">*</span>
-              </Label>
-              <Select value={paymentMode} onValueChange={setPaymentMode}>
-                <SelectTrigger className="h-8 text-xs font-medium">
-                  <SelectValue placeholder="Select Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {VOUCHER_TYPES.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Account (voucher level) */}
-            <div className="col-span-12 space-y-1 lg:col-span-7">
-              <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                Account <span className="text-rose-500">*</span>
-              </Label>
-              <div className="flex items-stretch gap-1.5">
-                <Input
-                  value={voucherAccountName}
-                  readOnly
-                  className="h-8 cursor-default text-xs font-medium"
-                  placeholder="Select account (F2)"
-                  onClick={() => accountSearchBtnRef.current?.click()}
-                />
-                <PopupTable
-                  trigger={
-                    <Button
-                      ref={accountSearchBtnRef}
+              <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-800/50">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 dark:text-zinc-100 truncate">
+                      {formData.accountName || "No account selected"}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
+                      {selectedAccount
+                        ? `${groupMap[selectedAccount.accountGroupId] || "General"} • ${typeMap[selectedAccount.accountTypeId] || "Account"}`
+                        : "Press F2 or click above to search"}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <button
                       type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 shrink-0 gap-1.5 px-2.5 text-[11px]"
-                      title="Search Account (F2)"
+                      onClick={() => accountSearchBtnRef.current?.click()}
+                      className="text-[11px] font-medium text-primary-action hover:underline mt-0.5"
                     >
-                      <Search className="h-3 w-3 text-slate-500" />
-                      F2
-                    </Button>
-                  }
-                  placement="bottom-end"
-                  apiEndpoint={API_ENDPOINTS.ACCOUNTS.BASE}
-                  columns={accountPopupColumns}
-                  onSelect={handleSelectVoucherAccount}
-                  searchPlaceholder="Search accounts..."
-                />
+                      Change
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Narration */}
-            <div className="col-span-12 space-y-1 lg:col-span-5">
-              <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+          {/* ── CARD: Voucher Details ── */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <FileText className="h-4 w-4 text-primary-action" />
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Voucher Details
+              </h2>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Voucher Date <span className="text-rose-500">*</span>
+                  </Label>
+                  <DatePicker
+                    value={formData.voucherDate}
+                    onChange={(d) =>
+                      setFormData((prev) => ({ ...prev, voucherDate: d }))
+                    }
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Voucher No.
+                  </Label>
+                  <Input
+                    value={formData.voucherNo || ""}
+                    disabled
+                    className="h-8 text-xs font-medium bg-slate-50 dark:bg-zinc-800/50"
+                    placeholder="Auto"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                  {mode === "payment" ? "Payment Type" : "Receipt Type"}{" "}
+                  <span className="text-rose-500">*</span>
+                </Label>
+                <Select
+                  value={formData.reference}
+                  onValueChange={(val) =>
+                    setFormData((prev) => ({ ...prev, reference: val }))
+                  }
+                >
+                  <SelectTrigger className="h-8 text-xs font-medium">
+                    <SelectValue placeholder="Select Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VOUCHER_TYPES.map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* ── CARD: Narration ── */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <MessageSquareText className="h-4 w-4 text-primary-action" />
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
                 Narration
-              </Label>
-              <Input
-                value={narration}
-                onChange={(e) => setNarration(e.target.value)}
-                className="h-8 text-xs"
-                placeholder="Overall voucher narration"
+              </h2>
+            </div>
+            <div className="p-4">
+              <textarea
+                rows={5}
+                value={formData.remarks}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, remarks: e.target.value }))
+                }
+                placeholder="Enter voucher narration..."
+                className="w-full rounded-md border border-slate-200 bg-transparent p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary-action dark:border-zinc-800 dark:text-zinc-100 resize-none"
               />
             </div>
           </div>
         </div>
 
-        {/* ── LINE ITEMS GRID (fills remaining space) ── */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4 text-primary-action" />
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                Payment Details
-              </h2>
+        {/* ── ROW 2: Line Items | Summary ── */}
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-8 overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 gap-2">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="h-4 w-4 text-primary-action" />
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                  {mode === "payment" ? "Payment Details" : "Receipt Details"}
+                </h3>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleAddLine}
+                className="h-7 gap-1.5 bg-primary-action hover:bg-primary-action/90 text-primary-action-foreground text-xs font-medium px-3"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Line
+              </Button>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
-                Total
-              </span>
-              <span className="text-sm font-semibold text-primary-action">
-                {formatINR(totalAmount)}
-              </span>
+
+            <div
+              style={{
+                height: `${Math.min(420, Math.max(220, (lines.length + 2) * 38 + 48))}px`,
+              }}
+            >
+              <DataGrid
+                rowData={lines}
+                columnDefs={lineColumns}
+                pinnedBottomRowData={pinnedTotal}
+                gridOptions={{
+                  pagination: false,
+                  onCellValueChanged: handleCellValueChanged,
+                  singleClickEdit: true,
+                  onCellKeyDown: (e: any) => {
+                    if (
+                      e.event instanceof KeyboardEvent &&
+                      e.event.key === "Enter" &&
+                      !e.node?.rowPinned
+                    ) {
+                      const idx = e.node?.rowIndex;
+                      if (idx != null) {
+                        setLines((prev) => {
+                          if (
+                            idx === prev.length - 1 &&
+                            rowHasContent(prev[idx])
+                          ) {
+                            return [...prev, emptyLine()];
+                          }
+                          return prev;
+                        });
+                      }
+                    }
+                  },
+                  defaultColDef: {
+                    sortable: false,
+                    filter: false,
+                    floatingFilter: false,
+                    resizable: true,
+                  },
+                }}
+              />
+            </div>
+
+            <div className="border-t border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2">
+              <button
+                type="button"
+                onClick={handleAddLine}
+                className="flex items-center gap-1.5 text-xs font-medium text-primary-action hover:text-primary-action/80"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add New Line
+              </button>
             </div>
           </div>
 
-          <div className="min-h-0 flex-1">
-            <DataGrid
-              rowData={lines}
-              columnDefs={lineColumns}
-              pinnedBottomRowData={
-                completeLines.length > 0 ? pinnedTotal : undefined
-              }
-              gridOptions={{
-                pagination: false,
-                getRowId: (p: any) => p.data?.rowKey,
-                onCellValueChanged: handleCellValueChanged,
-                singleClickEdit: true,
-                onCellKeyDown: (e: any) => {
-                  if (
-                    e.event instanceof KeyboardEvent &&
-                    e.event.key === "Enter" &&
-                    !e.node?.rowPinned
-                  ) {
-                    setLines((prev) => {
-                      const idx = prev.findIndex(
-                        (l) => l.rowKey === e.data?.rowKey,
-                      );
-                      if (idx === prev.length - 1 && rowHasContent(prev[idx])) {
-                        return [...prev, emptyLine()];
-                      }
-                      return prev;
-                    });
-                  }
-                },
-                defaultColDef: {
-                  sortable: false,
-                  filter: false,
-                  floatingFilter: false,
-                  resizable: true,
-                },
-              }}
-            />
+          {/* ── CARD: Summary ── */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <Receipt className="h-4 w-4 text-primary-action" />
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Summary
+              </h3>
+            </div>
+            <div className="p-4">
+              <div className="space-y-0">
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Total Entries
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                    {completeLines.length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Total Amount
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                    {formatINR(totalAmount)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between rounded-lg border border-primary-action/25 bg-primary-action/10 px-3 py-2.5">
+                <span className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                  {mode === "payment" ? "Total Paid" : "Total Received"}
+                </span>
+                <span className="text-base font-extrabold text-primary-action tracking-tight">
+                  {formatINR(totalAmount)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

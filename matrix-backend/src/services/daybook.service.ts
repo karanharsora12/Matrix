@@ -120,16 +120,26 @@ export class DaybookService {
     const hasDaybookId = cols.includes("daybook_id");
 
     let nextSrNo = 1;
-    if (hasSrNo) {
-      let query;
-      if (hasDaybookId && daybook.id) {
-        query = sql`SELECT COALESCE(MAX(sr_no), 0) as max_sr FROM ${sql.raw(rawTableName)} WHERE daybook_id = ${daybook.id}`;
+    if (hasDaybookId && daybook.id) {
+      const latestResult = await db.execute(
+        sql`SELECT sr_no FROM ${sql.raw(rawTableName)} WHERE daybook_id = ${daybook.id} ORDER BY id DESC LIMIT 1`,
+      );
+      const latestRow = latestResult.rows[0] as any;
+      if (latestRow && latestRow.sr_no != null && !isNaN(Number(latestRow.sr_no))) {
+        nextSrNo = Number(latestRow.sr_no) + 1;
       } else {
-        query = sql`SELECT COALESCE(MAX(sr_no), 0) as max_sr FROM ${sql.raw(rawTableName)}`;
+        nextSrNo = 1;
       }
-      const maxResult = await db.execute(query);
-      const maxSr = Number(maxResult.rows[0]?.max_sr || 0);
-      nextSrNo = maxSr + 1;
+    } else if (hasSrNo) {
+      const latestResult = await db.execute(
+        sql`SELECT sr_no FROM ${sql.raw(rawTableName)} ORDER BY id DESC LIMIT 1`,
+      );
+      const latestRow = latestResult.rows[0] as any;
+      if (latestRow && latestRow.sr_no != null && !isNaN(Number(latestRow.sr_no))) {
+        nextSrNo = Number(latestRow.sr_no) + 1;
+      } else {
+        nextSrNo = 1;
+      }
     }
 
     const voucherNo =

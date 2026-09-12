@@ -10,6 +10,7 @@ export interface NumericInputProps extends Omit<
   decimals?: number;
   align?: "left" | "right";
   useGrouping?: boolean;
+  locale?: string;
 }
 
 export const NumericInput = React.forwardRef<
@@ -23,6 +24,7 @@ export const NumericInput = React.forwardRef<
       decimals = 2,
       align = "right",
       useGrouping = true,
+      locale = "en-IN",
       onBlur,
       onFocus,
       className,
@@ -46,7 +48,7 @@ export const NumericInput = React.forwardRef<
           setLocalValue("");
         } else if (useGrouping) {
           setLocalValue(
-            new Intl.NumberFormat("en-US", {
+            new Intl.NumberFormat(locale, {
               minimumFractionDigits: decimals,
               maximumFractionDigits: decimals,
               useGrouping: true,
@@ -56,7 +58,7 @@ export const NumericInput = React.forwardRef<
           setLocalValue(numValue.toFixed(decimals));
         }
       }
-    }, [value, isFocused, decimals, useGrouping]);
+    }, [value, isFocused, decimals, useGrouping, locale]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setLocalValue(e.target.value);
@@ -91,7 +93,7 @@ export const NumericInput = React.forwardRef<
         onChange={handleChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        className={`${align === "right" ? "text-right" : "text-left"} ${className || ""}`}
+        className={`[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${align === "right" ? "text-right" : "text-left"} ${className || ""}`}
         {...props}
       />
     );
