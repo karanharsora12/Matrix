@@ -1836,37 +1836,54 @@ export const Sales: React.FC = () => {
         remarks={formData.remarks}
       />
 
-      {/* â”€â”€ TAG PRINT PREVIEW MODAL â”€â”€ */}
       <Dialog open={isTagModalOpen} onOpenChange={setIsTagModalOpen}>
-        <DialogContent className="max-w-md p-5">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-sm">
-              <Tag className="h-4 w-4 text-amber-600" />
-              <span>Print Jewellery Tags</span>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col p-0 rounded-2xl border-0 shadow-2xl">
+          <DialogHeader className="px-5 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 border border-amber-200">
+                <Tag className="h-3.5 w-3.5 text-amber-700" />
+              </div>
+              <span className="text-sm font-bold text-slate-900">
+                Print Jewellery Tags
+              </span>
+              <Badge variant="outline" className="text-[9px] font-mono ml-1">
+                {formData.itemLines?.length || 0} items
+              </Badge>
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3">
-            <p className="text-xs text-slate-500">
-              Printable jewelry barcode tags for line items:
-            </p>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto px-5 py-3 min-h-0">
+            <div className="space-y-1.5">
               {(formData.itemLines || []).map((line, i) => (
                 <div
                   key={i}
-                  className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-xs dark:border-amber-900/40 dark:bg-amber-950/20"
+                  className="flex items-center justify-between rounded-lg border border-amber-200 bg-white px-3 py-2 hover:bg-amber-50/50 transition-colors"
                 >
-                  <div className="flex justify-between font-bold text-slate-900 dark:text-zinc-100">
-                    <span>{line.tagNo || `TAG-${i + 1}`}</span>
-                    <span>{line.purity || "22K"}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-100 text-[10px] font-bold text-amber-700">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900 truncate">
+                          {line.tagNo || `TAG-${i + 1}`}
+                        </span>
+                        <span className="inline-flex px-1 py-0.5 rounded bg-amber-100 text-amber-700 text-[8px] font-bold shrink-0">
+                          {line.purity || "22K"}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 truncate">
+                        {line.itemName || "Item"}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-[11px] text-slate-600 dark:text-zinc-300 mt-1">
-                    {line.itemName || "Item"}
-                  </div>
-                  <div className="mt-1 flex justify-between  text-[11px] text-slate-700 dark:text-zinc-300">
-                    <span>GW: {Number(line.grossWt || 0).toFixed(3)}</span>
-                    <span>NW: {Number(line.netWt || 0).toFixed(3)}</span>
-                    <span className="font-semibold text-amber-800 dark:text-amber-300">
+                  <div className="flex items-center gap-3 shrink-0 ml-2">
+                    <div className="text-right text-[10px] text-slate-500 tabular-nums">
+                      <span>GW: {Number(line.grossWt || 0).toFixed(3)}</span>
+                      <span className="mx-1">&bull;</span>
+                      <span>NW: {Number(line.netWt || 0).toFixed(3)}</span>
+                    </div>
+                    <span className="text-xs font-bold text-amber-700 tabular-nums">
                       ₹{line.amount?.toLocaleString("en-IN")}
                     </span>
                   </div>
@@ -1875,21 +1892,22 @@ export const Sales: React.FC = () => {
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="px-5 py-3 border-t border-slate-200 bg-gradient-to-r from-slate-50 to-white shrink-0 gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsTagModalOpen(false)}
+              className="h-8 border-slate-200 hover:bg-slate-100 text-slate-700 text-xs"
             >
               Close
             </Button>
             <Button
               size="sm"
-              className="bg-amber-600 hover:bg-amber-700 text-white text-xs"
+              className="h-8 gap-1.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-md shadow-amber-200 text-xs"
               onClick={() => window.print()}
             >
-              <Printer className="h-3.5 w-3.5 mr-1" />
-              <span>Print Tags</span>
+              <Printer className="h-3.5 w-3.5" />
+              <span className="font-semibold">Print Tags</span>
             </Button>
           </DialogFooter>
         </DialogContent>
