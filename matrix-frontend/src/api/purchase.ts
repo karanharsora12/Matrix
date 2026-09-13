@@ -3,14 +3,16 @@ import apiClient from "./client";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 
 export interface PurchaseLineItem {
-  id?: string;
+  id?: string | number;
+  purchaseId?: number;
   itemId: number;
   itemName?: string;
   itemCode?: string;
   itemGroupId?: number;
   itemGroupName?: string;
   tagNo?: string;
-  pcs: number;
+  qty?: number;
+  pcs?: number;
   uom?: string;
   weight?: number;
   grossWt?: number;
@@ -18,12 +20,15 @@ export interface PurchaseLineItem {
   adjustedWt?: number;
   fineWt?: number;
   rate: number;
+  rateTypeId?: number;
   rateType?: string;
   tax?: string;
   labourAmount?: number;
   otherAmount?: number;
   discountAmount?: number;
   amount: number;
+  taxableAmount?: number;
+  amountWithTax?: number;
 }
 
 export interface Purchase {
@@ -35,8 +40,8 @@ export interface Purchase {
   daybookName?: string;
   accountId?: number;
   accountName?: string;
-  reference: string;
-  remarks: string;
+  reference?: string;
+  remarks?: string;
   purchaserName?: string;
   billMode?: string;
   // Supplier details
@@ -53,15 +58,18 @@ export interface Purchase {
   supplierEmail?: string;
   // Financial & Settlement
   itemLines: PurchaseLineItem[];
-  subtotal: number;
-  discountRate: number;
-  discountAmount: number;
-  taxRate: number;
-  taxAmount: number;
-  roundOff: number;
-  grandTotal: number;
-  // Payments
+  totalTaxableAmount?: number;
+  totalAmount?: number;
+  osAmount?: number;
   advanceAmount?: number;
+  subtotal?: number;
+  discountRate?: number;
+  discountAmount?: number;
+  taxRate?: number;
+  taxAmount?: number;
+  roundOff?: number;
+  grandTotal?: number;
+  // Payments
   urdAmount?: number;
   cashAmount?: number;
   bankAmount?: number;

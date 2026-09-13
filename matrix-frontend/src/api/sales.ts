@@ -18,6 +18,7 @@ export interface SaleLineItem {
   adjustedWt?: number;
   fineWt?: number;
   rate: number;
+  rateTypeId?: number;
   rateType?: string;
   tax?: string;
   labourAmount?: number;

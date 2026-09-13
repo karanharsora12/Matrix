@@ -19,6 +19,7 @@ import { todayISO, toISODate } from "@/utils/date";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
+import { PrintInvoiceModal } from "@/components/common/PrintInvoiceModal";
 import { PopupCellEditor } from "@/components/common/PopupCellEditor";
 import { SelectCellEditor } from "@/components/common/SelectCellEditor";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
@@ -174,6 +175,28 @@ export const Sales: React.FC = () => {
         field: "shortName",
         width: 120,
         valueGetter: (p) => p.data?.shortName || "-",
+      },
+      {
+        headerName: "ID",
+        field: "id",
+        width: 65,
+        type: "numericColumn",
+      },
+    ],
+    [],
+  );
+
+  const itemCodePopupColumns = useMemo<ColDef[]>(
+    () => [
+      {
+        headerName: "Item Code",
+        field: "itemCodeName",
+        minWidth: 160,
+      },
+      {
+        headerName: "Item",
+        field: "itemName",
+        minWidth: 180,
       },
       {
         headerName: "ID",
@@ -590,6 +613,25 @@ export const Sales: React.FC = () => {
         valueGetter: (p) => (p.node?.rowPinned ? "" : p.data?.itemName || ""),
       },
       {
+        headerName: "Item Code",
+        field: "itemCode",
+        minWidth: 140,
+        width: 150,
+        editable: (p) => !p.node?.rowPinned,
+        cellEditor: PopupCellEditor,
+        cellEditorParams: {
+          apiEndpoint: API_ENDPOINTS.INVENTORY.ITEM_CODES,
+          columns: itemCodePopupColumns,
+          onItemSelect: (itemCodeObj: any, rowIndex: number) => {
+            handleSelectItemCodeForRow(rowIndex, itemCodeObj);
+          },
+          searchPlaceholder: "Search Item Code...",
+          width: 650,
+          height: 360,
+        },
+        valueGetter: (p) => (p.node?.rowPinned ? "" : p.data?.itemCode || ""),
+      },
+      {
         headerName: "Pcs",
         field: "pcs",
         width: 80,
@@ -792,6 +834,26 @@ export const Sales: React.FC = () => {
       return { ...prev, itemLines: lines };
     });
   }, []);
+
+  // Item Code Selection for Grid Line Item
+  const handleSelectItemCodeForRow = useCallback(
+    (rowIndex: number, itemCodeObj: any) => {
+      setFormData((prev) => {
+        const lines = [...(prev.itemLines || [])];
+        if (!lines[rowIndex]) return prev;
+        const current = { ...lines[rowIndex] };
+        current.itemCode = itemCodeObj.itemCodeName;
+        current.tagNo = itemCodeObj.itemCodeName;
+        if (itemCodeObj.itemId) {
+          current.itemId = itemCodeObj.itemId;
+          current.itemName = itemCodeObj.itemName;
+        }
+        lines[rowIndex] = current;
+        return { ...prev, itemLines: lines };
+      });
+    },
+    [],
+  );
 
   // Save / Update
   const isSaving = createMutation.isPending || updateMutation.isPending;
@@ -1722,219 +1784,34 @@ export const Sales: React.FC = () => {
         isSaveDisabled={isSaving}
       />
 
-      {/* â”€â”€ PRINT TAX INVOICE PREVIEW MODAL â”€â”€ */}
-      <Dialog open={isPrintModalOpen} onOpenChange={setIsPrintModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between text-base">
-              <span>Tax Invoice Preview</span>
-              <Badge variant="outline" className="text-xs">
-                {formData.voucherNo}
-              </Badge>
-            </DialogTitle>
-          </DialogHeader>
-
-          {/* Printable Invoice Container */}
-          <div
-            id="printable-tax-invoice"
-            className="border border-slate-200 p-6 rounded-lg bg-white text-slate-900 space-y-4"
-          >
-            {/* Company Header */}
-            <div className="flex justify-between items-start border-b border-slate-200 pb-4">
-              <div>
-                <h2 className="text-xl font-black tracking-tight text-amber-700">
-                  MATRIX JEWELLERS & LUXURY RETAIL
-                </h2>
-                <p className="text-xs text-slate-600">
-                  402, Matrix Heights, CG Road, Navrangpura, Ahmedabad - 380009
-                </p>
-                <p className="text-xs text-slate-600">
-                  GSTIN: 24AAACM4901P1Z8 &bull; Phone: +91 79 2640 9811
-                </p>
-              </div>
-              <div className="text-right">
-                <Badge className="bg-amber-600 text-white font-bold">
-                  RETAIL TAX INVOICE
-                </Badge>
-                <p className="mt-1 text-xs  font-bold">
-                  Invoice #{formData.voucherNo}
-                </p>
-                <p className="text-xs text-slate-500">
-                  Date: {formData.voucherDate}
-                </p>
-              </div>
-            </div>
-
-            {/* Bill To & Invoice Meta */}
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="rounded border border-slate-100 p-2.5 bg-slate-50">
-                <p className="font-semibold text-slate-800 uppercase tracking-wider text-[10px]">
-                  Billed To:
-                </p>
-                <p className="font-bold text-sm text-slate-900">
-                  {formData.accountName || "Walk-in Customer"}
-                </p>
-                {formData.customerPhone && (
-                  <p className="text-slate-600">
-                    Phone: {formData.customerPhone}
-                  </p>
-                )}
-                {formData.customerAddress1 && (
-                  <p className="text-slate-600">
-                    {formData.customerAddress1}, {formData.customerCity}
-                  </p>
-                )}
-                {formData.customerGstNo && (
-                  <p className="text-slate-600 ">
-                    GSTIN: {formData.customerGstNo}
-                  </p>
-                )}
-                {formData.customerPanNo && (
-                  <p className="text-slate-600 ">
-                    PAN: {formData.customerPanNo}
-                  </p>
-                )}
-              </div>
-              <div className="rounded border border-slate-100 p-2.5 bg-slate-50 text-right">
-                <p className="font-semibold text-slate-800 uppercase tracking-wider text-[10px]">
-                  Payment & Terms:
-                </p>
-                <p className="text-slate-700">
-                  Mode:{" "}
-                  <span className="font-semibold">{formData.billMode}</span>
-                </p>
-                <p className="text-slate-700">
-                  Salesman:{" "}
-                  <span className="font-semibold">{formData.salesmanName}</span>
-                </p>
-                <p className="text-slate-700">
-                  Reference:{" "}
-                  <span className="font-semibold">
-                    {formData.reference || "N/A"}
-                  </span>
-                </p>
-                <p className="text-slate-700">
-                  Rate Type:{" "}
-                  <span className="font-semibold">{formData.rateFixType}</span>
-                </p>
-              </div>
-            </div>
-
-            {/* Items Table */}
-            <table className="w-full text-xs border border-slate-200">
-              <thead>
-                <tr className="bg-slate-100 text-slate-700 border-b border-slate-200 text-[11px]">
-                  <th className="p-1.5 text-center">#</th>
-                  <th className="p-1.5 text-left">Item Description</th>
-                  <th className="p-1.5 text-left">Purity</th>
-                  <th className="p-1.5 text-right">Net Wt</th>
-                  <th className="p-1.5 text-right">Rate (₹)</th>
-                  <th className="p-1.5 text-right">Labour (₹)</th>
-                  <th className="p-1.5 text-right">Amount (₹)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {(formData.itemLines || []).map((line, i) => (
-                  <tr key={i}>
-                    <td className="p-1.5 text-center ">{i + 1}</td>
-                    <td className="p-1.5 font-medium">
-                      {line.itemName || "Jewellery Item"}
-                      {line.tagNo && (
-                        <span className="text-[10px] text-slate-400 block">
-                          Tag: {line.tagNo}
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-1.5">{line.purity || "22K"}</td>
-                    <td className="p-1.5 text-right ">
-                      {Number(line.netWt || 0).toFixed(3)}g
-                    </td>
-                    <td className="p-1.5 text-right ">
-                      ₹{line.rate?.toLocaleString("en-IN")}
-                    </td>
-                    <td className="p-1.5 text-right ">
-                      ₹{line.labourAmount?.toLocaleString("en-IN")}
-                    </td>
-                    <td className="p-1.5 text-right  font-semibold">
-                      ₹{line.amount?.toLocaleString("en-IN")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Invoice Totals Breakdown */}
-            <div className="flex justify-between items-start text-xs pt-2">
-              <div className="max-w-xs text-[11px] text-slate-500 space-y-1">
-                <p className="font-semibold text-slate-700">Remarks / Terms:</p>
-                <p>
-                  {formData.remarks ||
-                    "All jewellery items are BIS Hallmarked. 100% Certified."}
-                </p>
-              </div>
-              <div className="w-64 space-y-1.5 text-right">
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Subtotal:</span>
-                  <span className=" font-medium">
-                    ₹
-                    {calculatedTotals.subtotal.toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                {calculatedTotals.totalLineDiscount > 0 && (
-                  <div className="flex justify-between text-rose-600">
-                    <span>Discount:</span>
-                    <span className="">
-                      -₹
-                      {calculatedTotals.totalLineDiscount.toLocaleString(
-                        "en-IN",
-                        { minimumFractionDigits: 2 },
-                      )}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-slate-600">GST (3%):</span>
-                  <span className="">
-                    ₹
-                    {calculatedTotals.taxAmount.toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                <div className="flex justify-between border-t border-slate-300 pt-1 font-bold text-sm text-slate-900">
-                  <span>Grand Total:</span>
-                  <span className=" text-emerald-800">
-                    ₹
-                    {calculatedTotals.grandTotal.toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsPrintModalOpen(false)}
-            >
-              Close
-            </Button>
-            <Button
-              size="sm"
-              className="gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"
-              onClick={() => window.print()}
-            >
-              <Printer className="h-4 w-4" />
-              <span>Print Document</span>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* ── PRINT TAX INVOICE PREVIEW MODAL ── */}
+      <PrintInvoiceModal
+        open={isPrintModalOpen}
+        onOpenChange={setIsPrintModalOpen}
+        invoiceType="sales"
+        voucherNo={formData.voucherNo}
+        voucherDate={formData.voucherDate}
+        party={{
+          name: formData.accountName || "Walk-in Customer",
+          phone: formData.customerPhone,
+          address: formData.customerAddress1,
+          city: formData.customerCity,
+          gstNo: formData.customerGstNo,
+          panNo: formData.customerPanNo,
+        }}
+        billMode={formData.billMode}
+        staffTitle="Salesman:"
+        staffName={formData.salesmanName}
+        reference={formData.reference}
+        rateFixType={formData.rateFixType}
+        itemLines={formData.itemLines}
+        subtotal={calculatedTotals.subtotal}
+        discountAmount={calculatedTotals.totalLineDiscount}
+        taxAmount={calculatedTotals.taxAmount}
+        taxRate={Number(formData.taxRate || 3)}
+        grandTotal={calculatedTotals.grandTotal}
+        remarks={formData.remarks}
+      />
 
       {/* â”€â”€ TAG PRINT PREVIEW MODAL â”€â”€ */}
       <Dialog open={isTagModalOpen} onOpenChange={setIsTagModalOpen}>

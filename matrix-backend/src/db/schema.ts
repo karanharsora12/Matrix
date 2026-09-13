@@ -270,6 +270,9 @@ export const salesItems = pgTable("sales_items", {
   adjustedWt: numeric("adjusted_wt").default("0"),
 
   rate: numeric("rate").default("0").notNull(),
+  rateTypeId: integer("rate_type_id").references(
+    (): AnyPgColumn => rateTypes.id,
+  ),
   rateType: varchar("rate_type", { length: 256 }),
   tax: varchar("tax", { length: 256 }),
 
@@ -317,4 +320,50 @@ export const paymentDetails = pgTable("payment_details", {
   editBy: integer("edit_by").references((): AnyPgColumn => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const purchases = pgTable("purchases", {
+  id: serial("id").primaryKey(),
+  accountId: integer("account_id").references((): AnyPgColumn => accounts.id),
+  voucherNo: varchar("voucher_no", { length: 256 }).notNull().unique(),
+  srNo: integer("sr_no"),
+  daybookId: integer("daybook_id").references((): AnyPgColumn => daybooks.id),
+  voucherDate: timestamp("voucher_date").notNull(),
+  reference: varchar("reference", { length: 256 }),
+  remarks: varchar("remarks", { length: 1024 }),
+  totalTaxableAmount: numeric("total_taxable_amount").default("0").notNull(),
+  totalAmount: numeric("total_amount").default("0").notNull(),
+  osAmount: numeric("os_amount").default("0"),
+  advanceAmount: numeric("advance_amount").default("0"),
+
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const purchaseItems = pgTable("purchase_items", {
+  id: serial("id").primaryKey(),
+  purchaseId: integer("purchase_id")
+    .references((): AnyPgColumn => purchases.id, { onDelete: "cascade" })
+    .notNull(),
+  itemGroupId: integer("item_group_id").references(
+    (): AnyPgColumn => itemGroups.id,
+  ),
+  itemId: integer("item_id")
+    .references((): AnyPgColumn => items.id)
+    .notNull(),
+  itemCode: varchar("item_code", { length: 256 }),
+  qty: numeric("qty").default("1").notNull(),
+  uom: varchar("uom", { length: 256 }),
+  rate: numeric("rate").default("0").notNull(),
+  rateTypeId: integer("rate_type_id").references(
+    (): AnyPgColumn => rateTypes.id,
+  ),
+  grossWt: numeric("gross_wt").default("0"),
+  netWt: numeric("net_wt").default("0"),
+  amount: numeric("amount").default("0").notNull(),
+  taxableAmount: numeric("taxable_amount").default("0").notNull(),
+  amountWithTax: numeric("amount_with_tax").default("0").notNull(),
+  discountAmount: numeric("discount_amount").default("0"),
 });

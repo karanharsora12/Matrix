@@ -24,6 +24,7 @@ export const getItemGroupUpdates = (
     transactionType === "sales" ? itemGroup.salesRate : itemGroup.purchaseRate;
 
   if (rateTypeId) {
+    updates.rateTypeId = rateTypeId;
     const rateTypeObj = rateTypes.find((rt) => rt.id === rateTypeId);
     if (rateTypeObj) {
       updates.rateType = rateTypeObj.name;

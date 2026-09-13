@@ -8,6 +8,7 @@ import accountRoutes from "./routes/account.routes";
 import daybookRoutes from "./routes/daybook.routes";
 import salesRoutes from "./routes/sales.routes";
 import paymentRoutes from "./routes/payment.routes";
+import purchaseRoutes from "./routes/purchase.routes";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use("/api/accounts", accountRoutes);
 app.use("/api/daybooks", daybookRoutes);
 app.use("/api/sales", salesRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/purchases", purchaseRoutes);
 
 app.get("/", (req, res) => {
   res.send("Matrix ERP System API");

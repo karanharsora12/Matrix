@@ -31,10 +31,6 @@ export interface FormFooterProps {
   onPrint?: () => void;
   printText?: string;
 
-  // Tag Print Action
-  onTagPrint?: () => void;
-  tagPrintText?: string;
-
   // Delete Action
   onDelete?: () => void;
   deleteText?: string;
@@ -75,7 +71,6 @@ export const FormFooter: React.FC<FormFooterProps> = ({
   saveText = "Save",
   clearText = "Clear",
   printText = "Print",
-  tagPrintText = "Tag Print",
   deleteText = "Delete",
   backText = "Back",
   isSaveDisabled = false,
@@ -153,22 +148,7 @@ export const FormFooter: React.FC<FormFooterProps> = ({
           {leftSlot}
         </div>
 
-        {/* Right side: Action buttons */}
         <div className="flex flex-wrap items-center gap-1.5">
-          {/* Tag Print */}
-          {onTagPrint && (
-            <Button
-              size="sm"
-              type="button"
-              variant="outline"
-              onClick={onTagPrint}
-              className="h-8 gap-1.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-400"
-            >
-              <Tag className="h-3.5 w-3.5 text-amber-600" />
-              <span>{tagPrintText}</span>
-            </Button>
-          )}
-
           {/* Print */}
           {onPrint && (
             <Button
