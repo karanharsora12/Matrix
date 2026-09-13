@@ -354,8 +354,7 @@ export const purchaseItems = pgTable("purchase_items", {
     .references((): AnyPgColumn => items.id)
     .notNull(),
   itemCode: varchar("item_code", { length: 256 }),
-  qty: numeric("qty").default("1").notNull(),
-  uom: varchar("uom", { length: 256 }),
+  pcs: numeric("pcs").default("1").notNull(),
   rate: numeric("rate").default("0").notNull(),
   rateTypeId: integer("rate_type_id").references(
     (): AnyPgColumn => rateTypes.id,

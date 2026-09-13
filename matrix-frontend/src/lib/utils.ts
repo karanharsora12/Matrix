@@ -95,3 +95,19 @@ export function buildRoute(
   const queryString = query.toString();
   return queryString ? `${finalPath}?${queryString}` : finalPath;
 }
+
+export const fmtINR = (
+  amount: number | string,
+  currency: string = "₹",
+): string => {
+  const numericValue = typeof amount === "string" ? parseFloat(amount) : amount;
+
+  if (isNaN(numericValue)) {
+    return `${currency}0.00`;
+  }
+
+  return `${currency}${numericValue.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};

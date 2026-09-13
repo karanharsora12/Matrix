@@ -10,7 +10,6 @@ export interface PurchaseLineItem {
   itemCode?: string;
   itemGroupId?: number;
   itemGroupName?: string;
-  tagNo?: string;
   qty?: number;
   pcs?: number;
   uom?: string;

@@ -1,45 +1,34 @@
-import { useAccounts } from "@/api/accounts";
-import { AccountHelp } from "@/components/common/AccountHelp";
-import { todayISO, toISODate } from "@/utils/date";
-import {
-  generateVoucherNo,
-  useDaybookGroups,
-  useDaybooks,
-} from "@/api/daybooks";
-import { useItemGroups, useItems } from "@/api/inventory";
+import { generateVoucherNo } from "@/api/daybooks";
 import {
   useCreatePurchase,
   useDeletePurchase,
   usePurchase,
-  usePurchases,
   useUpdatePurchase,
   type Purchase as PurchaseData,
   type PurchaseLineItem,
 } from "@/api/purchase";
+import { AccountHelp } from "@/components/common/AccountHelp";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
-import { PrintInvoiceModal } from "@/components/common/PrintInvoiceModal";
 import { PopupCellEditor } from "@/components/common/PopupCellEditor";
+import { PrintInvoiceModal } from "@/components/common/PrintInvoiceModal";
 import { SelectCellEditor } from "@/components/common/SelectCellEditor";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import {
   CommonListType,
-  TransactionMenu,
   getDaybooksByMenu,
+  TransactionMenu,
 } from "@/constants/enums";
-import { buildRoute, decodeURL, encodeURL } from "@/lib/utils";
+import { decodeURL, fmtINR } from "@/lib/utils";
+import { todayISO, toISODate } from "@/utils/date";
 import {
   calculateLineItemAmount,
   calculateTransactionTotals,
   getItemGroupUpdates,
 } from "@/utils/transactionCalculations";
-import type {
-  CellValueChangedEvent,
-  ColDef,
-  ICellRendererParams,
-} from "ag-grid-community";
+import type { CellValueChangedEvent, ColDef } from "ag-grid-community";
 import type { AgGridReact } from "ag-grid-react";
 import React, {
   useCallback,
@@ -51,17 +40,8 @@ import React, {
 import { useNavigate, useParams } from "react-router-dom";
 
 // UI Components
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AmountInput } from "@/components/ui/numeric-input";
@@ -75,58 +55,40 @@ import {
 
 // Icons
 import { GridDeleteCell } from "@/components/common/GridDeleteCell";
-import type { RootState } from "@/store";
 import {
-  Barcode,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  ChevronDown,
+  formatNumericalValue,
+  NumericalCellEditor,
+  parseNumericalValue,
+} from "@/components/common/NumericalCell";
+import useRedux from "@/hooks/useRedux";
+import {
   Coins,
   CreditCard,
-  Download,
   FileText,
   Paperclip,
-  Percent,
   Plus,
-  Printer,
   Receipt,
-  Search,
   Settings2,
-  Sparkles,
-  Tag,
   UploadCloud,
   User,
-  UserPlus,
-  Wallet,
 } from "lucide-react";
-import { useSelector } from "react-redux";
-
-const BILL_MODES = [
-  "Debit Memo",
-  "Cash",
-  "Bank Transfer / UPI",
-  "Credit Card",
-  "Split Payment",
-];
 
 const DEFAULT_LINE_ITEM: PurchaseLineItem = {
-  id: "temp-1",
+  id: "",
   itemId: 0,
   itemName: "",
   itemCode: "",
   itemGroupId: 0,
   itemGroupName: "",
-  tagNo: "",
   pcs: 1,
-  uom: "GMS",
+  uom: "",
   grossWt: 0,
   netWt: 0,
   adjustedWt: 0,
   fineWt: 0,
   rate: 0,
   rateType: "",
-  tax: "3%",
+  tax: "",
   labourAmount: 0,
   otherAmount: 0,
   discountAmount: 0,
@@ -141,29 +103,18 @@ export const Purchase: React.FC = () => {
   const isEditing = purchaseId > 0;
   const gridRef = useRef<AgGridReact>(null);
 
-  // Master Data Queries
-  const { data: purchasesListResp } = usePurchases();
-  const { data: daybooksResp } = useDaybooks();
-  const { data: daybookGroupsResp } = useDaybookGroups();
-  const { data: accountsResp } = useAccounts();
-  const { data: itemsResp } = useItems();
-  const { data: itemGroupsResp } = useItemGroups();
-  const { data: existingPurchase, isLoading: isLoadingPurchase } = usePurchase(
+  const { data: existingPurchase } = usePurchase(
     isEditing ? purchaseId : undefined,
   );
-  const { rateTypes, commonLists } = useSelector(
-    (state: RootState) => state.inventory,
-  );
+  const {
+    rateTypes,
+    commonLists,
+    daybookGroups,
+    daybooks: allDaybooks,
+  } = useRedux("inventory");
   const measureUnits = commonLists.filter(
     (c) => c.listType === CommonListType.MEASURE_UNIT,
   );
-
-  const allDaybooks = daybooksResp?.data || [];
-  const daybookGroups = daybookGroupsResp?.data || [];
-  const accounts = accountsResp?.data || [];
-  const items = itemsResp?.data || [];
-  const itemGroups = itemGroupsResp?.data || [];
-  const allPurchases = purchasesListResp?.data || [];
 
   const itemGroupPopupColumns = useMemo<ColDef[]>(
     () => [
@@ -233,7 +184,6 @@ export const Purchase: React.FC = () => {
     [],
   );
 
-  // Filter daybooks for PURCHASE menu only
   const daybooks = useMemo(() => {
     const filtered = getDaybooksByMenu(
       TransactionMenu.PURCHASE,
@@ -255,104 +205,36 @@ export const Purchase: React.FC = () => {
     "cash" | "bank" | "card" | "upi"
   >("cash");
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-  const [taxMode, setTaxMode] = useState<"GST" | "IGST">("GST");
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
   const [placeOfSupply, setPlaceOfSupply] = useState("Gujarat (24)");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
-  const [formData, setFormData] = useState<Partial<PurchaseData>>({
-    voucherNo: "",
-    voucherDate: todayISO(),
-    daybookId: undefined,
-    daybookName: "",
-    reference: "",
-    remarks: "",
-    purchaserName: "",
-    billMode: "Debit Memo",
-    supplierPhone: "",
-    supplierAltPhone: "",
-    supplierAddress1: "",
-    supplierAddress2: "",
-    supplierCity: "",
-    supplierPincode: "",
-    supplierState: "",
-    supplierGstNo: "",
-    supplierPanNo: "",
-    supplierAadharNo: "",
-    supplierEmail: "",
-    itemLines: [{ ...DEFAULT_LINE_ITEM, id: `line-${Date.now()}` }],
-    subtotal: 0,
-    discountRate: 0,
-    discountAmount: 0,
-    taxRate: 3,
-    taxAmount: 0,
-    roundOff: 0,
-    grandTotal: 0,
-    cashAmount: 0,
-    bankAmount: 0,
-    bankName: "",
-    cardAmount: 0,
-    cardCommission: 0,
-    advanceAmount: 0,
-    urdAmount: 0,
-    purchaseReturnAmount: 0,
-    schemeAmount: 0,
-    giftVoucherAmount: 0,
-    kasarAmount: 0,
-    tdsAmount: 0,
-    rateFixType: "Fix",
-    dueDate: toISODate(new Date(Date.now() + 15 * 86400000)),
-    deliveryPending: false,
-    isActive: true,
-  });
+  const [formData, setFormData] = useState<Partial<PurchaseData>>({});
 
   useEffect(() => {
     if (existingPurchase && isEditing) {
-      const matchedAccount = accounts.find(
-        (a) => a.id === existingPurchase.accountId,
-      );
-      const matchedDaybook = daybooks.find(
-        (d) => d.id === existingPurchase.daybookId,
-      );
-
       setFormData((prev) => ({
         ...prev,
         ...existingPurchase,
-        daybookName:
-          existingPurchase.daybookName ||
-          matchedDaybook?.daybookName ||
-          prev.daybookName,
+        daybookName: existingPurchase.daybookName || prev.daybookName,
         accountId: existingPurchase.accountId,
-        accountName:
-          existingPurchase.accountName ||
-          matchedAccount?.accountName ||
-          prev.accountName,
+        accountName: existingPurchase.accountName || prev.accountName,
         voucherDate: toISODate(existingPurchase.voucherDate) || todayISO(),
         dueDate: existingPurchase.dueDate
           ? toISODate(existingPurchase.dueDate)
           : undefined,
         itemLines:
           existingPurchase.itemLines && existingPurchase.itemLines.length > 0
-            ? existingPurchase.itemLines.map((line, idx) => ({
-                ...line,
-                itemCode: line.itemCode || line.tagNo || `ITM-${idx + 1}`,
-                tagNo: line.tagNo || line.itemCode || `TAG-${idx + 1}`,
-                uom: line.uom || "GMS",
-                rateType: line.rateType,
-                tax: line.tax || "3%",
-              }))
+            ? existingPurchase.itemLines
             : [
                 {
                   ...DEFAULT_LINE_ITEM,
-                  itemCode: "ITM-001",
-                  tagNo: "TAG-001",
                 },
               ],
       }));
     }
-  }, [existingPurchase, isEditing, accounts, daybooks]);
+  }, [existingPurchase, isEditing, daybooks]);
 
   // Calculations
   const calculatedTotals = useMemo(() => {
@@ -387,7 +269,6 @@ export const Purchase: React.FC = () => {
     }));
   }, [calculatedTotals, couponDiscount]);
 
-  // Handler when daybook changes: generates voucher number
   const handleSelectDaybook = useCallback(
     async (val: string) => {
       const dbId = Number(val);
@@ -423,7 +304,6 @@ export const Purchase: React.FC = () => {
     [daybooks],
   );
 
-  // Auto-generate voucher number on initial load for new purchases
   useEffect(() => {
     if (!isEditing && daybooks.length > 0 && !formData.daybookId) {
       const defaultDb = daybooks[0];
@@ -431,20 +311,12 @@ export const Purchase: React.FC = () => {
     }
   }, [isEditing, daybooks, formData.daybookId, handleSelectDaybook]);
 
-  // Handlers for Line Items
   const handleLineItemChange = useCallback(
     (index: number, field: keyof PurchaseLineItem, value: any) => {
       setFormData((prev) => {
         const updatedLines = [...(prev.itemLines || [])];
         if (!updatedLines[index]) return prev;
         const current = { ...updatedLines[index], [field]: value };
-
-        if (field === "itemCode") {
-          current.tagNo = value;
-        } else if (field === "tagNo") {
-          current.itemCode = value;
-        }
-
         const updatedLine = calculateLineItemAmount(current, field);
         updatedLines[index] = updatedLine;
         return { ...prev, itemLines: updatedLines };
@@ -460,10 +332,6 @@ export const Purchase: React.FC = () => {
         if (!updatedLines[index]) return prev;
 
         let current = { ...updatedLines[index], ...updates };
-
-        if (updates.itemCode !== undefined) current.tagNo = updates.itemCode;
-        if (updates.tagNo !== undefined) current.itemCode = updates.tagNo;
-
         current = calculateLineItemAmount(current);
         updatedLines[index] = current;
         return { ...prev, itemLines: updatedLines };
@@ -473,11 +341,8 @@ export const Purchase: React.FC = () => {
   );
 
   const handleAddLineItem = useCallback(() => {
-    const nextNum = Math.floor(100 + Math.random() * 900);
     const newLine: PurchaseLineItem = {
       ...DEFAULT_LINE_ITEM,
-      itemCode: `ITM-${nextNum}`,
-      tagNo: `TAG-${nextNum}`,
     };
     setFormData((prev) => ({
       ...prev,
@@ -488,18 +353,6 @@ export const Purchase: React.FC = () => {
   const handleDeleteLineItem = useCallback((index: number) => {
     setFormData((prev) => {
       const lines = prev.itemLines || [];
-      if (lines.length <= 1) {
-        return {
-          ...prev,
-          itemLines: [
-            {
-              ...DEFAULT_LINE_ITEM,
-              itemCode: "ITM-001",
-              tagNo: "TAG-001",
-            },
-          ],
-        };
-      }
       return {
         ...prev,
         itemLines: lines.filter((_, i) => i !== index),
@@ -517,21 +370,9 @@ export const Purchase: React.FC = () => {
       let value = event.newValue;
 
       if (field === "itemGroupName") {
-        const grp = itemGroups.find((g) => g.itemGroupName === value);
-        if (grp) {
-          const updates = getItemGroupUpdates(grp, rateTypes, "purchase");
-          applyLineItemUpdates(rowIndex, updates);
-          return;
-        }
       }
 
       if (field === "itemName") {
-        const matched = items.find((i) => i.itemName === value);
-        if (matched) {
-          handleLineItemChange(rowIndex, "itemId", matched.id);
-          handleLineItemChange(rowIndex, "itemName", matched.itemName);
-          return;
-        }
       }
 
       if (field === "rateType") {
@@ -560,12 +401,13 @@ export const Purchase: React.FC = () => {
 
       handleLineItemChange(rowIndex, field, value);
     },
-    [handleLineItemChange, applyLineItemUpdates, itemGroups, items, rateTypes],
+    [handleLineItemChange, applyLineItemUpdates, rateTypes],
   );
 
   const columnDefs = useMemo<ColDef[]>(() => {
     return [
       {
+        field: "index",
         headerName: "#",
         width: 50,
         pinned: "left",
@@ -636,76 +478,81 @@ export const Purchase: React.FC = () => {
         headerName: "Pcs",
         field: "pcs",
         width: 80,
-        type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellEditorParams: { min: 1, step: 1 },
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "integer",
+          decimals: 0,
+        },
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "integer", decimals: 0 },
+            Boolean(params.node?.rowPinned),
+          ),
         valueParser: (params) => {
           if (params.newValue === "" || params.newValue == null) return 1;
           const n = parseInt(params.newValue, 10);
           return isNaN(n) ? 1 : n;
-        },
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" ? String(p.value) : "",
-      },
-      {
-        headerName: "UOM",
-        field: "uom",
-        width: 90,
-        editable: (p) => !p.node?.rowPinned,
-        cellEditor: SelectCellEditor,
-        cellEditorParams: {
-          options: measureUnits,
-          valueKey: "listValue",
-          labelKey: "listValue",
         },
       },
       {
         headerName: "Gross Wt.",
         field: "grossWt",
         width: 110,
-        type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellEditorParams: { min: 0, step: 0.001, precision: 3 },
-        valueParser: (params) => {
-          if (params.newValue === "" || params.newValue == null) return 0;
-          const n = parseFloat(params.newValue);
-          return isNaN(n) ? 0 : n;
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "weight",
+          decimals: 3,
         },
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" && !isNaN(Number(p.value))
-            ? Number(p.value).toFixed(3)
-            : "",
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "weight", decimals: 3 },
+            Boolean(params.node?.rowPinned),
+          ),
+        valueParser: (params) =>
+          parseNumericalValue(params.newValue, { type: "weight", decimals: 3 }),
       },
       {
         headerName: "Net Wt.",
         field: "netWt",
         width: 110,
-        type: "numericColumn",
         editable: false,
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" && !isNaN(Number(p.value))
-            ? Number(p.value).toFixed(3)
-            : "",
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "weight", decimals: 3 },
+            Boolean(params.node?.rowPinned),
+          ),
       },
       {
-        headerName: "Rate (₹)",
+        headerName: "Rate",
         field: "rate",
         width: 115,
-        type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellEditorParams: { min: 0, step: 0.01, precision: 2 },
-        valueParser: (params) => {
-          if (params.newValue === "" || params.newValue == null) return 0;
-          const n = parseFloat(params.newValue);
-          return isNaN(n) ? 0 : n;
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "amount",
+          decimals: 2,
         },
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" && !isNaN(Number(p.value))
-            ? Number(p.value).toFixed(2)
-            : "",
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "amount", decimals: 2 },
+            Boolean(params.node?.rowPinned),
+          ),
+        valueParser: (params) =>
+          parseNumericalValue(params.newValue, { type: "amount", decimals: 2 }),
       },
       {
         headerName: "Rate Type",
@@ -727,33 +574,44 @@ export const Purchase: React.FC = () => {
         },
       },
       {
-        headerName: "Discount (₹)",
+        headerName: "Discount",
         field: "discountAmount",
         width: 115,
-        type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellEditorParams: { min: 0, step: 0.01, precision: 2 },
-        valueParser: (params) => {
-          if (params.newValue === "" || params.newValue == null) return 0;
-          const n = parseFloat(params.newValue);
-          return isNaN(n) ? 0 : n;
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "amount",
+          decimals: 2,
         },
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" && !isNaN(Number(p.value))
-            ? Number(p.value).toFixed(2)
-            : "",
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "amount", decimals: 2 },
+            Boolean(params.node?.rowPinned),
+          ),
+        valueParser: (params) =>
+          parseNumericalValue(params.newValue, { type: "amount", decimals: 2 }),
       },
       {
-        headerName: "Amount (₹)",
+        headerName: "Amount",
         field: "amount",
         width: 135,
-        type: "numericColumn",
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "amount",
+          decimals: 2,
+        },
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "amount", decimals: 2 },
+            Boolean(params.node?.rowPinned),
+          ),
         editable: false,
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" && !isNaN(Number(p.value))
-            ? Number(p.value).toFixed(2)
-            : "",
       },
       {
         headerName: "",
@@ -772,12 +630,12 @@ export const Purchase: React.FC = () => {
         },
       },
     ];
-  }, [handleDeleteLineItem, itemGroups, items]);
+  }, [handleDeleteLineItem]);
 
   const pinnedBottomRowData = useMemo(() => {
     return [
       {
-        itemGroupName: "TOTAL",
+        index: "TOTAL",
         itemName: "",
         pcs: calculatedTotals.pcs,
         uom: "",
@@ -792,28 +650,23 @@ export const Purchase: React.FC = () => {
     ];
   }, [calculatedTotals]);
 
-  // Supplier Selection Handler
-  const handleSelectSupplier = useCallback(
-    (accountOrId: any) => {
-      const acc =
-        typeof accountOrId === "object"
-          ? accountOrId
-          : accounts.find((a) => a.id === Number(accountOrId));
-      if (acc) {
-        setFormData((prev) => ({
-          ...prev,
-          accountId: acc.id,
-          accountName:
-            acc.accountName ||
-            `${acc.firstName || ""} ${acc.lastName || ""}`.trim(),
-          supplierPhone:
-            acc.phone || acc.mobile || acc.userName || prev.supplierPhone,
-          supplierEmail: acc.email || prev.supplierEmail,
-        }));
-      }
-    },
-    [accounts],
-  );
+  const handleSelectSupplier = useCallback((account: any) => {
+    if (account) {
+      setFormData((prev) => ({
+        ...prev,
+        accountId: account.id,
+        accountName:
+          account.accountName ||
+          `${account.firstName || ""} ${account.lastName || ""}`.trim(),
+        supplierPhone:
+          account.phone ||
+          account.mobile ||
+          account.userName ||
+          prev.supplierPhone,
+        supplierEmail: account.email || prev.supplierEmail,
+      }));
+    }
+  }, []);
 
   // Item Group Selection for Grid Line Item
   const handleSelectItemGroupForRow = useCallback(
@@ -833,16 +686,11 @@ export const Purchase: React.FC = () => {
       const current = { ...lines[rowIndex] };
       current.itemId = item.id;
       current.itemName = item.itemName;
-      if (!current.tagNo || current.tagNo.startsWith("TAG-")) {
-        current.tagNo = item.shortName || item.itemName;
-        current.itemCode = item.shortName || item.itemName;
-      }
       lines[rowIndex] = current;
       return { ...prev, itemLines: lines };
     });
   }, []);
 
-  // Item Code Selection for Grid Line Item
   const handleSelectItemCodeForRow = useCallback(
     (rowIndex: number, itemCodeObj: any) => {
       setFormData((prev) => {
@@ -850,7 +698,6 @@ export const Purchase: React.FC = () => {
         if (!lines[rowIndex]) return prev;
         const current = { ...lines[rowIndex] };
         current.itemCode = itemCodeObj.itemCodeName;
-        current.tagNo = itemCodeObj.itemCodeName;
         if (itemCodeObj.itemId) {
           current.itemId = itemCodeObj.itemId;
           current.itemName = itemCodeObj.itemName;
@@ -862,7 +709,6 @@ export const Purchase: React.FC = () => {
     [],
   );
 
-  // Save / Update
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   const handleSave = async () => {
@@ -871,28 +717,8 @@ export const Purchase: React.FC = () => {
       return;
     }
 
-    const payload: Omit<PurchaseData, "id"> = {
-      voucherNo: formData.voucherNo || "PUR-001",
-      srNo: formData.srNo,
-      voucherDate: formData.voucherDate || todayISO(),
-      daybookId: formData.daybookId || 1,
-      daybookName: formData.daybookName || "PURCHASE",
-      reference: formData.reference || "",
-      accountId: formData.accountId,
-      remarks: formData.remarks || "",
-      purchaserName: formData.purchaserName || "",
-      billMode: formData.billMode || "Debit Memo",
-      supplierPhone: formData.supplierPhone || "",
-      supplierAltPhone: formData.supplierAltPhone || "",
-      supplierAddress1: formData.supplierAddress1 || "",
-      supplierAddress2: formData.supplierAddress2 || "",
-      supplierCity: formData.supplierCity || "",
-      supplierPincode: formData.supplierPincode || "",
-      supplierState: formData.supplierState || "",
-      supplierGstNo: formData.supplierGstNo || "",
-      supplierPanNo: formData.supplierPanNo || "",
-      supplierAadharNo: formData.supplierAadharNo || "",
-      supplierEmail: formData.supplierEmail || "",
+    const payload: Partial<PurchaseData> = {
+      ...formData,
       itemLines: (formData.itemLines || [])
         .filter((line) => line.itemId && line.itemId > 0)
         .map((line) => {
@@ -909,39 +735,6 @@ export const Purchase: React.FC = () => {
             amountWithTax: Number(withTax.toFixed(2)),
           };
         }),
-      totalTaxableAmount: calculatedTotals.subtotal,
-      totalAmount: calculatedTotals.grandTotal,
-      osAmount: Math.max(
-        0,
-        calculatedTotals.grandTotal -
-          (formData.cashAmount || 0) -
-          (formData.bankAmount || 0) -
-          (formData.cardAmount || 0) -
-          (formData.advanceAmount || 0),
-      ),
-      subtotal: calculatedTotals.subtotal,
-      discountRate: formData.discountRate || 0,
-      discountAmount: calculatedTotals.totalLineDiscount + couponDiscount,
-      taxRate: formData.taxRate || 3,
-      taxAmount: calculatedTotals.taxAmount,
-      roundOff: calculatedTotals.roundOff,
-      grandTotal: calculatedTotals.grandTotal,
-      cashAmount: formData.cashAmount || 0,
-      bankAmount: formData.bankAmount || 0,
-      bankName: formData.bankName || "",
-      cardAmount: formData.cardAmount || 0,
-      cardCommission: formData.cardCommission || 0,
-      advanceAmount: formData.advanceAmount || 0,
-      urdAmount: formData.urdAmount || 0,
-      purchaseReturnAmount: formData.purchaseReturnAmount || 0,
-      schemeAmount: formData.schemeAmount || 0,
-      giftVoucherAmount: formData.giftVoucherAmount || 0,
-      kasarAmount: formData.kasarAmount || 0,
-      tdsAmount: formData.tdsAmount || 0,
-      rateFixType: formData.rateFixType || "Fix",
-      dueDate: formData.dueDate,
-      deliveryPending: formData.deliveryPending || false,
-      isActive: formData.isActive ?? true,
     };
 
     if (payload.itemLines.length === 0) {
@@ -976,30 +769,7 @@ export const Purchase: React.FC = () => {
   const handleClear = () => {
     const defaultDb = daybooks[0];
     const defaultDbId = defaultDb?.id || 1;
-    setFormData({
-      voucherNo: "",
-      srNo: undefined,
-      voucherDate: todayISO(),
-      daybookId: defaultDbId,
-      daybookName: defaultDb?.daybookName || "PURCHASE",
-      reference: "",
-      remarks: "",
-      purchaserName: "",
-      billMode: "Debit Memo",
-      supplierPhone: "",
-      supplierAddress1: "",
-      supplierCity: "",
-      supplierPincode: "",
-      supplierState: "",
-      itemLines: [{ ...DEFAULT_LINE_ITEM }],
-      taxRate: 3,
-      cashAmount: 0,
-      bankAmount: 0,
-      cardAmount: 0,
-      advanceAmount: 0,
-      urdAmount: 0,
-      isActive: true,
-    });
+    setFormData({});
     setCouponDiscount(0);
     handleSelectDaybook(String(defaultDbId));
   };
@@ -1020,38 +790,6 @@ export const Purchase: React.FC = () => {
       });
     }
   };
-
-  // Record Navigation (Prev / Next record from list)
-  const handleNavigateRecord = (direction: "prev" | "next") => {
-    if (!allPurchases.length) return;
-    const currentIndex = allPurchases.findIndex((p) => p.id === purchaseId);
-    let targetIndex = -1;
-    if (direction === "prev") {
-      targetIndex =
-        currentIndex > 0 ? currentIndex - 1 : allPurchases.length - 1;
-    } else {
-      targetIndex =
-        currentIndex >= 0 && currentIndex < allPurchases.length - 1
-          ? currentIndex + 1
-          : 0;
-    }
-    const targetPurchase = allPurchases[targetIndex];
-    if (targetPurchase) {
-      const token = encodeURL({ id: targetPurchase.id });
-      navigate(buildRoute(WEB_ROUTES.TRANSACTION.PURCHASE, { token }));
-    }
-  };
-
-  if (isEditing && isLoadingPurchase) {
-    return (
-      <div className="flex h-96 flex-col items-center justify-center gap-3">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent" />
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-          Loading purchase voucher #{purchaseId}...
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-full flex flex-col bg-[#f5f6fa] dark:bg-zinc-950">
@@ -1508,7 +1246,6 @@ export const Purchase: React.FC = () => {
 
         {/* ── ROW 3: Terms & Conditions | Summary | Payment Details + Attachments ── */}
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
-          {/* ── CARD: Terms & Conditions (4 cols) ── */}
           <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
               <FileText className="h-4 w-4 text-primary-action" />
@@ -1563,11 +1300,10 @@ export const Purchase: React.FC = () => {
                     Total Amount
                   </span>
                   <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                    ₹
-                    {(
+                    {fmtINR(
                       calculatedTotals.subtotal +
-                      calculatedTotals.totalLineDiscount
-                    ).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        calculatedTotals.totalLineDiscount,
+                    )}
                   </span>
                 </div>
                 {/* Total Discount */}
@@ -1576,11 +1312,7 @@ export const Purchase: React.FC = () => {
                     Total Discount
                   </span>
                   <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                    ₹
-                    {calculatedTotals.totalLineDiscount.toLocaleString(
-                      "en-IN",
-                      { minimumFractionDigits: 2 },
-                    )}
+                    {fmtINR(calculatedTotals.totalLineDiscount)}
                   </span>
                 </div>
                 {/* Taxable Amount */}
@@ -1589,53 +1321,9 @@ export const Purchase: React.FC = () => {
                     Taxable Amount
                   </span>
                   <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                    ₹
-                    {calculatedTotals.subtotal.toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                    })}
+                    {fmtINR(calculatedTotals.subtotal)}
                   </span>
                 </div>
-                {/* Tax Rows: CGST + SGST or IGST */}
-                {taxMode === "GST" ? (
-                  <>
-                    <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
-                      <span className="text-xs text-slate-600 dark:text-zinc-400">
-                        CGST ({((formData.taxRate || 3) / 2).toFixed(1)}%)
-                      </span>
-                      <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                        ₹
-                        {(calculatedTotals.taxAmount / 2).toLocaleString(
-                          "en-IN",
-                          { minimumFractionDigits: 2 },
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
-                      <span className="text-xs text-slate-600 dark:text-zinc-400">
-                        SGST ({((formData.taxRate || 3) / 2).toFixed(1)}%)
-                      </span>
-                      <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                        ₹
-                        {(calculatedTotals.taxAmount / 2).toLocaleString(
-                          "en-IN",
-                          { minimumFractionDigits: 2 },
-                        )}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
-                    <span className="text-xs text-slate-600 dark:text-zinc-400">
-                      IGST ({formData.taxRate || 3}%)
-                    </span>
-                    <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                      ₹
-                      {calculatedTotals.taxAmount.toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* Grand Total Highlight Row */}
@@ -1644,10 +1332,7 @@ export const Purchase: React.FC = () => {
                   Grand Total
                 </span>
                 <span className="text-base font-extrabold text-primary-action tracking-tight">
-                  ₹
-                  {calculatedTotals.grandTotal.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
+                  {fmtINR(calculatedTotals.grandTotal)}
                 </span>
               </div>
             </div>
@@ -1730,10 +1415,7 @@ export const Purchase: React.FC = () => {
                             : "text-amber-600 dark:text-amber-400"
                         }`}
                       >
-                        ₹{" "}
-                        {calculatedTotals.balanceDue.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}
+                        {fmtINR(calculatedTotals.balanceDue)}
                       </span>
                     </div>
                   </div>
@@ -1798,10 +1480,6 @@ export const Purchase: React.FC = () => {
 
       <FormFooter
         showVoucherNavigation={true}
-        onNavigatePrev={() => handleNavigateRecord("prev")}
-        onNavigateNext={() => handleNavigateRecord("next")}
-        onTagPrint={() => setIsTagModalOpen(true)}
-        tagPrintText="Tag Print"
         onPrint={() => setIsPrintModalOpen(true)}
         printText="Print Invoice"
         onDelete={isEditing ? handleDelete : undefined}
@@ -1816,7 +1494,6 @@ export const Purchase: React.FC = () => {
         isSaveDisabled={isSaving}
       />
 
-      {/* ── PRINT TAX INVOICE PREVIEW MODAL ── */}
       <PrintInvoiceModal
         open={isPrintModalOpen}
         onOpenChange={setIsPrintModalOpen}
@@ -1846,84 +1523,6 @@ export const Purchase: React.FC = () => {
         grandTotal={calculatedTotals.grandTotal}
         remarks={formData.remarks}
       />
-
-      {/* ── TAG PRINT PREVIEW MODAL ── */}
-      <Dialog open={isTagModalOpen} onOpenChange={setIsTagModalOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col p-0 rounded-2xl border-0 shadow-2xl">
-          <DialogHeader className="px-5 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white shrink-0">
-            <DialogTitle className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 border border-amber-200">
-                <Tag className="h-3.5 w-3.5 text-amber-700" />
-              </div>
-              <span className="text-sm font-bold text-slate-900">
-                Print Jewellery Tags
-              </span>
-              <Badge variant="outline" className="text-[9px] font-mono ml-1">
-                {formData.itemLines?.length || 0} items
-              </Badge>
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-y-auto px-5 py-3 min-h-0">
-            <div className="space-y-1.5">
-              {(formData.itemLines || []).map((line, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between rounded-lg border border-amber-200 bg-white px-3 py-2 hover:bg-amber-50/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-100 text-[10px] font-bold text-amber-700">
-                      {i + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-900 truncate">
-                          {line.tagNo || `TAG-${i + 1}`}
-                        </span>
-                        <span className="inline-flex px-1 py-0.5 rounded bg-amber-100 text-amber-700 text-[8px] font-bold shrink-0">
-                          {line.purity || "22K"}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 truncate">
-                        {line.itemName || "Item"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0 ml-2">
-                    <div className="text-right text-[10px] text-slate-500 tabular-nums">
-                      <span>GW: {Number(line.grossWt || 0).toFixed(3)}</span>
-                      <span className="mx-1">•</span>
-                      <span>NW: {Number(line.netWt || 0).toFixed(3)}</span>
-                    </div>
-                    <span className="text-xs font-bold text-amber-700 tabular-nums">
-                      ₹{line.amount?.toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <DialogFooter className="px-5 py-3 border-t border-slate-200 bg-gradient-to-r from-slate-50 to-white shrink-0 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsTagModalOpen(false)}
-              className="h-8 border-slate-200 hover:bg-slate-100 text-slate-700 text-xs"
-            >
-              Close
-            </Button>
-            <Button
-              size="sm"
-              className="h-8 gap-1.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-md shadow-amber-200 text-xs"
-              onClick={() => window.print()}
-            >
-              <Printer className="h-3.5 w-3.5" />
-              <span className="font-semibold">Print Tags</span>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

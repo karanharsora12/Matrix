@@ -1,4 +1,3 @@
-import { useAccounts } from "@/api/accounts";
 import {
   generateVoucherNo,
   useDaybookGroups,
@@ -121,7 +120,6 @@ export const Sales: React.FC = () => {
   const { data: salesListResp } = useSales();
   const { data: daybooksResp } = useDaybooks();
   const { data: daybookGroupsResp } = useDaybookGroups();
-  const { data: accountsResp } = useAccounts();
   const { data: itemsResp } = useItems();
   const { data: itemGroupsResp } = useItemGroups();
   const { data: existingSale } = useSale(isEditing ? saleId : undefined);
@@ -134,7 +132,6 @@ export const Sales: React.FC = () => {
 
   const allDaybooks = daybooksResp?.data || [];
   const daybookGroups = daybookGroupsResp?.data || [];
-  const accounts = accountsResp?.data || [];
   const items = itemsResp?.data || [];
   const itemGroups = itemGroupsResp?.data || [];
   const allSales = salesListResp?.data || [];
@@ -292,9 +289,6 @@ export const Sales: React.FC = () => {
 
   useEffect(() => {
     if (existingSale && isEditing) {
-      const matchedAccount = accounts.find(
-        (a) => a.id === existingSale.accountId,
-      );
       const matchedDaybook = daybooks.find(
         (d) => d.id === existingSale.daybookId,
       );
@@ -307,10 +301,7 @@ export const Sales: React.FC = () => {
           matchedDaybook?.daybookName ||
           prev.daybookName,
         accountId: existingSale.accountId,
-        accountName:
-          existingSale.accountName ||
-          matchedAccount?.accountName ||
-          prev.accountName,
+        accountName: existingSale.accountName || prev.accountName,
         voucherDate: toISODate(existingSale.voucherDate) || todayISO(),
         dueDate: existingSale.dueDate
           ? toISODate(existingSale.dueDate)
@@ -334,7 +325,7 @@ export const Sales: React.FC = () => {
               ],
       }));
     }
-  }, [existingSale, isEditing, accounts, daybooks]);
+  }, [existingSale, isEditing, daybooks]);
 
   // Calculations
   const calculatedTotals = useMemo(() => {
@@ -809,27 +800,23 @@ export const Sales: React.FC = () => {
   }, [calculatedTotals]);
 
   // Customer Selection Handler
-  const handleSelectCustomer = useCallback(
-    (accountOrId: any) => {
-      const acc =
-        typeof accountOrId === "object"
-          ? accountOrId
-          : accounts.find((a) => a.id === Number(accountOrId));
-      if (acc) {
-        setFormData((prev) => ({
-          ...prev,
-          accountId: acc.id,
-          accountName:
-            acc.accountName ||
-            `${acc.firstName || ""} ${acc.lastName || ""}`.trim(),
-          customerPhone:
-            acc.phone || acc.mobile || acc.userName || prev.customerPhone,
-          customerEmail: acc.email || prev.customerEmail,
-        }));
-      }
-    },
-    [accounts],
-  );
+  const handleSelectCustomer = useCallback((account: any) => {
+    if (account) {
+      setFormData((prev) => ({
+        ...prev,
+        accountId: account.id,
+        accountName:
+          account.accountName ||
+          `${account.firstName || ""} ${account.lastName || ""}`.trim(),
+        customerPhone:
+          account.phone ||
+          account.mobile ||
+          account.userName ||
+          prev.customerPhone,
+        customerEmail: account.email || prev.customerEmail,
+      }));
+    }
+  }, []);
 
   // Item Group Selection for Grid Line Item
   const handleSelectItemGroupForRow = useCallback(

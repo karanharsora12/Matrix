@@ -103,10 +103,12 @@ export const SelectCellEditor = forwardRef<any, SelectCellEditorParams>(
     const selectedValueRef = useRef<any>(initialRawValue);
     const [open, setOpen] = useState(true);
 
-    // AG Grid interface
     useImperativeHandle(ref, () => ({
       getValue() {
         return selectedValueRef.current;
+      },
+      isPopup() {
+        return true;
       },
       isCancelBeforeStart() {
         return false;
@@ -181,7 +183,7 @@ export const SelectCellEditor = forwardRef<any, SelectCellEditorParams>(
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
             className={cn(
-              "z-[9999] min-w-[8rem] max-h-60 overflow-y-auto bg-popover text-popover-foreground shadow-lg border border-border",
+              "ag-custom-component-popup z-[9999] min-w-[8rem] max-h-60 overflow-y-auto bg-popover text-popover-foreground shadow-lg border border-border",
               props.contentClassName || colParams?.contentClassName,
             )}
           >
