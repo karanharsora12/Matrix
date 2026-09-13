@@ -956,8 +956,16 @@ export const Sales: React.FC = () => {
       );
     } else {
       createMutation.mutate(payload, {
-        onSuccess: () => {
-          navigate(WEB_ROUTES.TRANSACTION.SALES_LIST);
+        onSuccess: (res: any) => {
+          const createdSale = res?.data || res;
+          if (createdSale?.id) {
+            setFormData((prev) => ({
+              ...prev,
+              id: createdSale.id,
+              voucherNo: createdSale.voucherNo || prev.voucherNo,
+            }));
+          }
+          setIsPrintModalOpen(true);
         },
         onError: (err: any) => {
           alert(err?.message || "Failed to create sales voucher");
@@ -1819,6 +1827,7 @@ export const Sales: React.FC = () => {
           phone: formData.customerPhone,
           address: formData.customerAddress1,
           city: formData.customerCity,
+          state: formData.customerState,
           gstNo: formData.customerGstNo,
           panNo: formData.customerPanNo,
         }}

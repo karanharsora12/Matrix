@@ -1829,6 +1829,7 @@ export const Purchase: React.FC = () => {
           phone: formData.supplierPhone,
           address: formData.supplierAddress1,
           city: formData.supplierCity,
+          state: formData.supplierState,
           gstNo: formData.supplierGstNo,
           panNo: formData.supplierPanNo,
         }}
@@ -1854,7 +1855,9 @@ export const Purchase: React.FC = () => {
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 border border-amber-200">
                 <Tag className="h-3.5 w-3.5 text-amber-700" />
               </div>
-              <span className="text-sm font-bold text-slate-900">Print Jewellery Tags</span>
+              <span className="text-sm font-bold text-slate-900">
+                Print Jewellery Tags
+              </span>
               <Badge variant="outline" className="text-[9px] font-mono ml-1">
                 {formData.itemLines?.length || 0} items
               </Badge>

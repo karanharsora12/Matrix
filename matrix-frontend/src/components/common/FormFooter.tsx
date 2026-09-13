@@ -65,7 +65,6 @@ export const FormFooter: React.FC<FormFooterProps> = ({
   onSave,
   onClear,
   onPrint,
-  onTagPrint,
   onDelete,
   onBack,
   saveText = "Save",
