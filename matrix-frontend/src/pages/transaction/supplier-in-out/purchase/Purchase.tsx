@@ -81,7 +81,6 @@ const DEFAULT_LINE_ITEM: PurchaseLineItem = {
   itemGroupId: 0,
   itemGroupName: "",
   pcs: 1,
-  uom: "",
   grossWt: 0,
   netWt: 0,
   adjustedWt: 0,
@@ -568,6 +567,16 @@ export const Purchase: React.FC = () => {
               field: "name",
             },
           ],
+          onItemSelect: (rt: any, rowIndex: number) => {
+            const rtName = typeof rt === "object" ? rt?.name : rt;
+            const matchedRt = rateTypes.find(
+              (r) => r.name === rtName || r.id === rt?.id,
+            );
+            applyLineItemUpdates(rowIndex, {
+              rateType: rtName,
+              rateTypeId: matchedRt ? matchedRt.id : undefined,
+            });
+          },
           searchPlaceholder: "Search Rate Type...",
           width: 320,
           height: 220,

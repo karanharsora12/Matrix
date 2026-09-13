@@ -55,9 +55,10 @@ export const calculateLineItemAmount = (
   const pieces = Number(current.pcs || 1);
 
   let baseAmount = 0;
-  if (current.rateType === "Per Piece") {
+  const rt = (current.rateType || "").toLowerCase();
+  if (rt.includes("pc") || rt.includes("piece")) {
     baseAmount = pieces * rate;
-  } else if (current.rateType === "Flat / Fixed") {
+  } else if (rt.includes("flat") || rt.includes("fix")) {
     baseAmount = rate;
   } else {
     const wt = Number(current.netWt || 0);

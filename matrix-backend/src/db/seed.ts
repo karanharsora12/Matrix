@@ -120,12 +120,9 @@ async function main() {
     await db
       .insert(rateTypes)
       .values([
-        { name: "Kg * Rate" },
-        { name: "Ton * Rate" },
+        { name: "Gross Weight * Rate" },
+        { name: "Net Weight * Rate" },
         { name: "Pcs * Rate" },
-        { name: "Meter * Rate" },
-        { name: "Sq Ft * Rate" },
-        { name: "Sq Meter * Rate" },
       ])
       .onConflictDoNothing({ target: rateTypes.name });
 
@@ -393,11 +390,13 @@ async function main() {
     const asId = metalMap.get("Alloy Steel") || 5;
     const irId = metalMap.get("Iron") || 1;
 
-    const kgRate = rateTypeMap.get("Kg * Rate") || 1;
-    const tonRate = rateTypeMap.get("Ton * Rate") || 2;
-    const pcsRate = rateTypeMap.get("Pcs * Rate") || 3;
-    const meterRate = rateTypeMap.get("Meter * Rate") || 4;
-    const sqftRate = rateTypeMap.get("Sq Ft * Rate") || 5;
+    const weightRate =
+      rateTypeMap.get("Weight * Rate") || rateTypeMap.get("Kg * Rate") || 1;
+    const pcsRate = rateTypeMap.get("Pcs * Rate") || 2;
+    const kgRate = weightRate;
+    const tonRate = weightRate;
+    const meterRate = pcsRate;
+    const sqftRate = pcsRate;
 
     const itemGroupsList = [
       {
@@ -2043,14 +2042,54 @@ async function main() {
     // 12. Seeding Daybook Groups
     console.log("Seeding daybook groups...");
     const daybookGroupList = [
-      { groupName: "Sales", shortName: "SAL", description: "Sales transactions", isActive: true },
-      { groupName: "Purchase", shortName: "PUR", description: "Purchase transactions", isActive: true },
-      { groupName: "Payment", shortName: "PAY", description: "General payment vouchers", isActive: true },
-      { groupName: "Receipt", shortName: "RCT", description: "General receipt vouchers", isActive: true },
-      { groupName: "Journal", shortName: "JRN", description: "General journal vouchers", isActive: true },
-      { groupName: "Contra", shortName: "CTR", description: "Inter-bank and cash transfer vouchers", isActive: true },
-      { groupName: "Cash", shortName: "CASH", description: "Cash transactions and daybooks", isActive: true },
-      { groupName: "Bank", shortName: "BANK", description: "Bank transactions and daybooks", isActive: true },
+      {
+        groupName: "Sales",
+        shortName: "SAL",
+        description: "Sales transactions",
+        isActive: true,
+      },
+      {
+        groupName: "Purchase",
+        shortName: "PUR",
+        description: "Purchase transactions",
+        isActive: true,
+      },
+      {
+        groupName: "Payment",
+        shortName: "PAY",
+        description: "General payment vouchers",
+        isActive: true,
+      },
+      {
+        groupName: "Receipt",
+        shortName: "RCT",
+        description: "General receipt vouchers",
+        isActive: true,
+      },
+      {
+        groupName: "Journal",
+        shortName: "JRN",
+        description: "General journal vouchers",
+        isActive: true,
+      },
+      {
+        groupName: "Contra",
+        shortName: "CTR",
+        description: "Inter-bank and cash transfer vouchers",
+        isActive: true,
+      },
+      {
+        groupName: "Cash",
+        shortName: "CASH",
+        description: "Cash transactions and daybooks",
+        isActive: true,
+      },
+      {
+        groupName: "Bank",
+        shortName: "BANK",
+        description: "Bank transactions and daybooks",
+        isActive: true,
+      },
     ];
 
     for (const grp of daybookGroupList) {
@@ -2061,7 +2100,9 @@ async function main() {
     }
 
     const currentDaybookGroups = await db.select().from(daybookGroups);
-    const daybookGroupMap = new Map(currentDaybookGroups.map((g) => [g.shortName, g.id]));
+    const daybookGroupMap = new Map(
+      currentDaybookGroups.map((g) => [g.shortName, g.id]),
+    );
 
     // 13. Seeding Daybooks
     console.log("Seeding daybooks...");
@@ -2187,4 +2228,3 @@ async function main() {
 }
 
 main();
-
