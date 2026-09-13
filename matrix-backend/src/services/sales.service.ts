@@ -100,11 +100,20 @@ export class SalesService {
   }
 
   async getSaleById(id: number) {
-    const sale = await db.query.sales.findFirst({
-      where: eq(sales.id, id),
-    });
+    const [result] = await db
+      .select({
+        sale: sales,
+        account: accounts,
+        daybook: daybooks,
+      })
+      .from(sales)
+      .leftJoin(accounts, eq(sales.accountId, accounts.id))
+      .leftJoin(daybooks, eq(sales.daybookId, daybooks.id))
+      .where(eq(sales.id, id));
 
-    if (!sale) return null;
+    if (!result) return null;
+
+    const { sale, account, daybook } = result;
 
     const fetchedItems = await db
       .select({
@@ -119,6 +128,10 @@ export class SalesService {
 
     return {
       ...formatSaleRow(sale),
+      daybookName: daybook?.daybookName || "",
+      accountId: sale.accountId,
+      accountName: account?.accountName || "",
+      customerPhone: account?.userName || "",
       itemLines: fetchedItems.map(({ item, itemGroupName, itemName }) => ({
         ...formatSaleItemRow(item),
         itemGroupName,
@@ -142,6 +155,10 @@ export class SalesService {
           editBy: saleData.editBy ? Number(saleData.editBy) : null,
         })
         .returning();
+
+      if (!newSale) {
+        throw new Error("Failed to create sale voucher");
+      }
 
       let insertedItems: any[] = [];
       if (itemLines && itemLines.length > 0) {

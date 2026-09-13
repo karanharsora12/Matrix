@@ -75,9 +75,23 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "shortName", headerName: "Short Name", width: 100 },
     { field: "metalName", headerName: "Metal", width: 100 },
     { field: "salesRateTypeName", headerName: "Sales Rate Type", width: 120 },
-    { field: "salesRate", headerName: "Sales Rate", width: 100, type: "numericColumn" },
-    { field: "purchaseRateTypeName", headerName: "Purchase Rate Type", width: 140 },
-    { field: "purchaseRate", headerName: "Purchase Rate", width: 100, type: "numericColumn" },
+    {
+      field: "salesRate",
+      headerName: "Sales Rate",
+      width: 100,
+      type: "numericColumn",
+    },
+    {
+      field: "purchaseRateTypeName",
+      headerName: "Purchase Rate Type",
+      width: 140,
+    },
+    {
+      field: "purchaseRate",
+      headerName: "Purchase Rate",
+      width: 100,
+      type: "numericColumn",
+    },
     { field: "measureUnitCode", headerName: "MU", width: 80 },
   ],
 
@@ -135,12 +149,42 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "daybookGroupName", headerName: "Daybook Group", width: 140 },
     { field: "daybookName", headerName: "Daybook", width: 160 },
     { field: "accountName", headerName: "Account Name", width: 250 },
-    { field: "discountAmount", headerName: "Disc. Amount", width: 120, type: "numericColumn" },
-    { field: "kasarAmount", headerName: "Kasar Amount", width: 120, type: "numericColumn" },
-    { field: "roundOff", headerName: "ROF Amount", width: 100, type: "numericColumn" },
-    { field: "taxAmount", headerName: "Tax Amount", width: 120, type: "numericColumn" },
-    { field: "tdsAmount", headerName: "TDS Amount", width: 120, type: "numericColumn" },
-    { field: "grandTotal", headerName: "Grand Total", width: 140, type: "numericColumn" },
+    {
+      field: "discountAmount",
+      headerName: "Disc. Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "kasarAmount",
+      headerName: "Kasar Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "roundOff",
+      headerName: "ROF Amount",
+      width: 100,
+      type: "numericColumn",
+    },
+    {
+      field: "taxAmount",
+      headerName: "Tax Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "tdsAmount",
+      headerName: "TDS Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "grandTotal",
+      headerName: "Grand Total",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "salesmanName", headerName: "Salesman", width: 150 },
     { field: "remarks", headerName: "Remarks", width: 200 },
   ],
@@ -151,10 +195,30 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "daybookGroupName", headerName: "Daybook Group", width: 140 },
     { field: "daybookName", headerName: "Daybook", width: 160 },
     { field: "accountName", headerName: "Account Name", width: 250 },
-    { field: "discountAmount", headerName: "Disc. Amount", width: 120, type: "numericColumn" },
-    { field: "taxAmount", headerName: "Tax Amount", width: 120, type: "numericColumn" },
-    { field: "roundOff", headerName: "ROF Amount", width: 100, type: "numericColumn" },
-    { field: "grandTotal", headerName: "Grand Total", width: 140, type: "numericColumn" },
+    {
+      field: "discountAmount",
+      headerName: "Disc. Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "taxAmount",
+      headerName: "Tax Amount",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "roundOff",
+      headerName: "ROF Amount",
+      width: 100,
+      type: "numericColumn",
+    },
+    {
+      field: "grandTotal",
+      headerName: "Grand Total",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "remarks", headerName: "Remarks", width: 200 },
   ],
 
@@ -163,7 +227,12 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "voucherDate", headerName: "Voucher Date", width: 120 },
     { field: "daybookName", headerName: "Daybook", width: 180 },
     { field: "accountName", headerName: "Account", width: 250 },
-    { field: "totalAmount", headerName: "Amount", width: 140, type: "numericColumn" },
+    {
+      field: "totalAmount",
+      headerName: "Amount",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "reference", headerName: "Type", width: 130 },
     { field: "remarks", headerName: "Narration", width: 200 },
   ],
@@ -173,7 +242,12 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "voucherDate", headerName: "Voucher Date", width: 120 },
     { field: "daybookName", headerName: "Daybook", width: 180 },
     { field: "accountName", headerName: "Account", width: 250 },
-    { field: "totalAmount", headerName: "Amount", width: 140, type: "numericColumn" },
+    {
+      field: "totalAmount",
+      headerName: "Amount",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "reference", headerName: "Type", width: 130 },
     { field: "remarks", headerName: "Narration", width: 200 },
   ],
@@ -183,7 +257,12 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "voucherDate", headerName: "Voucher Date", width: 120 },
     { field: "daybookName", headerName: "Daybook", width: 180 },
     { field: "accountName", headerName: "Account", width: 250 },
-    { field: "totalAmount", headerName: "Amount", width: 140, type: "numericColumn" },
+    {
+      field: "totalAmount",
+      headerName: "Amount",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "reference", headerName: "Type", width: 130 },
     { field: "remarks", headerName: "Narration", width: 200 },
   ],
@@ -193,7 +272,12 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
     { field: "voucherDate", headerName: "Voucher Date", width: 120 },
     { field: "daybookName", headerName: "Daybook", width: 180 },
     { field: "accountName", headerName: "Account", width: 250 },
-    { field: "totalAmount", headerName: "Amount", width: 140, type: "numericColumn" },
+    {
+      field: "totalAmount",
+      headerName: "Amount",
+      width: 140,
+      type: "numericColumn",
+    },
     { field: "reference", headerName: "Type", width: 130 },
     { field: "remarks", headerName: "Narration", width: 200 },
   ],
@@ -223,7 +307,8 @@ export function getListingColumns(
   menu: MenuList | string,
   options: { includeAddEdit?: boolean } = { includeAddEdit: true },
 ): ListingColumn[] {
-  if (!menu) return options.includeAddEdit !== false ? [...ADD_EDIT_COLUMNS] : [];
+  if (!menu)
+    return options.includeAddEdit !== false ? [...ADD_EDIT_COLUMNS] : [];
 
   // Find exact or case-insensitive match in BASE_LISTING_COLUMNS_MAP
   const lower = String(menu).toLowerCase();
@@ -231,7 +316,8 @@ export function getListingColumns(
     (k) => k.toLowerCase() === lower,
   );
 
-  const baseColumns = matchedKey ? BASE_LISTING_COLUMNS_MAP[matchedKey] : [];
+  const baseColumns =
+    (matchedKey ? BASE_LISTING_COLUMNS_MAP[matchedKey] : []) || [];
 
   if (options.includeAddEdit !== false) {
     return [...baseColumns, ...ADD_EDIT_COLUMNS];

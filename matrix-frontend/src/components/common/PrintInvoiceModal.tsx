@@ -1,5 +1,5 @@
 import React from "react";
-import { Printer } from "lucide-react";
+import { Printer, FileDown, ExternalLink, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/date";
+import { downloadInvoicePdf, openInvoicePdfInNewTab } from "@/api/report";
+import { toast } from "@/components/ui/use-toast";
 
 export interface InvoicePartyInfo {
   name?: string;
@@ -37,6 +39,7 @@ export interface PrintInvoiceModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoiceType?: "sales" | "purchase" | string;
+  voucherId?: number | string;
   badgeText?: string;
   voucherNo?: string;
   voucherDate?: string | Date;
@@ -66,6 +69,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
   open,
   onOpenChange,
   invoiceType = "sales",
+  voucherId,
   badgeText,
   voucherNo = "INV-001",
   voucherDate,
@@ -91,10 +95,74 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
   },
 }) => {
   const isPurchase = invoiceType === "purchase";
-  const defaultBadgeText = isPurchase ? "PURCHASE TAX INVOICE" : "RETAIL TAX INVOICE";
+  const defaultBadgeText = isPurchase
+    ? "PURCHASE TAX INVOICE"
+    : "RETAIL TAX INVOICE";
   const defaultPartyTitle = isPurchase ? "Purchased From:" : "Billed To:";
   const defaultStaffTitle = isPurchase ? "Purchaser:" : "Salesman:";
   const defaultPartyName = isPurchase ? "Unknown Supplier" : "Walk-in Customer";
+
+  const [isDownloadingPdf, setIsDownloadingPdf] = React.useState(false);
+  const [isOpeningPdf, setIsOpeningPdf] = React.useState(false);
+  const [statusMessage, setStatusMessage] = React.useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const handleDownloadPdf = async () => {
+    setStatusMessage(null);
+    if (!voucherId) {
+      setStatusMessage({
+        text: "Please save this voucher first to download the jsreport PDF invoice.",
+        type: "error",
+      });
+      return;
+    }
+    try {
+      setIsDownloadingPdf(true);
+      await downloadInvoicePdf(
+        isPurchase ? "purchase" : "sales",
+        voucherId,
+        `${isPurchase ? "Purchase" : "Sales"}-Invoice-${voucherNo}.pdf`,
+      );
+      setStatusMessage({
+        text: "Invoice PDF generated and downloaded successfully.",
+        type: "success",
+      });
+    } catch (err: any) {
+      setStatusMessage({
+        text: err?.message || "Failed to render PDF with jsreport.",
+        type: "error",
+      });
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
+  const handleOpenPdf = async () => {
+    setStatusMessage(null);
+    if (!voucherId) {
+      setStatusMessage({
+        text: "Please save this voucher first to open the jsreport PDF invoice.",
+        type: "error",
+      });
+      return;
+    }
+    try {
+      setIsOpeningPdf(true);
+      await openInvoicePdfInNewTab(
+        isPurchase ? "purchase" : "sales",
+        voucherId,
+      );
+    } catch (err: any) {
+      setStatusMessage({
+        text: err?.message || "Failed to render PDF with jsreport.",
+        type: "error",
+      });
+    } finally {
+      setIsOpeningPdf(false);
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -111,6 +179,18 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
             </Badge>
           </DialogTitle>
         </DialogHeader>
+
+        {statusMessage && (
+          <div
+            className={`text-xs px-3 py-2 rounded-md ${
+              statusMessage.type === "error"
+                ? "bg-rose-50 text-rose-700 border border-rose-200"
+                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+            }`}
+          >
+            {statusMessage.text}
+          </div>
+        )}
 
         {/* Printable Invoice Container */}
         <div
@@ -184,8 +264,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                 <span className="font-semibold">{reference || "N/A"}</span>
               </p>
               <p className="text-slate-700">
-                Rate Type:{" "}
-                <span className="font-semibold">{rateFixType}</span>
+                Rate Type: <span className="font-semibold">{rateFixType}</span>
               </p>
             </div>
           </div>
@@ -289,7 +368,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:justify-end">
+        <DialogFooter className="gap-2 sm:justify-end flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -297,6 +376,41 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
           >
             Close
           </Button>
+
+          {voucherId && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-amber-300 text-amber-900 hover:bg-amber-50"
+                onClick={handleOpenPdf}
+                disabled={isOpeningPdf || isDownloadingPdf}
+              >
+                {isOpeningPdf ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="h-4 w-4 text-amber-700" />
+                )}
+                <span>View PDF (jsreport)</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-amber-300 text-amber-900 hover:bg-amber-50"
+                onClick={handleDownloadPdf}
+                disabled={isOpeningPdf || isDownloadingPdf}
+              >
+                {isDownloadingPdf ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4 text-amber-700" />
+                )}
+                <span>Download PDF</span>
+              </Button>
+            </>
+          )}
+
           <Button
             size="sm"
             className="gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"

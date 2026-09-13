@@ -292,8 +292,25 @@ export const Sales: React.FC = () => {
 
   useEffect(() => {
     if (existingSale && isEditing) {
-      setFormData({
+      const matchedAccount = accounts.find(
+        (a) => a.id === existingSale.accountId,
+      );
+      const matchedDaybook = daybooks.find(
+        (d) => d.id === existingSale.daybookId,
+      );
+
+      setFormData((prev) => ({
+        ...prev,
         ...existingSale,
+        daybookName:
+          existingSale.daybookName ||
+          matchedDaybook?.daybookName ||
+          prev.daybookName,
+        accountId: existingSale.accountId,
+        accountName:
+          existingSale.accountName ||
+          matchedAccount?.accountName ||
+          prev.accountName,
         voucherDate: toISODate(existingSale.voucherDate) || todayISO(),
         dueDate: existingSale.dueDate
           ? toISODate(existingSale.dueDate)
@@ -315,9 +332,9 @@ export const Sales: React.FC = () => {
                   tagNo: "TAG-001",
                 },
               ],
-      });
+      }));
     }
-  }, [existingSale, isEditing]);
+  }, [existingSale, isEditing, accounts, daybooks]);
 
   // Calculations
   const calculatedTotals = useMemo(() => {
@@ -792,21 +809,27 @@ export const Sales: React.FC = () => {
   }, [calculatedTotals]);
 
   // Customer Selection Handler
-  const handleSelectCustomer = (accountOrId: any) => {
-    const acc =
-      typeof accountOrId === "object"
-        ? accountOrId
-        : accounts.find((a) => a.id === Number(accountOrId));
-    if (acc) {
-      setFormData((prev) => ({
-        ...prev,
-        partyId: acc.id,
-        accountName:
-          acc.accountName ||
-          `${acc.firstName || ""} ${acc.lastName || ""}`.trim(),
-      }));
-    }
-  };
+  const handleSelectCustomer = useCallback(
+    (accountOrId: any) => {
+      const acc =
+        typeof accountOrId === "object"
+          ? accountOrId
+          : accounts.find((a) => a.id === Number(accountOrId));
+      if (acc) {
+        setFormData((prev) => ({
+          ...prev,
+          accountId: acc.id,
+          accountName:
+            acc.accountName ||
+            `${acc.firstName || ""} ${acc.lastName || ""}`.trim(),
+          customerPhone:
+            acc.phone || acc.mobile || acc.userName || prev.customerPhone,
+          customerEmail: acc.email || prev.customerEmail,
+        }));
+      }
+    },
+    [accounts],
+  );
 
   // Item Group Selection for Grid Line Item
   const handleSelectItemGroupForRow = useCallback(
@@ -867,8 +890,7 @@ export const Sales: React.FC = () => {
     const payload: Omit<Sale, "id"> = {
       voucherNo: formData.voucherNo || "INV-001",
       srNo: formData.srNo,
-      voucherDate:
-        formData.voucherDate || todayISO(),
+      voucherDate: formData.voucherDate || todayISO(),
       daybookId: formData.daybookId || 1,
       daybookName: formData.daybookName || "RETAIL INVOICE",
       reference: formData.reference || "",
@@ -1093,7 +1115,8 @@ export const Sales: React.FC = () => {
                   Customer <span className="text-rose-500">*</span>
                 </Label>
                 <AccountHelp
-                  accountName={formData.accountName || "Walk-in Customer"}
+                  accountName={formData.accountName}
+                  value={formData.accountId}
                   placeholder="Walk-in Customer"
                   searchPlaceholder="Search customer..."
                   onSelect={handleSelectCustomer}
@@ -1784,11 +1807,11 @@ export const Sales: React.FC = () => {
         isSaveDisabled={isSaving}
       />
 
-      {/* ── PRINT TAX INVOICE PREVIEW MODAL ── */}
       <PrintInvoiceModal
         open={isPrintModalOpen}
         onOpenChange={setIsPrintModalOpen}
         invoiceType="sales"
+        voucherId={formData.id}
         voucherNo={formData.voucherNo}
         voucherDate={formData.voucherDate}
         party={{

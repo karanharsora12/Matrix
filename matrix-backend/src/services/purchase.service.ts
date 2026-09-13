@@ -108,11 +108,20 @@ export class PurchaseService {
   }
 
   async getPurchaseById(id: number) {
-    const purchase = await db.query.purchases.findFirst({
-      where: eq(purchases.id, id),
-    });
+    const [result] = await db
+      .select({
+        purchase: purchases,
+        account: accounts,
+        daybook: daybooks,
+      })
+      .from(purchases)
+      .leftJoin(accounts, eq(purchases.accountId, accounts.id))
+      .leftJoin(daybooks, eq(purchases.daybookId, daybooks.id))
+      .where(eq(purchases.id, id));
 
-    if (!purchase) return null;
+    if (!result) return null;
+
+    const { purchase, account, daybook } = result;
 
     const fetchedItems = await db
       .select({
@@ -129,6 +138,10 @@ export class PurchaseService {
 
     return {
       ...purchase,
+      daybookName: daybook?.daybookName || "",
+      accountId: purchase.accountId,
+      accountName: account?.accountName || "",
+      supplierPhone: account?.userName || "",
       itemLines: fetchedItems.map(({ item, itemGroupName, itemName, rateTypeName }) => ({
         ...item,
         itemGroupName,
@@ -170,6 +183,10 @@ export class PurchaseService {
           editBy: purchaseData.editBy ? Number(purchaseData.editBy) : null,
         })
         .returning();
+
+      if (!newPurchase) {
+        throw new Error("Failed to create purchase voucher");
+      }
 
       let insertedItems: any[] = [];
       if (itemLines && itemLines.length > 0) {

@@ -19,6 +19,14 @@ function toDate(val: any): Date {
   return isNaN(d.getTime()) ? new Date() : d;
 }
 
+function formatPaymentDetailRow(row: any) {
+  if (!row) return row;
+  return {
+    ...row,
+    amount: Number(row.amount || 0),
+  };
+}
+
 export class PaymentService {
   async getPayments(options?: {
     page?: number;
@@ -194,6 +202,10 @@ export class PaymentService {
           editBy: paymentData.editBy ? Number(paymentData.editBy) : null,
         })
         .returning();
+
+      if (!newPayment) {
+        throw new Error("Failed to create payment record");
+      }
 
       let insertedDetails: any[] = [];
       if (details && Array.isArray(details) && details.length > 0) {

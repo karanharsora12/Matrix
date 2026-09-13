@@ -310,8 +310,25 @@ export const Purchase: React.FC = () => {
 
   useEffect(() => {
     if (existingPurchase && isEditing) {
-      setFormData({
+      const matchedAccount = accounts.find(
+        (a) => a.id === existingPurchase.accountId,
+      );
+      const matchedDaybook = daybooks.find(
+        (d) => d.id === existingPurchase.daybookId,
+      );
+
+      setFormData((prev) => ({
+        ...prev,
         ...existingPurchase,
+        daybookName:
+          existingPurchase.daybookName ||
+          matchedDaybook?.daybookName ||
+          prev.daybookName,
+        accountId: existingPurchase.accountId,
+        accountName:
+          existingPurchase.accountName ||
+          matchedAccount?.accountName ||
+          prev.accountName,
         voucherDate: toISODate(existingPurchase.voucherDate) || todayISO(),
         dueDate: existingPurchase.dueDate
           ? toISODate(existingPurchase.dueDate)
@@ -333,9 +350,9 @@ export const Purchase: React.FC = () => {
                   tagNo: "TAG-001",
                 },
               ],
-      });
+      }));
     }
-  }, [existingPurchase, isEditing]);
+  }, [existingPurchase, isEditing, accounts, daybooks]);
 
   // Calculations
   const calculatedTotals = useMemo(() => {
@@ -776,21 +793,27 @@ export const Purchase: React.FC = () => {
   }, [calculatedTotals]);
 
   // Supplier Selection Handler
-  const handleSelectSupplier = (accountOrId: any) => {
-    const acc =
-      typeof accountOrId === "object"
-        ? accountOrId
-        : accounts.find((a) => a.id === Number(accountOrId));
-    if (acc) {
-      setFormData((prev) => ({
-        ...prev,
-        accountId: acc.id,
-        accountName:
-          acc.accountName ||
-          `${acc.firstName || ""} ${acc.lastName || ""}`.trim(),
-      }));
-    }
-  };
+  const handleSelectSupplier = useCallback(
+    (accountOrId: any) => {
+      const acc =
+        typeof accountOrId === "object"
+          ? accountOrId
+          : accounts.find((a) => a.id === Number(accountOrId));
+      if (acc) {
+        setFormData((prev) => ({
+          ...prev,
+          accountId: acc.id,
+          accountName:
+            acc.accountName ||
+            `${acc.firstName || ""} ${acc.lastName || ""}`.trim(),
+          supplierPhone:
+            acc.phone || acc.mobile || acc.userName || prev.supplierPhone,
+          supplierEmail: acc.email || prev.supplierEmail,
+        }));
+      }
+    },
+    [accounts],
+  );
 
   // Item Group Selection for Grid Line Item
   const handleSelectItemGroupForRow = useCallback(
@@ -851,8 +874,7 @@ export const Purchase: React.FC = () => {
     const payload: Omit<PurchaseData, "id"> = {
       voucherNo: formData.voucherNo || "PUR-001",
       srNo: formData.srNo,
-      voucherDate:
-        formData.voucherDate || todayISO(),
+      voucherDate: formData.voucherDate || todayISO(),
       daybookId: formData.daybookId || 1,
       daybookName: formData.daybookName || "PURCHASE",
       reference: formData.reference || "",
@@ -874,7 +896,10 @@ export const Purchase: React.FC = () => {
       itemLines: (formData.itemLines || [])
         .filter((line) => line.itemId && line.itemId > 0)
         .map((line) => {
-          const taxable = Math.max(0, (line.amount || 0) - (line.discountAmount || 0));
+          const taxable = Math.max(
+            0,
+            (line.amount || 0) - (line.discountAmount || 0),
+          );
           const taxPct = Number(formData.taxRate || 3);
           const withTax = taxable * (1 + taxPct / 100);
           return {
@@ -1107,7 +1132,8 @@ export const Purchase: React.FC = () => {
                   Supplier <span className="text-rose-500">*</span>
                 </Label>
                 <AccountHelp
-                  accountName={formData.accountName || "Walk-in Supplier"}
+                  accountName={formData.accountName}
+                  value={formData.accountId}
                   placeholder="Walk-in Supplier"
                   searchPlaceholder="Search supplier..."
                   onSelect={handleSelectSupplier}
@@ -1795,6 +1821,7 @@ export const Purchase: React.FC = () => {
         open={isPrintModalOpen}
         onOpenChange={setIsPrintModalOpen}
         invoiceType="purchase"
+        voucherId={formData.id}
         voucherNo={formData.voucherNo}
         voucherDate={formData.voucherDate}
         party={{
@@ -1841,7 +1868,6 @@ export const Purchase: React.FC = () => {
                 >
                   <div className="flex justify-between font-bold text-slate-900 dark:text-zinc-100">
                     <span>{line.tagNo || `TAG-${i + 1}`}</span>
-                    <span>{line.purity || "22K"}</span>
                   </div>
                   <div className="text-[11px] text-slate-600 dark:text-zinc-300 mt-1">
                     {line.itemName || "Item"}
