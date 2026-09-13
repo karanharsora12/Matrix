@@ -147,7 +147,7 @@ export class PurchaseService {
         itemGroupName,
         itemName,
         rateType: rateTypeName || "",
-        pcs: Number(item.qty),
+        pcs: Number(item.pcs ?? 1),
       })),
     };
   }
@@ -192,7 +192,7 @@ export class PurchaseService {
       if (itemLines && itemLines.length > 0) {
         const itemsToInsert = await Promise.all(
           itemLines.map(async (item: any) => {
-            const qty = item.qty ?? item.pcs ?? 1;
+            const pcs = item.pcs ?? item.qty ?? 1;
             const amount = item.amount ?? 0;
             const taxableAmount = item.taxableAmount ?? amount;
             const amountWithTax = item.amountWithTax ?? amount;
@@ -203,8 +203,7 @@ export class PurchaseService {
               itemGroupId: item.itemGroupId ? Number(item.itemGroupId) : null,
               itemId: Number(item.itemId),
               itemCode: item.itemCode || item.tagNo || null,
-              qty: String(qty),
-              uom: item.uom || null,
+              pcs: String(pcs),
               rate: String(item.rate ?? 0),
               rateTypeId: rateTypeId,
               grossWt: String(item.grossWt ?? 0),
@@ -295,7 +294,7 @@ export class PurchaseService {
         }
 
         for (const item of itemLines) {
-          const qty = item.qty ?? item.pcs ?? 1;
+          const pcs = item.pcs ?? item.qty ?? 1;
           const amount = item.amount ?? 0;
           const taxableAmount = item.taxableAmount ?? amount;
           const amountWithTax = item.amountWithTax ?? amount;
@@ -305,8 +304,7 @@ export class PurchaseService {
             itemGroupId: item.itemGroupId ? Number(item.itemGroupId) : null,
             itemId: Number(item.itemId),
             itemCode: item.itemCode || item.tagNo || null,
-            qty: String(qty),
-            uom: item.uom || null,
+            pcs: String(pcs),
             rate: String(item.rate ?? 0),
             rateTypeId: rateTypeId,
             grossWt: String(item.grossWt ?? 0),
