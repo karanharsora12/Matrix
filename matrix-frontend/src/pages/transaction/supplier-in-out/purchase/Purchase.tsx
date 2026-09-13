@@ -209,7 +209,9 @@ export const Purchase: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
-  const [formData, setFormData] = useState<Partial<PurchaseData>>({});
+  const [formData, setFormData] = useState<Partial<PurchaseData>>({
+    voucherDate: todayISO(),
+  });
 
   useEffect(() => {
     if (existingPurchase && isEditing) {

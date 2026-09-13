@@ -184,8 +184,13 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                 <Printer className="h-4 w-4 text-amber-700" />
               </div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-slate-900">Invoice Preview</h2>
-                <Badge variant="outline" className="text-[10px] font-mono px-2 py-0.5">
+                <h2 className="text-sm font-bold text-slate-900">
+                  Invoice Preview
+                </h2>
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-mono px-2 py-0.5"
+                >
                   {voucherNo}
                 </Badge>
                 <Badge className="text-[10px] font-bold bg-amber-600 text-white px-2 py-0.5">
@@ -242,7 +247,9 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                     </span>
                   </div>
                   <p className="text-sm font-black mt-1.5">#{voucherNo}</p>
-                  <p className="text-amber-100 text-[10px]">{formatDate(voucherDate)}</p>
+                  <p className="text-amber-100 text-[10px]">
+                    {formatDate(voucherDate)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -265,8 +272,16 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                   </div>
                   {(party?.gstNo || party?.panNo) && (
                     <div className="flex gap-3 mt-1 pt-1 border-t border-slate-50 text-[9px] text-slate-400">
-                      {party?.gstNo && <span>GSTIN: <b className="text-slate-600">{party.gstNo}</b></span>}
-                      {party?.panNo && <span>PAN: <b className="text-slate-600">{party.panNo}</b></span>}
+                      {party?.gstNo && (
+                        <span>
+                          GSTIN: <b className="text-slate-600">{party.gstNo}</b>
+                        </span>
+                      )}
+                      {party?.panNo && (
+                        <span>
+                          PAN: <b className="text-slate-600">{party.panNo}</b>
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -279,21 +294,34 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                 <div className="bg-white rounded-lg p-2.5 border border-slate-100 grid grid-cols-2 gap-x-4 gap-y-1">
                   <div className="flex justify-between text-[10px]">
                     <span className="text-slate-400">Mode</span>
-                    <Badge variant="outline" className="text-[9px] font-semibold h-4 px-1.5">{billMode}</Badge>
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] font-semibold h-4 px-1.5"
+                    >
+                      {billMode}
+                    </Badge>
                   </div>
                   {staffName && (
                     <div className="flex justify-between text-[10px]">
-                      <span className="text-slate-400">{staffTitle || defaultStaffTitle}</span>
-                      <span className="font-semibold text-slate-700">{staffName}</span>
+                      <span className="text-slate-400">
+                        {staffTitle || defaultStaffTitle}
+                      </span>
+                      <span className="font-semibold text-slate-700">
+                        {staffName}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between text-[10px]">
                     <span className="text-slate-400">Reference</span>
-                    <span className="font-semibold text-slate-700">{reference || "N/A"}</span>
+                    <span className="font-semibold text-slate-700">
+                      {reference || "N/A"}
+                    </span>
                   </div>
                   <div className="flex justify-between text-[10px]">
                     <span className="text-slate-400">Rate Type</span>
-                    <span className="font-semibold text-slate-700">{rateFixType}</span>
+                    <span className="font-semibold text-slate-700">
+                      {rateFixType}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -304,14 +332,30 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
               <table className="w-full text-[10px]">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider w-6">#</th>
-                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider">Item</th>
-                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider w-16">Code</th>
-                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider w-12">Purity</th>
-                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-16">Net Wt</th>
-                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-16">Rate</th>
-                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-16">Labour</th>
-                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-20">Amount</th>
+                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider w-6">
+                      #
+                    </th>
+                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider">
+                      Item
+                    </th>
+                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider w-16">
+                      Code
+                    </th>
+                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider w-12">
+                      Purity
+                    </th>
+                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-16">
+                      Net Wt
+                    </th>
+                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-16">
+                      Rate
+                    </th>
+                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-16">
+                      Labour
+                    </th>
+                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-20">
+                      Amount
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -320,14 +364,22 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                       key={i}
                       className="border-b border-slate-50 last:border-0 hover:bg-amber-50/30"
                     >
-                      <td className="py-1.5 px-1.5 text-slate-300 font-medium">{i + 1}</td>
+                      <td className="py-1.5 px-1.5 text-slate-300 font-medium">
+                        {i + 1}
+                      </td>
                       <td className="py-1.5 px-1.5">
-                        <span className="font-semibold text-slate-800">{line.itemName || "Item"}</span>
+                        <span className="font-semibold text-slate-800">
+                          {line.itemName || "Item"}
+                        </span>
                         {line.tagNo && line.tagNo !== line.itemCode && (
-                          <span className="text-[8px] text-slate-400 ml-1">[{line.tagNo}]</span>
+                          <span className="text-[8px] text-slate-400 ml-1">
+                            [{line.tagNo}]
+                          </span>
                         )}
                       </td>
-                      <td className="py-1.5 px-1.5 text-slate-500 font-mono">{line.itemCode || line.tagNo || "-"}</td>
+                      <td className="py-1.5 px-1.5 text-slate-500 font-mono">
+                        {line.itemCode || line.tagNo || "-"}
+                      </td>
                       <td className="py-1.5 px-1.5">
                         <span className="inline-flex px-1 py-0.5 rounded bg-amber-100 text-amber-700 text-[8px] font-bold">
                           {line.purity || "22K"}
@@ -340,7 +392,8 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                         ₹{Number(line.rate || 0).toLocaleString("en-IN")}
                       </td>
                       <td className="py-1.5 px-1.5 text-right text-slate-600 tabular-nums">
-                        ₹{Number(line.labourAmount || 0).toLocaleString("en-IN")}
+                        ₹
+                        {Number(line.labourAmount || 0).toLocaleString("en-IN")}
                       </td>
                       <td className="py-1.5 px-1.5 text-right font-bold text-slate-900 tabular-nums">
                         ₹{Number(line.amount || 0).toLocaleString("en-IN")}
@@ -368,7 +421,8 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                   </button>
                   {showRemarks && (
                     <div className="bg-white rounded-lg p-2 border border-slate-100 text-[10px] text-slate-600 leading-relaxed mt-1">
-                      {remarks || "All jewellery items are BIS Hallmarked. 100% Certified."}
+                      {remarks ||
+                        "All jewellery items are BIS Hallmarked. 100% Certified."}
                     </div>
                   )}
                 </div>
@@ -380,29 +434,43 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                       <div className="flex justify-between text-[10px]">
                         <span className="text-slate-400">Subtotal</span>
                         <span className="font-semibold text-slate-700 tabular-nums">
-                          ₹{subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          ₹
+                          {subtotal.toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                          })}
                         </span>
                       </div>
                       {discountAmount > 0 && (
                         <div className="flex justify-between text-[10px]">
                           <span className="text-rose-500">Discount</span>
                           <span className="font-semibold text-rose-600 tabular-nums">
-                            -₹{discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            -₹
+                            {discountAmount.toLocaleString("en-IN", {
+                              minimumFractionDigits: 2,
+                            })}
                           </span>
                         </div>
                       )}
                       <div className="flex justify-between text-[10px]">
                         <span className="text-slate-400">GST ({taxRate}%)</span>
                         <span className="font-semibold text-slate-700 tabular-nums">
-                          ₹{taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          ₹
+                          {taxAmount.toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                          })}
                         </span>
                       </div>
                     </div>
                     <div className="border-t border-slate-200 bg-gradient-to-r from-amber-50 to-amber-100/50 px-2.5 py-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-[11px] font-bold text-slate-900">Grand Total</span>
+                        <span className="text-[11px] font-bold text-slate-900">
+                          Grand Total
+                        </span>
                         <span className="text-sm font-black text-amber-700 tabular-nums">
-                          ₹{grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          ₹
+                          {grandTotal.toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                          })}
                         </span>
                       </div>
                     </div>
@@ -433,11 +501,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                 onClick={handleOpenPdf}
                 disabled={isOpeningPdf || isDownloadingPdf}
               >
-                {isOpeningPdf ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <ExternalLink className="h-3.5 w-3.5" />
-                )}
+                <ExternalLink className="h-3.5 w-3.5" />
                 View PDF
               </Button>
 
@@ -448,11 +512,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                 onClick={handleDownloadPdf}
                 disabled={isOpeningPdf || isDownloadingPdf}
               >
-                {isDownloadingPdf ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <FileDown className="h-3.5 w-3.5" />
-                )}
+                <FileDown className="h-3.5 w-3.5" />
                 Download
               </Button>
             </>

@@ -3,7 +3,8 @@ import apiClient from "./client";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 
 export interface SaleLineItem {
-  id?: string;
+  id?: string | number;
+  saleId?: number;
   itemId: number;
   itemName?: string;
   itemCode?: string;
@@ -25,6 +26,8 @@ export interface SaleLineItem {
   otherAmount?: number;
   discountAmount?: number;
   amount: number;
+  taxableAmount?: number;
+  amountWithTax?: number;
 }
 
 export interface Sale {
@@ -34,10 +37,11 @@ export interface Sale {
   voucherDate: string;
   daybookId?: number;
   daybookName?: string;
+  daybookGroupName?: string;
   accountId?: number;
   accountName?: string;
-  reference: string;
-  remarks: string;
+  reference?: string;
+  remarks?: string;
   salesmanName?: string;
   billMode?: string;
   // Customer details
@@ -54,13 +58,16 @@ export interface Sale {
   customerEmail?: string;
   // Financial & Settlement
   itemLines: SaleLineItem[];
-  subtotal: number;
-  discountRate: number;
-  discountAmount: number;
-  taxRate: number;
-  taxAmount: number;
-  roundOff: number;
-  grandTotal: number;
+  totalTaxableAmount?: number;
+  totalAmount?: number;
+  osAmount?: number;
+  subtotal?: number;
+  discountRate?: number;
+  discountAmount?: number;
+  taxRate?: number;
+  taxAmount?: number;
+  roundOff?: number;
+  grandTotal?: number;
   // Payments
   advanceAmount?: number;
   urdAmount?: number;
@@ -77,8 +84,7 @@ export interface Sale {
   rateFixType?: string;
   dueDate?: string;
   deliveryPending?: boolean;
-  isActive: boolean;
-  status: "Draft" | "Posted" | "Cancelled";
+  status?: "Draft" | "Posted" | "Cancelled";
 }
 
 export interface ApiResponse<T> {

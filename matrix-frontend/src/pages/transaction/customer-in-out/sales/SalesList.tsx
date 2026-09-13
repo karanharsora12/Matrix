@@ -45,7 +45,8 @@ const SalesList: React.FC = () => {
     return (
       sale.voucherNo?.toLowerCase().includes(q) ||
       sale.daybookName?.toLowerCase().includes(q) ||
-      sale.reference?.toLowerCase().includes(q)
+      sale.reference?.toLowerCase().includes(q) ||
+      sale.accountName?.toLowerCase().includes(q)
     );
   });
 

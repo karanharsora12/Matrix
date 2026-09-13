@@ -103,11 +103,7 @@ export class SalesController {
           .status(404)
           .json({ success: false, error: "Sale not found" });
       }
-      res.json({
-        success: true,
-        data: deleted,
-        message: "Sale deleted successfully",
-      });
+      res.json({ success: true, message: "Sale deleted successfully" });
     } catch (error) {
       console.error("Error deleting sale:", error);
       res.status(500).json({ success: false, error: "Internal server error" });

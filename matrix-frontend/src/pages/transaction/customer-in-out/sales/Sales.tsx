@@ -1,34 +1,27 @@
-import {
-  generateVoucherNo,
-  useDaybookGroups,
-  useDaybooks,
-} from "@/api/daybooks";
-import { useItemGroups, useItems } from "@/api/inventory";
+import { generateVoucherNo } from "@/api/daybooks";
 import {
   useCreateSale,
   useDeleteSale,
   useSale,
-  useSales,
   useUpdateSale,
   type Sale,
   type SaleLineItem,
 } from "@/api/sales";
 import { AccountHelp } from "@/components/common/AccountHelp";
-import { todayISO, toISODate } from "@/utils/date";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
-import { PrintInvoiceModal } from "@/components/common/PrintInvoiceModal";
 import { PopupCellEditor } from "@/components/common/PopupCellEditor";
-import { SelectCellEditor } from "@/components/common/SelectCellEditor";
+import { PrintInvoiceModal } from "@/components/common/PrintInvoiceModal";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import {
   CommonListType,
-  TransactionMenu,
   getDaybooksByMenu,
+  TransactionMenu,
 } from "@/constants/enums";
-import { buildRoute, decodeURL, encodeURL } from "@/lib/utils";
+import { decodeURL, fmtINR } from "@/lib/utils";
+import { todayISO, toISODate } from "@/utils/date";
 import {
   calculateLineItemAmount,
   calculateTransactionTotals,
@@ -69,7 +62,12 @@ import {
 
 // Icons
 import { GridDeleteCell } from "@/components/common/GridDeleteCell";
-import type { RootState } from "@/store";
+import {
+  formatNumericalValue,
+  NumericalCellEditor,
+  parseNumericalValue,
+} from "@/components/common/NumericalCell";
+import useRedux from "@/hooks/useRedux";
 import {
   Coins,
   CreditCard,
@@ -83,7 +81,6 @@ import {
   UploadCloud,
   User,
 } from "lucide-react";
-import { useSelector } from "react-redux";
 
 const DEFAULT_LINE_ITEM: SaleLineItem = {
   id: "",
@@ -94,14 +91,13 @@ const DEFAULT_LINE_ITEM: SaleLineItem = {
   itemGroupName: "",
   tagNo: "",
   pcs: 1,
-  uom: "GMS",
   grossWt: 0,
   netWt: 0,
   adjustedWt: 0,
   fineWt: 0,
   rate: 0,
   rateType: "",
-  tax: "3%",
+  tax: "",
   labourAmount: 0,
   otherAmount: 0,
   discountAmount: 0,
@@ -116,25 +112,16 @@ export const Sales: React.FC = () => {
   const isEditing = saleId > 0;
   const gridRef = useRef<AgGridReact>(null);
 
-  // Master Data Queries
-  const { data: salesListResp } = useSales();
-  const { data: daybooksResp } = useDaybooks();
-  const { data: daybookGroupsResp } = useDaybookGroups();
-  const { data: itemsResp } = useItems();
-  const { data: itemGroupsResp } = useItemGroups();
   const { data: existingSale } = useSale(isEditing ? saleId : undefined);
-  const { rateTypes, commonLists } = useSelector(
-    (state: RootState) => state.inventory,
-  );
+  const {
+    rateTypes,
+    commonLists,
+    daybookGroups,
+    daybooks: allDaybooks,
+  } = useRedux("inventory");
   const measureUnits = commonLists.filter(
     (c) => c.listType === CommonListType.MEASURE_UNIT,
   );
-
-  const allDaybooks = daybooksResp?.data || [];
-  const daybookGroups = daybookGroupsResp?.data || [];
-  const items = itemsResp?.data || [];
-  const itemGroups = itemGroupsResp?.data || [];
-  const allSales = salesListResp?.data || [];
 
   const itemGroupPopupColumns = useMemo<ColDef[]>(
     () => [
@@ -159,7 +146,6 @@ export const Sales: React.FC = () => {
     [],
   );
 
-  // Item Popup Table Columns
   const itemPopupColumns = useMemo<ColDef[]>(
     () => [
       {
@@ -205,7 +191,6 @@ export const Sales: React.FC = () => {
     [],
   );
 
-  // Filter daybooks for SALES menu only
   const daybooks = useMemo(() => {
     const filtered = getDaybooksByMenu(
       TransactionMenu.SALES,
@@ -220,9 +205,6 @@ export const Sales: React.FC = () => {
   const updateMutation = useUpdateSale();
   const deleteMutation = useDeleteSale();
 
-  const [customerTab, setCustomerTab] = useState<
-    "general" | "shipping" | "kyc"
-  >("general");
   const [rightTab, setRightTab] = useState<"additional" | "shipping" | "notes">(
     "additional",
   );
@@ -231,75 +213,21 @@ export const Sales: React.FC = () => {
   >("cash");
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-  const [quickBarcode, setQuickBarcode] = useState("");
-  const [taxMode, setTaxMode] = useState<"GST" | "IGST">("GST");
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
-  const [priceList, setPriceList] = useState("Default Price List");
-  const [currency, setCurrency] = useState("INR - Indian Rupee (₹)");
-  const [salesTypeLocal, setSalesTypeLocal] = useState("Local Sale");
   const [placeOfSupply, setPlaceOfSupply] = useState("Gujarat (24)");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<Partial<Sale>>({
-    voucherNo: "",
     voucherDate: todayISO(),
-    daybookId: undefined,
-    daybookName: "",
-    reference: "",
-    remarks: "",
-    salesmanName: "Amit Verma",
-    billMode: "Debit Memo",
-    customerPhone: "",
-    customerAltPhone: "",
-    customerAddress1: "",
-    customerAddress2: "",
-    customerCity: "Ahmedabad",
-    customerPincode: "380009",
-    customerState: "Gujarat",
-    customerGstNo: "",
-    customerPanNo: "",
-    customerAadharNo: "",
-    customerEmail: "",
-    itemLines: [{ ...DEFAULT_LINE_ITEM, id: `line-${Date.now()}` }],
-    subtotal: 0,
-    discountRate: 0,
-    discountAmount: 0,
-    taxRate: 3, // Standard jewellery GST is 3%
-    taxAmount: 0,
-    roundOff: 0,
-    grandTotal: 0,
-    cashAmount: 0,
-    bankAmount: 0,
-    bankName: "HDFC Bank",
-    cardAmount: 0,
-    cardCommission: 0,
-    advanceAmount: 0,
-    urdAmount: 0,
-    salesReturnAmount: 0,
-    schemeAmount: 0,
-    giftVoucherAmount: 0,
-    kasarAmount: 0,
-    tdsAmount: 0,
-    rateFixType: "Fix",
-    dueDate: toISODate(new Date(Date.now() + 15 * 86400000)),
-    deliveryPending: false,
-    isActive: true,
   });
 
   useEffect(() => {
     if (existingSale && isEditing) {
-      const matchedDaybook = daybooks.find(
-        (d) => d.id === existingSale.daybookId,
-      );
-
       setFormData((prev) => ({
         ...prev,
         ...existingSale,
-        daybookName:
-          existingSale.daybookName ||
-          matchedDaybook?.daybookName ||
-          prev.daybookName,
+        daybookName: existingSale.daybookName || prev.daybookName,
         accountId: existingSale.accountId,
         accountName: existingSale.accountName || prev.accountName,
         voucherDate: toISODate(existingSale.voucherDate) || todayISO(),
@@ -308,19 +236,10 @@ export const Sales: React.FC = () => {
           : undefined,
         itemLines:
           existingSale.itemLines && existingSale.itemLines.length > 0
-            ? existingSale.itemLines.map((line, idx) => ({
-                ...line,
-                itemCode: line.itemCode || line.tagNo || `ITM-${idx + 1}`,
-                tagNo: line.tagNo || line.itemCode || `TAG-${idx + 1}`,
-                uom: line.uom || "GMS",
-                rateType: line.rateType,
-                tax: line.tax || "3%",
-              }))
+            ? existingSale.itemLines
             : [
                 {
                   ...DEFAULT_LINE_ITEM,
-                  itemCode: "ITM-001",
-                  tagNo: "TAG-001",
                 },
               ],
       }));
@@ -349,7 +268,6 @@ export const Sales: React.FC = () => {
     formData.giftVoucherAmount,
   ]);
 
-  // Keep grand totals in formData in sync
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
@@ -361,7 +279,6 @@ export const Sales: React.FC = () => {
     }));
   }, [calculatedTotals, couponDiscount]);
 
-  // Handler when daybook changes or is selected: generates voucher number
   const handleSelectDaybook = useCallback(
     async (val: string) => {
       const dbId = Number(val);
@@ -397,7 +314,6 @@ export const Sales: React.FC = () => {
     [daybooks],
   );
 
-  // Auto-generate voucher number on initial load for new sales
   useEffect(() => {
     if (!isEditing && daybooks.length > 0 && !formData.daybookId) {
       const defaultDb = daybooks[0];
@@ -405,22 +321,12 @@ export const Sales: React.FC = () => {
     }
   }, [isEditing, daybooks, formData.daybookId, handleSelectDaybook]);
 
-  // Handlers for Line Items
   const handleLineItemChange = useCallback(
     (index: number, field: keyof SaleLineItem, value: any) => {
       setFormData((prev) => {
         const updatedLines = [...(prev.itemLines || [])];
         if (!updatedLines[index]) return prev;
         const current = { ...updatedLines[index], [field]: value };
-
-        // Synchronize itemCode and tagNo
-        if (field === "itemCode") {
-          current.tagNo = value;
-        } else if (field === "tagNo") {
-          current.itemCode = value;
-        }
-
-        // Auto-calculate line amount based on rateType
         const updatedLine = calculateLineItemAmount(current, field);
         updatedLines[index] = updatedLine;
         return { ...prev, itemLines: updatedLines };
@@ -436,10 +342,6 @@ export const Sales: React.FC = () => {
         if (!updatedLines[index]) return prev;
 
         let current = { ...updatedLines[index], ...updates };
-
-        if (updates.itemCode !== undefined) current.tagNo = updates.itemCode;
-        if (updates.tagNo !== undefined) current.itemCode = updates.tagNo;
-
         current = calculateLineItemAmount(current);
         updatedLines[index] = current;
         return { ...prev, itemLines: updatedLines };
@@ -449,11 +351,8 @@ export const Sales: React.FC = () => {
   );
 
   const handleAddLineItem = useCallback(() => {
-    const nextNum = Math.floor(100 + Math.random() * 900);
     const newLine: SaleLineItem = {
       ...DEFAULT_LINE_ITEM,
-      itemCode: `ITM-${nextNum}`,
-      tagNo: `TAG-${nextNum}`,
     };
     setFormData((prev) => ({
       ...prev,
@@ -464,64 +363,12 @@ export const Sales: React.FC = () => {
   const handleDeleteLineItem = useCallback((index: number) => {
     setFormData((prev) => {
       const lines = prev.itemLines || [];
-      if (lines.length <= 1) {
-        return {
-          ...prev,
-          itemLines: [
-            {
-              ...DEFAULT_LINE_ITEM,
-              itemCode: "ITM-001",
-              tagNo: "TAG-001",
-            },
-          ],
-        };
-      }
       return {
         ...prev,
         itemLines: lines.filter((_, i) => i !== index),
       };
     });
   }, []);
-
-  // Quick Barcode Scan Handler
-  const handleQuickBarcodeAdd = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!quickBarcode.trim()) return;
-
-    // Search if an item matches
-    const searchTag = quickBarcode.trim();
-    const matchedItem = items.find(
-      (item) =>
-        item.shortName?.toLowerCase() === searchTag.toLowerCase() ||
-        item.itemName?.toLowerCase().includes(searchTag.toLowerCase()),
-    );
-
-    const newLine: SaleLineItem = {
-      ...DEFAULT_LINE_ITEM,
-      itemCode: searchTag.toUpperCase(),
-      tagNo: searchTag.toUpperCase(),
-      itemId: matchedItem?.id || 0,
-      itemName: matchedItem?.itemName || `Item ${searchTag}`,
-      itemGroupId: 0,
-      itemGroupName: "",
-      pcs: 0,
-      uom: "",
-      grossWt: 0,
-      netWt: 0,
-      rate: 0,
-      rateType: "",
-      labourAmount: 0,
-      discountAmount: 0,
-      tax: "",
-      amount: 0,
-    };
-
-    setFormData((prev) => ({
-      ...prev,
-      itemLines: [...(prev.itemLines || []), newLine],
-    }));
-    setQuickBarcode("");
-  };
 
   const handleCellValueChanged = useCallback(
     (event: CellValueChangedEvent) => {
@@ -532,22 +379,13 @@ export const Sales: React.FC = () => {
       const field = event.colDef.field as keyof SaleLineItem;
       let value = event.newValue;
 
-      if (field === "itemGroupName") {
-        const grp = itemGroups.find((g) => g.itemGroupName === value);
-        if (grp) {
-          const updates = getItemGroupUpdates(grp, rateTypes, "sales");
-          applyLineItemUpdates(rowIndex, updates);
-          return;
-        }
-      }
-
-      if (field === "itemName") {
-        const matched = items.find((i) => i.itemName === value);
-        if (matched) {
-          handleLineItemChange(rowIndex, "itemId", matched.id);
-          handleLineItemChange(rowIndex, "itemName", matched.itemName);
-          return;
-        }
+      if (field === "rateType") {
+        const rt = rateTypes.find((r) => r.name === value);
+        applyLineItemUpdates(rowIndex, {
+          rateType: value,
+          rateTypeId: rt ? rt.id : undefined,
+        });
+        return;
       }
 
       if (
@@ -567,12 +405,13 @@ export const Sales: React.FC = () => {
 
       handleLineItemChange(rowIndex, field, value);
     },
-    [handleLineItemChange, itemGroups, items],
+    [handleLineItemChange, applyLineItemUpdates, rateTypes],
   );
 
   const columnDefs = useMemo<ColDef[]>(() => {
     return [
       {
+        field: "index",
         headerName: "#",
         width: 50,
         pinned: "left",
@@ -643,76 +482,81 @@ export const Sales: React.FC = () => {
         headerName: "Pcs",
         field: "pcs",
         width: 80,
-        type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellEditorParams: { min: 1, step: 1 },
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "integer",
+          decimals: 0,
+        },
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "integer", decimals: 0 },
+            Boolean(params.node?.rowPinned),
+          ),
         valueParser: (params) => {
           if (params.newValue === "" || params.newValue == null) return 1;
           const n = parseInt(params.newValue, 10);
           return isNaN(n) ? 1 : n;
-        },
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" ? String(p.value) : "",
-      },
-      {
-        headerName: "UOM",
-        field: "uom",
-        width: 90,
-        editable: (p) => !p.node?.rowPinned,
-        cellEditor: SelectCellEditor,
-        cellEditorParams: {
-          options: measureUnits,
-          valueKey: "listValue",
-          labelKey: "listValue",
         },
       },
       {
         headerName: "Gross Wt.",
         field: "grossWt",
         width: 110,
-        type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellEditorParams: { min: 0, step: 0.001, precision: 3 },
-        valueParser: (params) => {
-          if (params.newValue === "" || params.newValue == null) return 0;
-          const n = parseFloat(params.newValue);
-          return isNaN(n) ? 0 : n;
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "weight",
+          decimals: 3,
         },
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" && !isNaN(Number(p.value))
-            ? Number(p.value).toFixed(3)
-            : "",
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "weight", decimals: 3 },
+            Boolean(params.node?.rowPinned),
+          ),
+        valueParser: (params) =>
+          parseNumericalValue(params.newValue, { type: "weight", decimals: 3 }),
       },
       {
         headerName: "Net Wt.",
         field: "netWt",
         width: 110,
-        type: "numericColumn",
         editable: false,
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" && !isNaN(Number(p.value))
-            ? Number(p.value).toFixed(3)
-            : "",
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "weight", decimals: 3 },
+            Boolean(params.node?.rowPinned),
+          ),
       },
       {
-        headerName: "Rate (₹)",
+        headerName: "Rate",
         field: "rate",
         width: 115,
-        type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellEditorParams: { min: 0, step: 0.01, precision: 2 },
-        valueParser: (params) => {
-          if (params.newValue === "" || params.newValue == null) return 0;
-          const n = parseFloat(params.newValue);
-          return isNaN(n) ? 0 : n;
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "amount",
+          decimals: 2,
         },
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" && !isNaN(Number(p.value))
-            ? Number(p.value).toFixed(2)
-            : "",
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "amount", decimals: 2 },
+            Boolean(params.node?.rowPinned),
+          ),
+        valueParser: (params) =>
+          parseNumericalValue(params.newValue, { type: "amount", decimals: 2 }),
       },
       {
         headerName: "Rate Type",
@@ -728,39 +572,60 @@ export const Sales: React.FC = () => {
               field: "name",
             },
           ],
+          onItemSelect: (rt: any, rowIndex: number) => {
+            const rtName = typeof rt === "object" ? rt?.name : rt;
+            const matchedRt = rateTypes.find(
+              (r) => r.name === rtName || r.id === rt?.id,
+            );
+            applyLineItemUpdates(rowIndex, {
+              rateType: rtName,
+              rateTypeId: matchedRt ? matchedRt.id : undefined,
+            });
+          },
           searchPlaceholder: "Search Rate Type...",
           width: 320,
           height: 220,
         },
       },
       {
-        headerName: "Discount (₹)",
+        headerName: "Discount",
         field: "discountAmount",
         width: 115,
-        type: "numericColumn",
         editable: (p) => !p.node?.rowPinned,
-        cellEditor: "agNumberCellEditor",
-        cellEditorParams: { min: 0, step: 0.01, precision: 2 },
-        valueParser: (params) => {
-          if (params.newValue === "" || params.newValue == null) return 0;
-          const n = parseFloat(params.newValue);
-          return isNaN(n) ? 0 : n;
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "amount",
+          decimals: 2,
         },
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" && !isNaN(Number(p.value))
-            ? Number(p.value).toFixed(2)
-            : "",
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "amount", decimals: 2 },
+            Boolean(params.node?.rowPinned),
+          ),
+        valueParser: (params) =>
+          parseNumericalValue(params.newValue, { type: "amount", decimals: 2 }),
       },
       {
-        headerName: "Amount (₹)",
+        headerName: "Amount",
         field: "amount",
         width: 135,
-        type: "numericColumn",
+        cellEditor: NumericalCellEditor,
+        cellEditorParams: {
+          type: "amount",
+          decimals: 2,
+        },
+        cellClass: "ag-right-aligned-cell",
+        headerClass: "ag-right-aligned-header",
+        valueFormatter: (params) =>
+          formatNumericalValue(
+            params.value,
+            { type: "amount", decimals: 2 },
+            Boolean(params.node?.rowPinned),
+          ),
         editable: false,
-        valueFormatter: (p) =>
-          p.value != null && p.value !== "" && !isNaN(Number(p.value))
-            ? Number(p.value).toFixed(2)
-            : "",
       },
       {
         headerName: "",
@@ -779,12 +644,18 @@ export const Sales: React.FC = () => {
         },
       },
     ];
-  }, [handleDeleteLineItem, itemGroups, items]);
+  }, [
+    handleDeleteLineItem,
+    rateTypes,
+    itemGroupPopupColumns,
+    itemPopupColumns,
+    itemCodePopupColumns,
+  ]);
 
   const pinnedBottomRowData = useMemo(() => {
     return [
       {
-        itemGroupName: "TOTAL",
+        index: "TOTAL",
         itemName: "",
         pcs: calculatedTotals.pcs,
         uom: "",
@@ -799,7 +670,6 @@ export const Sales: React.FC = () => {
     ];
   }, [calculatedTotals]);
 
-  // Customer Selection Handler
   const handleSelectCustomer = useCallback((account: any) => {
     if (account) {
       setFormData((prev) => ({
@@ -818,7 +688,6 @@ export const Sales: React.FC = () => {
     }
   }, []);
 
-  // Item Group Selection for Grid Line Item
   const handleSelectItemGroupForRow = useCallback(
     (rowIndex: number, grp: any) => {
       if (!grp) return;
@@ -828,7 +697,6 @@ export const Sales: React.FC = () => {
     [rateTypes, applyLineItemUpdates],
   );
 
-  // Item Selection for Grid Line Item
   const handleSelectItemForRow = useCallback((rowIndex: number, item: any) => {
     setFormData((prev) => {
       const lines = [...(prev.itemLines || [])];
@@ -836,16 +704,11 @@ export const Sales: React.FC = () => {
       const current = { ...lines[rowIndex] };
       current.itemId = item.id;
       current.itemName = item.itemName;
-      if (!current.tagNo || current.tagNo.startsWith("TAG-")) {
-        current.tagNo = item.shortName || item.itemName;
-        current.itemCode = item.shortName || item.itemName;
-      }
       lines[rowIndex] = current;
       return { ...prev, itemLines: lines };
     });
   }, []);
 
-  // Item Code Selection for Grid Line Item
   const handleSelectItemCodeForRow = useCallback(
     (rowIndex: number, itemCodeObj: any) => {
       setFormData((prev) => {
@@ -865,7 +728,6 @@ export const Sales: React.FC = () => {
     [],
   );
 
-  // Save / Update
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   const handleSave = async () => {
@@ -874,54 +736,24 @@ export const Sales: React.FC = () => {
       return;
     }
 
-    const payload: Omit<Sale, "id"> = {
-      voucherNo: formData.voucherNo || "INV-001",
-      srNo: formData.srNo,
-      voucherDate: formData.voucherDate || todayISO(),
-      daybookId: formData.daybookId || 1,
-      daybookName: formData.daybookName || "RETAIL INVOICE",
-      reference: formData.reference || "",
-      accountId: formData.accountId,
-      remarks: formData.remarks || "",
-      salesmanName: formData.salesmanName || "Sales Executive",
-      billMode: formData.billMode || "Debit Memo",
-      customerPhone: formData.customerPhone || "",
-      customerAltPhone: formData.customerAltPhone || "",
-      customerAddress1: formData.customerAddress1 || "",
-      customerAddress2: formData.customerAddress2 || "",
-      customerCity: formData.customerCity || "",
-      customerPincode: formData.customerPincode || "",
-      customerState: formData.customerState || "",
-      customerGstNo: formData.customerGstNo || "",
-      customerPanNo: formData.customerPanNo || "",
-      customerAadharNo: formData.customerAadharNo || "",
-      customerEmail: formData.customerEmail || "",
-      itemLines: (formData.itemLines || []).filter(
-        (line) => line.itemId && line.itemId > 0,
-      ),
-      subtotal: calculatedTotals.subtotal,
-      discountRate: formData.discountRate || 0,
-      discountAmount: calculatedTotals.totalLineDiscount + couponDiscount,
-      taxRate: formData.taxRate || 3,
-      taxAmount: calculatedTotals.taxAmount,
-      roundOff: calculatedTotals.roundOff,
-      grandTotal: calculatedTotals.grandTotal,
-      cashAmount: formData.cashAmount || 0,
-      bankAmount: formData.bankAmount || 0,
-      bankName: formData.bankName || "",
-      cardAmount: formData.cardAmount || 0,
-      cardCommission: formData.cardCommission || 0,
-      advanceAmount: formData.advanceAmount || 0,
-      urdAmount: formData.urdAmount || 0,
-      salesReturnAmount: formData.salesReturnAmount || 0,
-      schemeAmount: formData.schemeAmount || 0,
-      giftVoucherAmount: formData.giftVoucherAmount || 0,
-      kasarAmount: formData.kasarAmount || 0,
-      tdsAmount: formData.tdsAmount || 0,
-      rateFixType: formData.rateFixType || "Fix",
-      dueDate: formData.dueDate,
-      deliveryPending: formData.deliveryPending || false,
-      isActive: formData.isActive ?? true,
+    const payload: Partial<Sale> = {
+      ...formData,
+      itemLines: (formData.itemLines || [])
+        .filter((line) => line.itemId && line.itemId > 0)
+        .map((line) => {
+          const taxable = Math.max(
+            0,
+            (line.amount || 0) - (line.discountAmount || 0),
+          );
+          const taxPct = Number(formData.taxRate || 3);
+          const withTax = taxable * (1 + taxPct / 100);
+          return {
+            ...line,
+            qty: line.pcs ?? 1,
+            taxableAmount: taxable,
+            amountWithTax: Number(withTax.toFixed(2)),
+          };
+        }),
     };
 
     if (payload.itemLines.length === 0) {
@@ -942,17 +774,9 @@ export const Sales: React.FC = () => {
         },
       );
     } else {
-      createMutation.mutate(payload, {
-        onSuccess: (res: any) => {
-          const createdSale = res?.data || res;
-          if (createdSale?.id) {
-            setFormData((prev) => ({
-              ...prev,
-              id: createdSale.id,
-              voucherNo: createdSale.voucherNo || prev.voucherNo,
-            }));
-          }
-          setIsPrintModalOpen(true);
+      createMutation.mutate(payload as any, {
+        onSuccess: () => {
+          navigate(WEB_ROUTES.TRANSACTION.SALES_LIST);
         },
         onError: (err: any) => {
           alert(err?.message || "Failed to create sales voucher");
@@ -964,30 +788,7 @@ export const Sales: React.FC = () => {
   const handleClear = () => {
     const defaultDb = daybooks[0];
     const defaultDbId = defaultDb?.id || 1;
-    setFormData({
-      voucherNo: "",
-      srNo: undefined,
-      voucherDate: todayISO(),
-      daybookId: defaultDbId,
-      daybookName: defaultDb?.daybookName || "RETAIL INVOICE",
-      reference: "",
-      remarks: "",
-      salesmanName: "Amit Verma",
-      billMode: "Debit Memo",
-      customerPhone: "",
-      customerAddress1: "",
-      customerCity: "Ahmedabad",
-      customerPincode: "380009",
-      customerState: "Gujarat",
-      itemLines: [{ ...DEFAULT_LINE_ITEM }],
-      taxRate: 3,
-      cashAmount: 0,
-      bankAmount: 0,
-      cardAmount: 0,
-      advanceAmount: 0,
-      urdAmount: 0,
-      isActive: true,
-    });
+    setFormData({});
     setCouponDiscount(0);
     handleSelectDaybook(String(defaultDbId));
   };
@@ -1006,26 +807,6 @@ export const Sales: React.FC = () => {
           navigate(WEB_ROUTES.TRANSACTION.SALES_LIST);
         },
       });
-    }
-  };
-
-  // Record Navigation (Prev / Next record from list)
-  const handleNavigateRecord = (direction: "prev" | "next") => {
-    if (!allSales.length) return;
-    const currentIndex = allSales.findIndex((s) => s.id === saleId);
-    let targetIndex = -1;
-    if (direction === "prev") {
-      targetIndex = currentIndex > 0 ? currentIndex - 1 : allSales.length - 1;
-    } else {
-      targetIndex =
-        currentIndex >= 0 && currentIndex < allSales.length - 1
-          ? currentIndex + 1
-          : 0;
-    }
-    const targetSale = allSales[targetIndex];
-    if (targetSale) {
-      const token = encodeURL({ id: targetSale.id });
-      navigate(buildRoute(WEB_ROUTES.TRANSACTION.SALES, { token }));
     }
   };
 
@@ -1050,7 +831,6 @@ export const Sales: React.FC = () => {
 
           {/* Right: Invoice type selector + invoice number + settings */}
           <div className="flex items-center gap-2">
-            {/* Daybook / Invoice type selector */}
             <Select
               value={formData.daybookId ? String(formData.daybookId) : ""}
               onValueChange={handleSelectDaybook}
@@ -1073,12 +853,10 @@ export const Sales: React.FC = () => {
               </SelectContent>
             </Select>
 
-            {/* Invoice Number display */}
             <div className="flex h-8 min-w-[130px] items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
               {formData.voucherNo || "INV-2025-0001"}
             </div>
 
-            {/* Settings icon */}
             <button
               type="button"
               className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400"
@@ -1090,11 +868,9 @@ export const Sales: React.FC = () => {
       </div>
 
       <div className="flex-1 space-y-3 p-4 md:p-5">
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            ROW 1: Customer Details | Invoice Details | Additional Info Tabs
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {/* ROW 1: Customer Details | Invoice Details | Additional Info Tabs */}
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
-          {/* â”€â”€ CARD: Customer Details (4 cols) â”€â”€ */}
+          {/* CARD: Customer Details (4 cols) */}
           <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
               <User className="h-4 w-4 text-primary-action" />
@@ -1104,7 +880,6 @@ export const Sales: React.FC = () => {
             </div>
 
             <div className="p-4 space-y-3">
-              {/* Customer search field */}
               <div className="space-y-1">
                 <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
                   Customer <span className="text-rose-500">*</span>
@@ -1119,7 +894,6 @@ export const Sales: React.FC = () => {
                 />
               </div>
 
-              {/* Customer info card */}
               <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-850">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -1127,8 +901,8 @@ export const Sales: React.FC = () => {
                       {formData.accountName || "Walk-in Customer"}
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                      {formData.customerCity || "Ahmedabad"},{" "}
-                      {formData.customerState || "Gujarat"}
+                      {formData.customerCity || "City"},{" "}
+                      {formData.customerState || "State"}
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
@@ -1138,20 +912,66 @@ export const Sales: React.FC = () => {
                         ? formData.customerGstNo
                         : "Unregistered"}
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => setCustomerTab("general")}
-                      className="text-[11px] font-medium text-primary-action hover:underline mt-0.5"
-                    >
-                      View Details
-                    </button>
                   </div>
                 </div>
+              </div>
+
+              {/* Customer Phone & City */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Phone
+                  </Label>
+                  <Input
+                    value={formData.customerPhone || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        customerPhone: e.target.value,
+                      }))
+                    }
+                    placeholder="9876543210"
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    City
+                  </Label>
+                  <Input
+                    value={formData.customerCity || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        customerCity: e.target.value,
+                      }))
+                    }
+                    placeholder="Ahmedabad"
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                  Address
+                </Label>
+                <Input
+                  value={formData.customerAddress1 || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      customerAddress1: e.target.value,
+                    }))
+                  }
+                  placeholder="Address Line 1"
+                  className="h-8 text-xs"
+                />
               </div>
             </div>
           </div>
 
-          {/* â”€â”€ CARD: Invoice Details (5 cols) â”€â”€ */}
+          {/* CARD: Invoice Details (4 cols) */}
           <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
               <FileText className="h-4 w-4 text-primary-action" />
@@ -1161,7 +981,6 @@ export const Sales: React.FC = () => {
             </div>
 
             <div className="p-4 space-y-3">
-              {/* Row 1: Invoice Date, Due Date, Invoice No */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
                   <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
@@ -1200,7 +1019,6 @@ export const Sales: React.FC = () => {
                 </div>
               </div>
 
-              {/* Row 2: Reference No, Sales Person */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
@@ -1238,9 +1056,8 @@ export const Sales: React.FC = () => {
             </div>
           </div>
 
-          {/* â”€â”€ CARD: Additional Info / Shipping / Notes Tabs (4 cols) â”€â”€ */}
+          {/* CARD: Additional Info / Shipping / Notes Tabs (4 cols) */}
           <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
-            {/* Tab Header */}
             <div className="flex items-center border-b border-slate-100 dark:border-zinc-800 px-4">
               {(["additional", "shipping", "notes"] as const).map((tab) => (
                 <button
@@ -1266,63 +1083,8 @@ export const Sales: React.FC = () => {
             </div>
 
             <div className="p-4">
-              {/* Additional Info tab */}
               {rightTab === "additional" && (
                 <div className="grid grid-cols-2 gap-2.5">
-                  <div className="space-y-1">
-                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
-                      Price List
-                    </Label>
-                    <Select value={priceList} onValueChange={setPriceList}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Default Price List">
-                          Default Price List
-                        </SelectItem>
-                        <SelectItem value="Wholesale">Wholesale</SelectItem>
-                        <SelectItem value="Retail">Retail</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
-                      Currency
-                    </Label>
-                    <Select value={currency} onValueChange={setCurrency}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="INR - Indian Rupee (₹)">
-                          INR - Indian Rupee (₹)
-                        </SelectItem>
-                        <SelectItem value="USD ($)">USD ($)</SelectItem>
-                        <SelectItem value="AED">AED</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
-                      Sales Type
-                    </Label>
-                    <Select
-                      value={salesTypeLocal}
-                      onValueChange={setSalesTypeLocal}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Local Sale">Local Sale</SelectItem>
-                        <SelectItem value="Interstate">
-                          Interstate Sale
-                        </SelectItem>
-                        <SelectItem value="Export">Export</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                   <div className="space-y-1">
                     <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
                       Place of Supply
@@ -1354,12 +1116,11 @@ export const Sales: React.FC = () => {
                 </div>
               )}
 
-              {/* Shipping tab */}
               {rightTab === "shipping" && (
                 <div className="space-y-2.5">
                   <div className="space-y-1">
                     <Label className="text-[11px] font-medium text-slate-500">
-                      Recipient Email
+                      Customer Email
                     </Label>
                     <Input
                       type="email"
@@ -1413,7 +1174,6 @@ export const Sales: React.FC = () => {
                 </div>
               )}
 
-              {/* Notes tab */}
               {rightTab === "notes" && (
                 <div className="space-y-1">
                   <Label className="text-[11px] font-medium text-slate-500">
@@ -1437,6 +1197,7 @@ export const Sales: React.FC = () => {
           </div>
         </div>
 
+        {/* ITEM DETAILS GRID */}
         <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
           <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 gap-2">
             <div className="flex items-center gap-2">
@@ -1458,7 +1219,6 @@ export const Sales: React.FC = () => {
             </div>
           </div>
 
-          {/* AG Grid */}
           <div className="h-80">
             <DataGrid
               ref={gridRef}
@@ -1486,16 +1246,14 @@ export const Sales: React.FC = () => {
               className="flex items-center gap-1.5 text-xs font-medium text-primary-action hover:text-primary-action/80"
             >
               <Plus className="h-3.5 w-3.5" />
-              Add New Row
+              <span>Add New Row</span>
             </button>
           </div>
         </div>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            ROW 3: Terms & Conditions | Summary | Payment Details + Attachments
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {/* ROW 3: Remarks | Summary | Payment Details */}
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
-          {/* â”€â”€ CARD: Terms & Conditions (4 cols) â”€â”€ */}
+          {/* CARD: Remarks (4 cols) */}
           <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
               <FileText className="h-4 w-4 text-primary-action" />
@@ -1516,6 +1274,7 @@ export const Sales: React.FC = () => {
             </div>
           </div>
 
+          {/* CARD: Summary (4 cols) */}
           <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
               <Receipt className="h-4 w-4 text-primary-action" />
@@ -1525,7 +1284,6 @@ export const Sales: React.FC = () => {
             </div>
             <div className="p-4">
               <div className="space-y-0">
-                {/* Total Items */}
                 <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
                   <span className="text-xs text-slate-600 dark:text-zinc-400">
                     Total Items
@@ -1534,7 +1292,6 @@ export const Sales: React.FC = () => {
                     {formData.itemLines?.length || 0}
                   </span>
                 </div>
-                {/* Total Quantity */}
                 <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
                   <span className="text-xs text-slate-600 dark:text-zinc-400">
                     Total Quantity
@@ -1543,85 +1300,33 @@ export const Sales: React.FC = () => {
                     {calculatedTotals.pcs}
                   </span>
                 </div>
-                {/* Total Amount */}
                 <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
                   <span className="text-xs text-slate-600 dark:text-zinc-400">
                     Total Amount
                   </span>
                   <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                    ₹
-                    {(
+                    {fmtINR(
                       calculatedTotals.subtotal +
-                      calculatedTotals.totalLineDiscount
-                    ).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        calculatedTotals.totalLineDiscount,
+                    )}
                   </span>
                 </div>
-                {/* Total Discount */}
                 <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
                   <span className="text-xs text-slate-600 dark:text-zinc-400">
                     Total Discount
                   </span>
                   <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                    ₹
-                    {calculatedTotals.totalLineDiscount.toLocaleString(
-                      "en-IN",
-                      { minimumFractionDigits: 2 },
-                    )}
+                    {fmtINR(calculatedTotals.totalLineDiscount)}
                   </span>
                 </div>
-                {/* Taxable Amount */}
                 <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
                   <span className="text-xs text-slate-600 dark:text-zinc-400">
                     Taxable Amount
                   </span>
                   <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                    ₹
-                    {calculatedTotals.subtotal.toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                    })}
+                    {fmtINR(calculatedTotals.subtotal)}
                   </span>
                 </div>
-                {/* Tax Rows: CGST + SGST or IGST */}
-                {taxMode === "GST" ? (
-                  <>
-                    <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
-                      <span className="text-xs text-slate-600 dark:text-zinc-400">
-                        CGST ({((formData.taxRate || 3) / 2).toFixed(1)}%)
-                      </span>
-                      <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                        ₹
-                        {(calculatedTotals.taxAmount / 2).toLocaleString(
-                          "en-IN",
-                          { minimumFractionDigits: 2 },
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
-                      <span className="text-xs text-slate-600 dark:text-zinc-400">
-                        SGST ({((formData.taxRate || 3) / 2).toFixed(1)}%)
-                      </span>
-                      <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                        ₹
-                        {(calculatedTotals.taxAmount / 2).toLocaleString(
-                          "en-IN",
-                          { minimumFractionDigits: 2 },
-                        )}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
-                    <span className="text-xs text-slate-600 dark:text-zinc-400">
-                      IGST ({formData.taxRate || 3}%)
-                    </span>
-                    <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                      ₹
-                      {calculatedTotals.taxAmount.toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* Grand Total Highlight Row */}
@@ -1630,18 +1335,14 @@ export const Sales: React.FC = () => {
                   Grand Total
                 </span>
                 <span className="text-base font-extrabold text-primary-action tracking-tight">
-                  ₹
-                  {calculatedTotals.grandTotal.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
+                  {fmtINR(calculatedTotals.grandTotal)}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* â”€â”€ CARD: Payment Details + Attachments (4 cols) â”€â”€ */}
+          {/* CARD: Payment Details + Attachments (4 cols) */}
           <div className="lg:col-span-4 space-y-3">
-            {/* Payment Details */}
             <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
               <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
                 <CreditCard className="h-4 w-4 text-primary-action" />
@@ -1650,7 +1351,6 @@ export const Sales: React.FC = () => {
                 </h3>
               </div>
               <div className="p-4 space-y-3">
-                {/* Payment Type Pills */}
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
                     Payment Type
@@ -1679,7 +1379,6 @@ export const Sales: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Received Amount + Balance */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
@@ -1716,10 +1415,7 @@ export const Sales: React.FC = () => {
                             : "text-amber-600 dark:text-amber-400"
                         }`}
                       >
-                        ₹{" "}
-                        {calculatedTotals.balanceDue.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}
+                        {fmtINR(calculatedTotals.balanceDue)}
                       </span>
                     </div>
                   </div>
@@ -1784,8 +1480,6 @@ export const Sales: React.FC = () => {
 
       <FormFooter
         showVoucherNavigation={true}
-        onNavigatePrev={() => handleNavigateRecord("prev")}
-        onNavigateNext={() => handleNavigateRecord("next")}
         onTagPrint={() => setIsTagModalOpen(true)}
         tagPrintText="Tag Print"
         onPrint={() => setIsPrintModalOpen(true)}
@@ -1864,9 +1558,6 @@ export const Sales: React.FC = () => {
                         <span className="text-xs font-bold text-slate-900 truncate">
                           {line.tagNo || `TAG-${i + 1}`}
                         </span>
-                        <span className="inline-flex px-1 py-0.5 rounded bg-amber-100 text-amber-700 text-[8px] font-bold shrink-0">
-                          {line.purity || "22K"}
-                        </span>
                       </div>
                       <p className="text-[10px] text-slate-500 truncate">
                         {line.itemName || "Item"}
@@ -1880,7 +1571,7 @@ export const Sales: React.FC = () => {
                       <span>NW: {Number(line.netWt || 0).toFixed(3)}</span>
                     </div>
                     <span className="text-xs font-bold text-amber-700 tabular-nums">
-                      ₹{line.amount?.toLocaleString("en-IN")}
+                      {fmtINR(line.amount || 0)}
                     </span>
                   </div>
                 </div>
