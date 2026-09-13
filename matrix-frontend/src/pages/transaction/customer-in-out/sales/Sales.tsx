@@ -15,6 +15,7 @@ import {
   type SaleLineItem,
 } from "@/api/sales";
 import { AccountHelp } from "@/components/common/AccountHelp";
+import { todayISO, toISODate } from "@/utils/date";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
@@ -222,7 +223,7 @@ export const Sales: React.FC = () => {
 
   const [formData, setFormData] = useState<Partial<Sale>>({
     voucherNo: "",
-    voucherDate: new Date().toISOString().slice(0, 10),
+    voucherDate: todayISO(),
     daybookId: undefined,
     daybookName: "",
     reference: "",
@@ -261,7 +262,7 @@ export const Sales: React.FC = () => {
     kasarAmount: 0,
     tdsAmount: 0,
     rateFixType: "Fix",
-    dueDate: new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
+    dueDate: toISODate(new Date(Date.now() + 15 * 86400000)),
     deliveryPending: false,
     isActive: true,
   });
@@ -270,6 +271,10 @@ export const Sales: React.FC = () => {
     if (existingSale && isEditing) {
       setFormData({
         ...existingSale,
+        voucherDate: toISODate(existingSale.voucherDate) || todayISO(),
+        dueDate: existingSale.dueDate
+          ? toISODate(existingSale.dueDate)
+          : undefined,
         itemLines:
           existingSale.itemLines && existingSale.itemLines.length > 0
             ? existingSale.itemLines.map((line, idx) => ({
@@ -801,7 +806,7 @@ export const Sales: React.FC = () => {
       voucherNo: formData.voucherNo || "INV-001",
       srNo: formData.srNo,
       voucherDate:
-        formData.voucherDate || new Date().toISOString().slice(0, 10),
+        formData.voucherDate || todayISO(),
       daybookId: formData.daybookId || 1,
       daybookName: formData.daybookName || "RETAIL INVOICE",
       reference: formData.reference || "",
@@ -883,7 +888,7 @@ export const Sales: React.FC = () => {
     setFormData({
       voucherNo: "",
       srNo: undefined,
-      voucherDate: new Date().toISOString().slice(0, 10),
+      voucherDate: todayISO(),
       daybookId: defaultDbId,
       daybookName: defaultDb?.daybookName || "RETAIL INVOICE",
       reference: "",

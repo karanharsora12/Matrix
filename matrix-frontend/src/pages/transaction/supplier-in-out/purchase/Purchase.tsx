@@ -1,5 +1,6 @@
 import { useAccounts } from "@/api/accounts";
 import { AccountHelp } from "@/components/common/AccountHelp";
+import { todayISO, toISODate } from "@/utils/date";
 import {
   generateVoucherNo,
   useDaybookGroups,
@@ -240,7 +241,7 @@ export const Purchase: React.FC = () => {
 
   const [formData, setFormData] = useState<Partial<PurchaseData>>({
     voucherNo: "",
-    voucherDate: new Date().toISOString().slice(0, 10),
+    voucherDate: todayISO(),
     daybookId: undefined,
     daybookName: "",
     reference: "",
@@ -279,7 +280,7 @@ export const Purchase: React.FC = () => {
     kasarAmount: 0,
     tdsAmount: 0,
     rateFixType: "Fix",
-    dueDate: new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
+    dueDate: toISODate(new Date(Date.now() + 15 * 86400000)),
     deliveryPending: false,
     isActive: true,
   });
@@ -288,6 +289,10 @@ export const Purchase: React.FC = () => {
     if (existingPurchase && isEditing) {
       setFormData({
         ...existingPurchase,
+        voucherDate: toISODate(existingPurchase.voucherDate) || todayISO(),
+        dueDate: existingPurchase.dueDate
+          ? toISODate(existingPurchase.dueDate)
+          : undefined,
         itemLines:
           existingPurchase.itemLines && existingPurchase.itemLines.length > 0
             ? existingPurchase.itemLines.map((line, idx) => ({
@@ -776,7 +781,7 @@ export const Purchase: React.FC = () => {
       voucherNo: formData.voucherNo || "PUR-001",
       srNo: formData.srNo,
       voucherDate:
-        formData.voucherDate || new Date().toISOString().slice(0, 10),
+        formData.voucherDate || todayISO(),
       daybookId: formData.daybookId || 1,
       daybookName: formData.daybookName || "PURCHASE",
       reference: formData.reference || "",
@@ -858,7 +863,7 @@ export const Purchase: React.FC = () => {
     setFormData({
       voucherNo: "",
       srNo: undefined,
-      voucherDate: new Date().toISOString().slice(0, 10),
+      voucherDate: todayISO(),
       daybookId: defaultDbId,
       daybookName: defaultDb?.daybookName || "PURCHASE",
       reference: "",

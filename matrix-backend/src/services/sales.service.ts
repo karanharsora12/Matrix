@@ -11,29 +11,22 @@ import {
   items,
   users,
 } from "../db/schema";
-import { formatDate, formatDateTime, parseDate } from "../utils/date";
-
 const addByUser = alias(users, "sales_add_by_user");
 const editByUser = alias(users, "sales_edit_by_user");
 
+function toDate(val: any): Date | undefined {
+  if (!val) return undefined;
+  if (val instanceof Date) return isNaN(val.getTime()) ? undefined : val;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? undefined : d;
+}
+
 function formatSaleRow(s: any) {
-  if (!s) return s;
-  return {
-    ...s,
-    voucherDate: formatDate(s.voucherDate),
-    dueDate: s.dueDate ? formatDate(s.dueDate) : null,
-    createdAt: formatDateTime(s.createdAt),
-    updatedAt: formatDateTime(s.updatedAt),
-  };
+  return s;
 }
 
 function formatSaleItemRow(item: any) {
-  if (!item) return item;
-  return {
-    ...item,
-    createdAt: formatDateTime(item.createdAt),
-    updatedAt: formatDateTime(item.updatedAt),
-  };
+  return item;
 }
 
 export class SalesService {
@@ -143,10 +136,8 @@ export class SalesService {
         .insert(sales)
         .values({
           ...saleData,
-          voucherDate: parseDate(saleData.voucherDate) || new Date(),
-          dueDate: saleData.dueDate
-            ? parseDate(saleData.dueDate) || undefined
-            : undefined,
+          voucherDate: toDate(saleData.voucherDate) || new Date(),
+          dueDate: toDate(saleData.dueDate),
           addBy: saleData.addBy ? Number(saleData.addBy) : null,
           editBy: saleData.editBy ? Number(saleData.editBy) : null,
         })
@@ -186,12 +177,14 @@ export class SalesService {
         .update(sales)
         .set({
           ...saleData,
-          voucherDate: saleData.voucherDate
-            ? parseDate(saleData.voucherDate) || new Date()
-            : undefined,
-          dueDate: saleData.dueDate
-            ? parseDate(saleData.dueDate) || undefined
-            : undefined,
+          voucherDate:
+            saleData.voucherDate !== undefined
+              ? toDate(saleData.voucherDate) || new Date()
+              : undefined,
+          dueDate:
+            saleData.dueDate !== undefined
+              ? toDate(saleData.dueDate)
+              : undefined,
           editBy: saleData.editBy ? Number(saleData.editBy) : undefined,
           updatedAt: new Date(),
         })

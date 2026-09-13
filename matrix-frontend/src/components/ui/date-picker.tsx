@@ -25,41 +25,7 @@ export interface DatePickerProps {
   align?: "start" | "center" | "end";
 }
 
-function parseISODate(value?: string): Date | undefined {
-  if (!value) return undefined;
-  if (value.includes("/")) {
-    const parts = value.split("/");
-    if (parts.length === 3) {
-      const d = Number(parts[0]);
-      const m = Number(parts[1]);
-      const y = Number(parts[2]);
-      if (y && m && d) {
-        const date = new Date(y, m - 1, d);
-        if (isValid(date)) return date;
-      }
-    }
-  }
-  const parts = value.split("-");
-  if (parts.length >= 3) {
-    const y = Number(parts[0]);
-    const m = Number(parts[1]);
-    const d = Number(parts[2].slice(0, 2));
-    if (y && m && d) {
-      const date = new Date(y, m - 1, d);
-      return isValid(date) ? date : undefined;
-    }
-  }
-  const date = new Date(value);
-  return isValid(date) ? date : undefined;
-}
-
-/** Format a Date back to `YYYY-MM-DD` (local, no UTC shift). */
-function toISODate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
+import { parseDate, toISODate, formatDate } from "@/utils/date";
 
 export function DatePicker({
   value,
@@ -75,9 +41,9 @@ export function DatePicker({
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
 
-  const selected = React.useMemo(() => parseISODate(value), [value]);
-  const minDate = React.useMemo(() => parseISODate(min), [min]);
-  const maxDate = React.useMemo(() => parseISODate(max), [max]);
+  const selected = React.useMemo(() => parseDate(value) || undefined, [value]);
+  const minDate = React.useMemo(() => parseDate(min) || undefined, [min]);
+  const maxDate = React.useMemo(() => parseDate(max) || undefined, [max]);
 
   const disabledMatchers = React.useMemo<
     Matcher | Matcher[] | undefined

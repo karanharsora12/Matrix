@@ -16,6 +16,7 @@ import {
   AccountHelp,
   useAccountColumns,
 } from "@/components/common/AccountHelp";
+import { todayISO, toISODate } from "@/utils/date";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
@@ -116,7 +117,6 @@ const VOUCHER_TYPES = [
 
 interface VoucherLine extends PaymentDetail {}
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
 
 const emptyLine = (): VoucherLine => ({
   accountId: 0,
@@ -258,7 +258,7 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
         daybookId: existingVoucher.daybookId || 0,
         voucherNo: existingVoucher.voucherNo || "",
         srNo: existingVoucher.srNo || 0,
-        voucherDate: existingVoucher.voucherDate?.slice(0, 10) || todayISO(),
+        voucherDate: toISODate(existingVoucher.voucherDate) || todayISO(),
         transactionType:
           existingVoucher.transactionType || meta.transactionType,
         reference: VOUCHER_TYPES.includes(existingVoucher.reference || "")

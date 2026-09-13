@@ -1,4 +1,5 @@
 import type { ColDef } from "ag-grid-community";
+import { formatDate, formatDateTime, dateComparator } from "@/utils/date";
 
 export const MenuList = {
   // Inventory
@@ -48,11 +49,15 @@ export const ADD_EDIT_COLUMNS: ColDef[] = [
     field: "createdAt",
     headerName: "Add Date",
     width: 150,
+    valueFormatter: (p) => (p.node?.rowPinned ? "" : formatDateTime(p.value)),
+    comparator: dateComparator,
   },
   {
     field: "updatedAt",
     headerName: "Edit Date",
     width: 150,
+    valueFormatter: (p) => (p.node?.rowPinned ? "" : formatDateTime(p.value)),
+    comparator: dateComparator,
   },
 ];
 
@@ -305,6 +310,17 @@ export function getListingColumns(
   const matchedKey = BASE_LISTING_COLUMNS_MAP[menu];
 
   let columns = matchedKey ? matchedKey.map((col) => ({ ...col })) : [];
+
+  columns = columns.map((col) => {
+    if (col.field === "voucherDate" && !col.valueFormatter && !col.valueGetter) {
+      return {
+        ...col,
+        valueFormatter: (p) => (p.node?.rowPinned ? "" : formatDate(p.value)),
+        comparator: dateComparator,
+      };
+    }
+    return col;
+  });
 
   if (options.overrides) {
     columns = columns.map((col) => {

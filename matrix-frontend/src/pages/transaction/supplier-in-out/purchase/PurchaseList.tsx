@@ -7,6 +7,7 @@ import { useGridActions } from "@/hooks/useGridActions";
 import { buildRoute, encodeURL } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
+import { formatDate } from "@/utils/date";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -56,7 +57,7 @@ const PurchaseList: React.FC = () => {
         headerName: "Voucher Date",
         width: 110,
         valueGetter: (p) =>
-          p.node?.rowPinned ? "" : p.data?.voucherDate?.slice(0, 10),
+          p.node?.rowPinned ? "" : formatDate(p.data?.voucherDate),
       },
       { field: "daybookGroupName", headerName: "Daybook Group", width: 120 },
       { field: "daybookName", headerName: "Daybook", width: 160 },

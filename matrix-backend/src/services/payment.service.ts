@@ -9,28 +9,14 @@ import {
   accounts,
   users,
 } from "../db/schema";
-import { formatDate, formatDateTime, parseDate } from "../utils/date";
-
 const addByUser = alias(users, "payments_add_by_user");
 const editByUser = alias(users, "payments_edit_by_user");
 
-function formatPaymentRow(p: any) {
-  if (!p) return p;
-  return {
-    ...p,
-    voucherDate: formatDate(p.voucherDate),
-    createdAt: formatDateTime(p.createdAt),
-    updatedAt: formatDateTime(p.updatedAt),
-  };
-}
-
-function formatPaymentDetailRow(d: any) {
-  if (!d) return d;
-  return {
-    ...d,
-    createdAt: formatDateTime(d.createdAt),
-    updatedAt: formatDateTime(d.updatedAt),
-  };
+function toDate(val: any): Date {
+  if (!val) return new Date();
+  if (val instanceof Date) return isNaN(val.getTime()) ? new Date() : val;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? new Date() : d;
 }
 
 export class PaymentService {
@@ -107,7 +93,7 @@ export class PaymentService {
         addByUserName,
         editByUserName,
       }) => ({
-        ...formatPaymentRow(payment),
+        ...payment,
         daybookName: daybook?.daybookName || null,
         daybookGroupName: daybookGroup?.groupName || null,
         accountName: account?.accountName || null,
@@ -153,11 +139,11 @@ export class PaymentService {
       .orderBy(paymentDetails.id);
 
     return {
-      ...formatPaymentRow(row.payment),
+      ...row.payment,
       daybookName: row.daybook?.daybookName || null,
       daybookGroupName: row.daybookGroup?.groupName || null,
       accountName: row.account?.accountName || null,
-      details: fetchedDetails.map(formatPaymentDetailRow),
+      details: fetchedDetails,
     };
   }
 
@@ -194,7 +180,7 @@ export class PaymentService {
         .values({
           srNo,
           voucherNo: paymentData.voucherNo,
-          voucherDate: parseDate(paymentData.voucherDate) || new Date(),
+          voucherDate: toDate(paymentData.voucherDate),
           transactionType: paymentData.transactionType || "Cash Payment",
           daybookId: Number(paymentData.daybookId),
           accountId: Number(paymentData.accountId),
@@ -226,8 +212,8 @@ export class PaymentService {
       }
 
       return {
-        ...formatPaymentRow(newPayment),
-        details: insertedDetails.map(formatPaymentDetailRow),
+        ...newPayment,
+        details: insertedDetails,
       };
     });
   }
@@ -254,8 +240,7 @@ export class PaymentService {
       if (paymentData.srNo !== undefined)
         updatePayload.srNo = Number(paymentData.srNo);
       if (paymentData.voucherDate !== undefined)
-        updatePayload.voucherDate =
-          parseDate(paymentData.voucherDate) || new Date();
+        updatePayload.voucherDate = toDate(paymentData.voucherDate);
       if (paymentData.transactionType !== undefined)
         updatePayload.transactionType = paymentData.transactionType;
       if (paymentData.daybookId !== undefined)
@@ -334,7 +319,7 @@ export class PaymentService {
       }
 
       return {
-        ...formatPaymentRow(updatedPayment),
+        ...updatedPayment,
         details: finalDetails.map(formatPaymentDetailRow),
       };
     });

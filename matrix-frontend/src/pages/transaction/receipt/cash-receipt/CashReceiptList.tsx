@@ -8,6 +8,7 @@ import { useGridActions } from "@/hooks/useGridActions";
 import { buildRoute, encodeURL } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
+import { formatDate } from "@/utils/date";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -43,7 +44,7 @@ const CashReceiptList: React.FC = () => {
         overrides: {
           voucherDate: {
             valueGetter: (p) =>
-              p.node?.rowPinned ? "" : p.data?.voucherDate?.slice(0, 10),
+              p.node?.rowPinned ? "" : formatDate(p.data?.voucherDate),
           },
           totalAmount: {
             valueFormatter: (p) =>
