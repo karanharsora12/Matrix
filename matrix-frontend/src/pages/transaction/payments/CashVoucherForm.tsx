@@ -1,4 +1,4 @@
-import { useAccountMasterData, useAccounts } from "@/api/accounts";
+import { useAccounts } from "@/api/accounts";
 import {
   generateVoucherNo,
   useDaybookGroups,
@@ -12,12 +12,14 @@ import {
   useUpdatePayment,
   type PaymentDetail,
 } from "@/api/payments";
+import {
+  AccountHelp,
+  useAccountColumns,
+} from "@/components/common/AccountHelp";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
 import { GridDeleteCell } from "@/components/common/GridDeleteCell";
-import { PopupTable } from "@/components/common/PopupTable";
-import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import {
   TRANSACTION_TYPE_CONFIG,
   TransactionMenu,
@@ -29,13 +31,7 @@ import type {
   ColDef,
   ICellRendererParams,
 } from "ag-grid-community";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 // UI Components
@@ -59,16 +55,13 @@ import {
 } from "@/components/common/NumericalCell";
 import {
   Banknote,
-  ChevronDown,
   ClipboardList,
   FileText,
   MessageSquareText,
   Plus,
   Receipt,
   ReceiptText,
-  Search,
   User,
-  UserPlus,
 } from "lucide-react";
 
 export type CashVoucherMode = "payment" | "receipt";
@@ -160,7 +153,6 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
   const { data: daybooksResp } = useDaybooks();
   const { data: daybookGroupsResp } = useDaybookGroups();
   const { data: accountsResp } = useAccounts();
-  const { data: accountMasterResp } = useAccountMasterData();
   const { data: vouchersResp } = usePayments({
     transactionType: meta.transactionType,
   });
@@ -187,21 +179,7 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
     );
   }, [daybooksResp, daybookGroups, typeConfig.daybookGroupShortName]);
 
-  const groupMap = useMemo(() => {
-    const map: Record<number, string> = {};
-    (accountMasterResp?.accountGroups || []).forEach((g) => {
-      map[g.id] = g.name;
-    });
-    return map;
-  }, [accountMasterResp]);
-
-  const typeMap = useMemo(() => {
-    const map: Record<number, string> = {};
-    (accountMasterResp?.accountTypes || []).forEach((t) => {
-      map[t.id] = t.name;
-    });
-    return map;
-  }, [accountMasterResp]);
+  const { groupMap, typeMap } = useAccountColumns();
 
   const initialFormData = useMemo(
     () => ({
@@ -219,13 +197,7 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
   );
 
   const [formData, setFormData] = useState(initialFormData);
-  const accountSearchBtnRef = useRef<HTMLButtonElement>(null);
   const [lines, setLines] = useState<VoucherLine[]>([emptyLine()]);
-
-  const selectedDaybook = useMemo(
-    () => cashDaybooks.find((d) => d.id === formData.daybookId),
-    [cashDaybooks, formData.daybookId],
-  );
 
   const selectedAccount = useMemo(
     () => accounts.find((a) => a.id === formData.accountId),
@@ -306,18 +278,6 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
     }
   }, [isEditing, existingVoucher, meta.transactionType]);
 
-  // F2 opens the voucher-level account lookup
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "F2") {
-        e.preventDefault();
-        accountSearchBtnRef.current?.click();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
   // --- Line items (grid-first entry, trailing blank row) ---
   const completeLines = useMemo(() => lines.filter(isCompleteLine), [lines]);
 
@@ -383,47 +343,6 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
   const pinnedTotal = useMemo(
     () => [{ amount: totalAmount, id: "Total" }],
     [totalAmount],
-  );
-
-  const accountPopupColumns = useMemo<ColDef[]>(
-    () => [
-      {
-        headerName: "Account Name",
-        field: "accountName",
-        minWidth: 200,
-        flex: 1,
-        valueGetter: (p) =>
-          p.data?.accountName ||
-          `${p.data?.firstName || ""} ${p.data?.lastName || ""}`.trim() ||
-          "-",
-      },
-      { headerName: "ID", field: "id", type: "numericColumn", width: 65 },
-      {
-        headerName: "Short Name",
-        field: "userName",
-        width: 100,
-        valueGetter: (p) =>
-          p.data?.userName ||
-          (p.data?.firstName
-            ? p.data.firstName.slice(0, 4).toUpperCase()
-            : "-"),
-      },
-      {
-        headerName: "Group Name",
-        field: "accountGroupId",
-        valueGetter: (p) => groupMap[p.data?.accountGroupId] || "General",
-        minWidth: 120,
-        width: 130,
-      },
-      {
-        headerName: "Account Type",
-        field: "accountTypeId",
-        valueGetter: (p) => typeMap[p.data?.accountTypeId] || "-",
-        minWidth: 140,
-        width: 150,
-      },
-    ],
-    [groupMap, typeMap],
   );
 
   const lineColumns = useMemo<ColDef[]>(
@@ -639,38 +558,13 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
                 <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
                   Account <span className="text-rose-500">*</span>
                 </Label>
-                <div className="flex gap-1.5">
-                  <PopupTable
-                    trigger={
-                      <button
-                        ref={accountSearchBtnRef}
-                        type="button"
-                        title="Search Account (F2)"
-                        className="flex flex-1 h-8 items-center justify-between rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-                      >
-                        <div className="flex items-center gap-2 truncate">
-                          <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                          <span className="truncate font-medium">
-                            {formData.accountName || "Select account (F2)"}
-                          </span>
-                        </div>
-                        <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0 ml-1" />
-                      </button>
-                    }
-                    placement="bottom-start"
-                    apiEndpoint={API_ENDPOINTS.ACCOUNTS.BASE}
-                    columns={accountPopupColumns}
-                    onSelect={handleSelectVoucherAccount}
-                    searchPlaceholder="Search accounts..."
-                  />
-                  <button
-                    type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-primary-action/10 hover:text-primary-action hover:border-primary-action/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 shrink-0"
-                    title="Add new account"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                  </button>
-                </div>
+                <AccountHelp
+                  accountName={formData.accountName}
+                  placeholder="Select account (F2)"
+                  searchPlaceholder="Search accounts..."
+                  onSelect={handleSelectVoucherAccount}
+                  showAddButton
+                />
               </div>
 
               <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-800/50">

@@ -1,4 +1,5 @@
-import { useAccountMasterData, useAccounts } from "@/api/accounts";
+import { useAccounts } from "@/api/accounts";
+import { AccountHelp } from "@/components/common/AccountHelp";
 import {
   generateVoucherNo,
   useDaybookGroups,
@@ -18,7 +19,6 @@ import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
 import { PopupCellEditor } from "@/components/common/PopupCellEditor";
-import { PopupTable } from "@/components/common/PopupTable";
 import { SelectCellEditor } from "@/components/common/SelectCellEditor";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { WEB_ROUTES } from "@/config/webRoutes";
@@ -79,20 +79,23 @@ import {
   Building2,
   Calendar,
   CheckCircle2,
+  ChevronDown,
   Coins,
   CreditCard,
+  Download,
   FileText,
-  Package,
+  Paperclip,
   Percent,
   Plus,
   Printer,
   Receipt,
   Search,
+  Settings2,
   Sparkles,
   Tag,
-  Truck,
   UploadCloud,
   User,
+  UserPlus,
   Wallet,
 } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -141,7 +144,6 @@ export const Purchase: React.FC = () => {
   const { data: daybooksResp } = useDaybooks();
   const { data: daybookGroupsResp } = useDaybookGroups();
   const { data: accountsResp } = useAccounts();
-  const { data: accountMasterResp } = useAccountMasterData();
   const { data: itemsResp } = useItems();
   const { data: itemGroupsResp } = useItemGroups();
   const { data: existingPurchase, isLoading: isLoadingPurchase } = usePurchase(
@@ -160,75 +162,6 @@ export const Purchase: React.FC = () => {
   const items = itemsResp?.data || [];
   const itemGroups = itemGroupsResp?.data || [];
   const allPurchases = purchasesListResp?.data || [];
-
-  const groupMap = useMemo(() => {
-    const map: Record<number, string> = {};
-    accountMasterResp?.accountGroups?.forEach((g) => {
-      map[g.id] = g.name;
-    });
-    return map;
-  }, [accountMasterResp]);
-
-  const typeMap = useMemo(() => {
-    const map: Record<number, string> = {};
-    accountMasterResp?.accountTypes?.forEach((t) => {
-      map[t.id] = t.name;
-    });
-    return map;
-  }, [accountMasterResp]);
-
-  const accountDropdownColumns = useMemo<ColDef[]>(
-    () => [
-      {
-        headerName: "Supplier Name",
-        field: "accountName",
-        minWidth: 200,
-        flex: 1,
-        valueGetter: (p) =>
-          p.data?.accountName ||
-          `${p.data?.firstName || ""} ${p.data?.lastName || ""}`.trim() ||
-          "-",
-      },
-      {
-        headerName: "ID",
-        field: "id",
-        type: "numericColumn",
-        width: 65,
-      },
-      {
-        headerName: "Short Name",
-        field: "userName",
-        width: 100,
-        valueGetter: (p) =>
-          p.data?.userName ||
-          (p.data?.firstName
-            ? p.data.firstName.slice(0, 4).toUpperCase()
-            : "-"),
-      },
-      {
-        headerName: "Group Name",
-        field: "accountGroupId",
-        valueGetter: (p) => groupMap[p.data?.accountGroupId] || "General",
-        minWidth: 120,
-        width: 130,
-      },
-      {
-        headerName: "Mobile No.",
-        field: "phone",
-        valueGetter: (p) => p.data?.mobile || p.data?.phone || "-",
-        minWidth: 120,
-        width: 130,
-      },
-      {
-        headerName: "Account Type",
-        field: "accountTypeId",
-        valueGetter: (p) => typeMap[p.data?.accountTypeId] || "Supplier",
-        minWidth: 140,
-        width: 150,
-      },
-    ],
-    [groupMap, typeMap],
-  );
 
   const itemGroupPopupColumns = useMemo<ColDef[]>(
     () => [
@@ -291,15 +224,19 @@ export const Purchase: React.FC = () => {
   const updateMutation = useUpdatePurchase();
   const deleteMutation = useDeletePurchase();
 
-  const [supplierTab, setSupplierTab] = useState<
-    "general" | "shipping" | "kyc"
-  >("general");
-  const [settlementTab, setSettlementTab] = useState<"receipt" | "remarks">(
-    "receipt",
+  const [rightTab, setRightTab] = useState<"additional" | "shipping" | "notes">(
+    "additional",
   );
+  const [paymentTab, setPaymentTab] = useState<
+    "cash" | "bank" | "card" | "upi"
+  >("cash");
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [taxMode, setTaxMode] = useState<"GST" | "IGST">("GST");
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
+  const [placeOfSupply, setPlaceOfSupply] = useState("Gujarat (24)");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<Partial<PurchaseData>>({
     voucherNo: "",
@@ -394,7 +331,6 @@ export const Purchase: React.FC = () => {
     formData.giftVoucherAmount,
   ]);
 
-  // Keep grand totals in formData in sync
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
@@ -997,172 +933,120 @@ export const Purchase: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full flex flex-col bg-slate-50/60 dark:bg-zinc-950">
-      <div className="flex-1 space-y-4 p-5 md:p-6">
-        {/* ── SECTION 1: VOUCHER DETAILS & SUPPLIER PROFILE ── */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          {/* LEFT 4 COLS: Daybook & Voucher Details */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4">
-            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <Receipt className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                  Voucher Information
-                </h2>
-              </div>
+    <div className="min-h-full flex flex-col bg-[#f5f6fa] dark:bg-zinc-950">
+      <div className="bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Left: cart icon + title */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-action/10 border border-primary-action/25">
+              <Receipt className="h-5 w-5 text-primary-action" />
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {/* Daybook */}
-              <div className="col-span-2 space-y-1">
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                  Daybook <span className="text-rose-500">*</span>
-                </Label>
-                <Select
-                  value={formData.daybookId ? String(formData.daybookId) : ""}
-                  onValueChange={handleSelectDaybook}
-                >
-                  <SelectTrigger className="h-8 text-xs font-medium">
-                    <SelectValue placeholder="Select Daybook" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {daybooks.length > 0 ? (
-                      daybooks.map((db) => (
-                        <SelectItem key={db.id} value={String(db.id)}>
-                          {db.daybookName} ({db.voucherPrefix || "PUR"})
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="none" disabled>
-                        No purchase daybook found
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Bill / Voucher No. */}
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                  Bill No. <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  value={formData.voucherNo || ""}
-                  disabled
-                  className="h-8 text-xs font-medium"
-                  placeholder="e.g. PUR-215"
-                />
-              </div>
-
-              {/* Date */}
-              <div className="space-y-1">
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                  Date
-                </Label>
-                <DatePicker
-                  value={formData.voucherDate}
-                  onChange={(val) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      voucherDate: val,
-                    }))
-                  }
-                  className="h-8 text-xs"
-                />
-              </div>
-
-              {/* Purchaser */}
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-600 dark:text-zinc-400">
-                  Purchaser
-                </Label>
-                <Input
-                  value={formData.purchaserName || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      purchaserName: e.target.value,
-                    }))
-                  }
-                  className="h-8 text-xs"
-                  placeholder="e.g. Rajesh Kumar"
-                />
-              </div>
-
-              {/* Reference */}
-              <div className="space-y-1">
-                <Label className="text-xs text-slate-600 dark:text-zinc-400">
-                  Reference / Ref
-                </Label>
-                <Input
-                  value={formData.reference || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      reference: e.target.value,
-                    }))
-                  }
-                  className="h-8 text-xs"
-                  placeholder="e.g. PO-9812"
-                />
-              </div>
+            <div>
+              <h1 className="text-lg font-bold text-slate-900 dark:text-zinc-100 leading-tight">
+                Purchase Invoice
+              </h1>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                Create and manage your purchase transactions
+              </p>
             </div>
           </div>
 
-          {/* MIDDLE 5 COLS: Supplier Details */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-5">
-            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <Truck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                  Supplier / Party Details
-                </h2>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <PopupTable
-                  trigger={
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-6 px-2.5 text-[11px] border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 gap-1.5 shadow-2xs"
-                      title="Search Supplier in Dropdown Table"
-                    >
-                      <Search className="h-3 w-3 text-slate-500" />
-                      Find Supplier
-                    </Button>
-                  }
-                  placement="bottom-end"
-                  apiEndpoint={API_ENDPOINTS.ACCOUNTS.BASE}
-                  columns={accountDropdownColumns}
-                  onSelect={handleSelectSupplier}
-                  searchPlaceholder="Search suppliers..."
-                />
-              </div>
+          {/* Right: Invoice type selector + invoice number + settings */}
+          <div className="flex items-center gap-2">
+            {/* Daybook / Invoice type selector */}
+            <Select
+              value={formData.daybookId ? String(formData.daybookId) : ""}
+              onValueChange={handleSelectDaybook}
+            >
+              <SelectTrigger className="h-8 w-36 text-xs font-medium border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+                <SelectValue placeholder="Invoice" />
+              </SelectTrigger>
+              <SelectContent>
+                {daybooks.length > 0 ? (
+                  daybooks.map((db) => (
+                    <SelectItem key={db.id} value={String(db.id)}>
+                      {db.daybookName}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>
+                    No purchase daybook
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Invoice Number display */}
+            <div className="flex h-8 min-w-[130px] items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+              {formData.voucherNo || "PUR-2025-0001"}
             </div>
 
-            <div className="space-y-2.5">
-              {/* Supplier Name & Phone */}
-              <div className="grid grid-cols-12 gap-2">
-                <div className="col-span-12 sm:col-span-7 space-y-1">
-                  <Label className="text-xs text-slate-600 dark:text-zinc-400">
-                    Supplier Full Name <span className="text-rose-500">*</span>
-                  </Label>
-                  <Input
-                    value={formData.accountName || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        accountName: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. Mahesh Traders"
-                    className="h-8 text-xs"
-                  />
+            {/* Settings icon */}
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400"
+            >
+              <Settings2 className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 space-y-3 p-4 md:p-5">
+        {/* ── ROW 1: Supplier Details | Invoice Details | Additional Info Tabs ── */}
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+          {/* ── CARD: Supplier Details (4 cols) ── */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <User className="h-4 w-4 text-primary-action" />
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Supplier Details
+              </h2>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {/* Supplier search field */}
+              <div className="space-y-1">
+                <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                  Supplier <span className="text-rose-500">*</span>
+                </Label>
+                <AccountHelp
+                  accountName={formData.accountName || "Walk-in Supplier"}
+                  placeholder="Walk-in Supplier"
+                  searchPlaceholder="Search supplier..."
+                  onSelect={handleSelectSupplier}
+                  showAddButton
+                />
+              </div>
+
+              {/* Supplier info card */}
+              <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-850">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 dark:text-zinc-100 truncate">
+                      {formData.accountName || "Walk-in Supplier"}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
+                      {formData.supplierCity || "City"},{" "}
+                      {formData.supplierState || "State"}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                      GST:{" "}
+                      {formData.supplierGstNo
+                        ? formData.supplierGstNo
+                        : "Unregistered"}
+                    </p>
+                  </div>
                 </div>
-                <div className="col-span-12 sm:col-span-5 space-y-1">
-                  <Label className="text-xs text-slate-600 dark:text-zinc-400">
-                    Mobile No.
+              </div>
+
+              {/* Supplier Phone & Address */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Phone
                   </Label>
                   <Input
                     value={formData.supplierPhone || ""}
@@ -1172,52 +1056,12 @@ export const Purchase: React.FC = () => {
                         supplierPhone: e.target.value,
                       }))
                     }
-                    placeholder="e.g. 9876543210"
+                    placeholder="9876543210"
                     className="h-8 text-xs"
                   />
                 </div>
-              </div>
-
-              {/* Address Line 1 & Line 2 */}
-              <div className="grid grid-cols-12 gap-2">
-                <div className="col-span-12 sm:col-span-7 space-y-1">
-                  <Label className="text-xs text-slate-600 dark:text-zinc-400">
-                    Address Line 1
-                  </Label>
-                  <Input
-                    value={formData.supplierAddress1 || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        supplierAddress1: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. Shop 12, Silver Market"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div className="col-span-12 sm:col-span-5 space-y-1">
-                  <Label className="text-xs text-slate-600 dark:text-zinc-400">
-                    Alternate No.
-                  </Label>
-                  <Input
-                    value={formData.supplierAltPhone || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        supplierAltPhone: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. 9123456780"
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* City, Pincode, State */}
-              <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600 dark:text-zinc-400">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
                     City
                   </Label>
                   <Input
@@ -1232,243 +1076,283 @@ export const Purchase: React.FC = () => {
                     className="h-8 text-xs"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                  Address
+                </Label>
+                <Input
+                  value={formData.supplierAddress1 || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      supplierAddress1: e.target.value,
+                    }))
+                  }
+                  placeholder="Shop 12, Silver Market"
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── CARD: Invoice Details (4 cols) ── */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <FileText className="h-4 w-4 text-primary-action" />
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Invoice Details
+              </h2>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {/* Row 1: Invoice Date, Due Date, Invoice No */}
+              <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600 dark:text-zinc-400">
-                    Pincode
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Invoice Date <span className="text-rose-500">*</span>
                   </Label>
-                  <Input
-                    value={formData.supplierPincode || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        supplierPincode: e.target.value,
-                      }))
+                  <DatePicker
+                    value={formData.voucherDate}
+                    onChange={(val) =>
+                      setFormData((prev) => ({ ...prev, voucherDate: val }))
                     }
-                    placeholder="395003"
                     className="h-8 text-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-600 dark:text-zinc-400">
-                    State
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Due Date
+                  </Label>
+                  <DatePicker
+                    value={formData.dueDate}
+                    onChange={(val) =>
+                      setFormData((prev) => ({ ...prev, dueDate: val }))
+                    }
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Invoice No.
                   </Label>
                   <Input
-                    value={formData.supplierState || ""}
+                    value={formData.voucherNo || ""}
+                    disabled
+                    className="h-8 text-xs font-medium bg-slate-50 dark:bg-zinc-800/50"
+                    placeholder="PUR-2025-0001"
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Reference No, Purchaser */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Reference No.
+                  </Label>
+                  <Input
+                    value={formData.reference || ""}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        supplierState: e.target.value,
+                        reference: e.target.value,
                       }))
                     }
-                    placeholder="Gujarat"
                     className="h-8 text-xs"
+                    placeholder="e.g. PO/Ref No."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+                    Purchaser
+                  </Label>
+                  <Input
+                    value={formData.purchaserName || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        purchaserName: e.target.value,
+                      }))
+                    }
+                    className="h-8 text-xs"
+                    placeholder="Select Purchaser"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* RIGHT 3 COLS: Supplier Tabs (General Info / Shipping / KYC Upload) */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
-            <div className="mb-2.5 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex gap-1">
+          {/* ── CARD: Additional Info / Shipping / Notes Tabs (4 cols) ── */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            {/* Tab Header */}
+            <div className="flex items-center border-b border-slate-100 dark:border-zinc-800 px-4">
+              {(["additional", "shipping", "notes"] as const).map((tab) => (
                 <button
+                  key={tab}
                   type="button"
-                  onClick={() => setSupplierTab("general")}
-                  className={`rounded-md px-2 py-1 text-xs transition-all ${
-                    supplierTab === "general"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                  onClick={() => setRightTab(tab)}
+                  className={`relative py-2.5 px-0 mr-5 text-xs font-medium transition-colors ${
+                    rightTab === tab
+                      ? "text-primary-action"
+                      : "text-slate-500 hover:text-slate-700 dark:text-zinc-400"
                   }`}
                 >
-                  General Info
+                  {tab === "additional"
+                    ? "Additional Info"
+                    : tab === "shipping"
+                      ? "Shipping"
+                      : "Notes"}
+                  {rightTab === tab && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary-action" />
+                  )}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setSupplierTab("shipping")}
-                  className={`rounded-md px-2 py-1 text-xs transition-all ${
-                    supplierTab === "shipping"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  Shipping
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSupplierTab("kyc")}
-                  className={`rounded-md px-2 py-1 text-xs transition-all ${
-                    supplierTab === "kyc"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  KYC Docs
-                </button>
-              </div>
+              ))}
             </div>
 
-            {/* General Info Tab */}
-            {supplierTab === "general" && (
-              <div className="space-y-2">
-                <div className="space-y-1">
-                  <Label className="text-[11px] text-slate-500">
-                    GSTIN / Tax No.
-                  </Label>
-                  <Input
-                    value={formData.supplierGstNo || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        supplierGstNo: e.target.value,
-                      }))
-                    }
-                    placeholder="24AAACH7409R1ZZ"
-                    className="h-7 text-xs"
-                  />
+            <div className="p-4">
+              {/* Additional Info tab */}
+              {rightTab === "additional" && (
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                      Place of Supply
+                    </Label>
+                    <Select
+                      value={placeOfSupply}
+                      onValueChange={setPlaceOfSupply}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Gujarat (24)">
+                          Gujarat (24)
+                        </SelectItem>
+                        <SelectItem value="Maharashtra (27)">
+                          Maharashtra (27)
+                        </SelectItem>
+                        <SelectItem value="Delhi (07)">Delhi (07)</SelectItem>
+                        <SelectItem value="Rajasthan (08)">
+                          Rajasthan (08)
+                        </SelectItem>
+                        <SelectItem value="Karnataka (29)">
+                          Karnataka (29)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-[11px] text-slate-500">
-                    PAN Card No.
-                  </Label>
-                  <Input
-                    value={formData.supplierPanNo || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        supplierPanNo: e.target.value,
-                      }))
-                    }
-                    placeholder="ABCDE1234F"
-                    className="h-7 text-xs uppercase"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[11px] text-slate-500">
-                    Aadhar Card No.
-                  </Label>
-                  <Input
-                    value={formData.supplierAadharNo || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        supplierAadharNo: e.target.value,
-                      }))
-                    }
-                    placeholder="4532 8901 2341"
-                    className="h-7 text-xs"
-                  />
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* Shipping Info Tab */}
-            {supplierTab === "shipping" && (
-              <div className="space-y-2">
-                <div className="space-y-1">
-                  <Label className="text-[11px] text-slate-500">
-                    Supplier Email
-                  </Label>
-                  <Input
-                    type="email"
-                    value={formData.supplierEmail || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        supplierEmail: e.target.value,
-                      }))
-                    }
-                    placeholder="supplier@example.com"
-                    className="h-7 text-xs"
-                  />
+              {/* Shipping tab */}
+              {rightTab === "shipping" && (
+                <div className="space-y-2.5">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500">
+                      Supplier Email
+                    </Label>
+                    <Input
+                      type="email"
+                      value={formData.supplierEmail || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          supplierEmail: e.target.value,
+                        }))
+                      }
+                      placeholder="supplier@example.com"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500">
+                      Delivery Landmark
+                    </Label>
+                    <Input
+                      value={formData.supplierAddress2 || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          supplierAddress2: e.target.value,
+                        }))
+                      }
+                      placeholder="Near Gold Market"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="deliveryPendingCheck"
+                      checked={formData.deliveryPending || false}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          deliveryPending: e.target.checked,
+                        }))
+                      }
+                      className="h-3.5 w-3.5 rounded accent-primary-action"
+                    />
+                    <Label
+                      htmlFor="deliveryPendingCheck"
+                      className="text-xs cursor-pointer"
+                    >
+                      Pending Delivery
+                    </Label>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-[11px] text-slate-500">
-                    Landmark / Delivery
-                  </Label>
-                  <Input
-                    value={formData.supplierAddress2 || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        supplierAddress2: e.target.value,
-                      }))
-                    }
-                    placeholder="Near Gold Market"
-                    className="h-7 text-xs"
-                  />
-                </div>
-                <div className="flex items-center gap-2 pt-1">
-                  <Checkbox
-                    id="delivery-pending-box"
-                    checked={formData.deliveryPending || false}
-                    onCheckedChange={(c) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        deliveryPending: Boolean(c),
-                      }))
-                    }
-                  />
-                  <Label
-                    htmlFor="delivery-pending-box"
-                    className="text-xs cursor-pointer"
-                  >
-                    Pending Delivery
-                  </Label>
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* KYC & Media Upload Tab */}
-            {supplierTab === "kyc" && (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50/50 p-4 text-center dark:border-zinc-700 dark:bg-zinc-800/50">
-                <UploadCloud className="h-7 w-7 text-slate-400" />
-                <p className="mt-1 text-xs text-slate-700 dark:text-zinc-200">
-                  KYC & Document Media
-                </p>
-                <p className="text-[10px] text-slate-500">
-                  Aadhar, PAN, GST Cert (PDF / JPG)
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 h-6 text-[10px]"
-                >
-                  Attach File
-                </Button>
-              </div>
-            )}
+              {/* Notes tab */}
+              {rightTab === "notes" && (
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium text-slate-500">
+                    Voucher Notes
+                  </Label>
+                  <textarea
+                    rows={4}
+                    value={formData.remarks || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        remarks: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter any notes or terms..."
+                    className="w-full rounded-md border border-slate-200 bg-transparent p-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary-action dark:border-zinc-800 dark:text-zinc-100 resize-none"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* ── SECTION 2: TRANSACTION LINE ITEMS GRID ── */}
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="flex flex-wrap items-center justify-between border-b border-slate-200 bg-slate-50/70 px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-900/80">
+        {/* ── ITEM DETAILS GRID ── */}
+        <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2.5 gap-2">
             <div className="flex items-center gap-2">
-              <Package className="h-4 w-4 text-amber-600" />
+              <Coins className="h-4 w-4 text-primary-action" />
               <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                Purchase Item Line Details
+                Item Details
               </h3>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Button
-                variant="outline"
+                type="button"
                 size="sm"
                 onClick={handleAddLineItem}
-                className="h-7 gap-1.5 border-amber-300 bg-amber-50 text-xs text-amber-800 hover:bg-amber-100 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300"
+                className="h-7 gap-1.5 bg-primary-action hover:bg-primary-action/90 text-primary-action-foreground text-xs font-medium px-3"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>Add Item Row</span>
+                Add Item
               </Button>
             </div>
           </div>
 
-          <div
-            className="w-full"
-            style={{
-              height: `${Math.min(520, Math.max(260, ((formData.itemLines?.length || 1) + 2) * 38 + 48))}px`,
-            }}
-          >
+          {/* AG Grid */}
+          <div className="h-80">
             <DataGrid
               ref={gridRef}
               rowData={formData.itemLines || []}
@@ -1487,418 +1371,303 @@ export const Purchase: React.FC = () => {
               }}
             />
           </div>
+
+          <div className="border-t border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2">
+            <button
+              type="button"
+              onClick={handleAddLineItem}
+              className="flex items-center gap-1.5 text-xs font-medium text-primary-action hover:text-primary-action/80"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add New Row
+            </button>
+          </div>
         </div>
 
-        {/* ── SECTION 3: FINANCIAL SUMMARY & MULTI-TENDER SETTLEMENT ── */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          {/* CARD 1 (3 COLS): SUMMARY & TAXES */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
-            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                  Tax & Grand Summary
-                </h3>
-              </div>
-              <div className="flex rounded bg-slate-100 p-0.5 text-[10px] font-semibold dark:bg-zinc-800">
-                <button
-                  type="button"
-                  onClick={() => setTaxMode("GST")}
-                  className={`rounded px-1.5 py-0.5 ${taxMode === "GST" ? "bg-white shadow-xs text-slate-900 dark:bg-zinc-700 dark:text-zinc-100" : "text-slate-500"}`}
-                >
-                  GST
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTaxMode("IGST")}
-                  className={`rounded px-1.5 py-0.5 ${taxMode === "IGST" ? "bg-white shadow-xs text-slate-900 dark:bg-zinc-700 dark:text-zinc-100" : "text-slate-500"}`}
-                >
-                  IGST
-                </button>
-              </div>
+        {/* ── ROW 3: Terms & Conditions | Summary | Payment Details + Attachments ── */}
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+          {/* ── CARD: Terms & Conditions (4 cols) ── */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <FileText className="h-4 w-4 text-primary-action" />
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Remarks
+              </h3>
             </div>
-
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between py-1 border-b border-slate-50 dark:border-zinc-800/60">
-                <span className="text-slate-600 dark:text-zinc-400">
-                  Gross Subtotal:
-                </span>
-                <span className="text-slate-900 dark:text-zinc-100">
-                  ₹
-                  {calculatedTotals.subtotal.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-1 border-b border-slate-50 dark:border-zinc-800/60">
-                <span className="text-slate-600 dark:text-zinc-400">
-                  Special Coupon / Disc:
-                </span>
-                <div className="w-24">
-                  <AmountInput
-                    value={couponDiscount}
-                    onChange={(val) => setCouponDiscount(val)}
-                    className="h-6 text-xs text-right"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between py-1 border-b border-slate-50 dark:border-zinc-800/60">
-                <div className="flex items-center gap-1">
-                  <span className="text-slate-600 dark:text-zinc-400">
-                    {taxMode === "GST" ? "CGST + SGST" : "IGST"}
-                  </span>
-                  <span className="rounded bg-slate-100 px-1 text-[10px] text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
-                    {formData.taxRate || 3}%
-                  </span>
-                </div>
-                <span className="font-medium text-slate-900 dark:text-zinc-100">
-                  ₹
-                  {calculatedTotals.taxAmount.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between py-1 border-b border-slate-50 dark:border-zinc-800/60">
-                <span className="text-slate-600 dark:text-zinc-400">
-                  Round Off:
-                </span>
-                <span className="text-slate-500">
-                  {calculatedTotals.roundOff >= 0
-                    ? `+₹${calculatedTotals.roundOff}`
-                    : `-₹${Math.abs(calculatedTotals.roundOff)}`}
-                </span>
-              </div>
-
-              {/* Net Grand Total Card */}
-              <div className="mt-3 rounded-lg border border-amber-300 bg-gradient-to-br from-amber-50 to-amber-100/50 p-3 shadow-xs dark:border-amber-800 dark:from-amber-950/40 dark:to-amber-900/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                    Net Payable
-                  </span>
-                  <Badge className="bg-amber-600 text-white hover:bg-amber-600">
-                    Dr
-                  </Badge>
-                </div>
-                <div className="mt-1 text-2xl font-black tracking-tight text-amber-900 dark:text-amber-100">
-                  ₹
-                  {calculatedTotals.grandTotal.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
-                </div>
-              </div>
+            <div className="p-4">
+              <textarea
+                rows={6}
+                value={formData.remarks || ""}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, remarks: e.target.value }))
+                }
+                placeholder="Enter remarks..."
+                className="w-full rounded-md border border-slate-200 bg-transparent p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary-action dark:border-zinc-800 dark:text-zinc-100 resize-none"
+              />
             </div>
           </div>
 
-          {/* CARD 2 (6 COLS): PAYMENT SETTLEMENT MODES */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-6">
-            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => setSettlementTab("receipt")}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
-                    settlementTab === "receipt"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  Payment / Tender Modes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSettlementTab("remarks")}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
-                    settlementTab === "remarks"
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                  }`}
-                >
-                  Notes & Remarks
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-medium text-slate-500">
-                  Mode:
-                </span>
-                <Select
-                  value={formData.billMode || "Debit Memo"}
-                  onValueChange={(val) =>
-                    setFormData((prev) => ({ ...prev, billMode: val }))
-                  }
-                >
-                  <SelectTrigger className="h-6 w-36 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BILL_MODES.map((bm) => (
-                      <SelectItem key={bm} value={bm}>
-                        {bm}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* ── CARD: Summary (4 cols) ── */}
+          <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+              <Receipt className="h-4 w-4 text-primary-action" />
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                Summary
+              </h3>
             </div>
-
-            {settlementTab === "receipt" ? (
-              <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2.5">
-                  {/* Cash */}
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <Wallet className="h-3.5 w-3.5 text-emerald-600" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        Cash
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.cashAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, cashAmount: val }))
-                        }
-                        className="h-7 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Bank / UPI */}
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <Building2 className="h-3.5 w-3.5 text-blue-600" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        Bank / UPI
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.bankAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, bankAmount: val }))
-                        }
-                        className="h-7 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Credit / Debit Card */}
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <CreditCard className="h-3.5 w-3.5 text-purple-600" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        Card
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.cardAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, cardAmount: val }))
-                        }
-                        className="h-7 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Advance */}
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        Advance
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.advanceAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            advanceAmount: val,
-                          }))
-                        }
-                        className="h-7 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <Coins className="h-3.5 w-3.5 text-amber-500" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        URD
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.urdAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, urdAmount: val }))
-                        }
-                        className="h-7 text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Kasar */}
-                  <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 px-2.5 py-1.5 dark:border-zinc-800 dark:bg-zinc-800/40">
-                    <div className="flex items-center gap-1.5">
-                      <Percent className="h-3.5 w-3.5 text-rose-500" />
-                      <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                        Kasar (Disc.)
-                      </span>
-                    </div>
-                    <div className="w-28">
-                      <AmountInput
-                        value={formData.kasarAmount ?? 0}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, kasarAmount: val }))
-                        }
-                        className="h-7 text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-2 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-2.5 dark:border-zinc-800 dark:bg-zinc-800/60">
-                  <div>
-                    <span className="text-[11px] text-slate-500">
-                      Total Payment Made:{" "}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100">
-                      ₹
-                      {calculatedTotals.totalPaid.toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-slate-500">Balance:</span>
-                    {calculatedTotals.balanceDue <= 0 ? (
-                      <Badge className="bg-emerald-600 text-white">
-                        <CheckCircle2 className="mr-1 h-3 w-3" /> Fully Settled
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300"
-                      >
-                        ₹
-                        {calculatedTotals.balanceDue.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}{" "}
-                        Due
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                  Purchase Remarks & Notes
-                </Label>
-                <textarea
-                  rows={4}
-                  value={formData.remarks || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      remarks: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter purchase notes, terms, delivery instructions, quality requirements..."
-                  className="w-full rounded-md border border-slate-200 bg-transparent p-2 text-xs text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-500 dark:border-zinc-800 dark:text-zinc-100"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* CARD 3 (3 COLS): TERMS & OTHER DETAILS */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
-            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                  Terms & Delivery
-                </h3>
-              </div>
-              <span className="text-[10px] text-slate-400">Details</span>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              <div className="space-y-1">
-                <Label className="text-[11px] font-medium text-slate-500">
-                  Rate Fix Type
-                </Label>
-                <Select
-                  value={formData.rateFixType || "Fix"}
-                  onValueChange={(val) =>
-                    setFormData((prev) => ({ ...prev, rateFixType: val }))
-                  }
-                >
-                  <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Fix">Fixed Rate</SelectItem>
-                    <SelectItem value="Floating">
-                      Floating / Market Rate
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-[11px] font-medium text-slate-500">
-                  Payment Due Date
-                </Label>
-                <DatePicker
-                  value={formData.dueDate}
-                  onChange={(val) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      dueDate: val,
-                    }))
-                  }
-                  className="h-7 text-xs"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-[11px] font-medium text-slate-500">
-                  TDS Amount (₹)
-                </Label>
-                <AmountInput
-                  value={formData.tdsAmount ?? 0}
-                  onChange={(val) =>
-                    setFormData((prev) => ({ ...prev, tdsAmount: val }))
-                  }
-                  className="h-7 text-xs"
-                />
-              </div>
-
-              <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-2 text-[11px] text-slate-500 dark:border-zinc-800 dark:bg-zinc-800/40">
-                <div className="flex justify-between">
-                  <span>Supplier Ledger OS:</span>
-                  <span className="font-medium text-slate-900 dark:text-zinc-100">
-                    ₹0.00
+            <div className="p-4">
+              <div className="space-y-0">
+                {/* Total Items */}
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Total Items
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                    {formData.itemLines?.length || 0}
                   </span>
                 </div>
-                <div className="mt-1 flex justify-between">
-                  <span>Bill OS:</span>
-                  <span className="font-medium text-amber-600">
+                {/* Total Quantity */}
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Total Quantity
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                    {calculatedTotals.pcs}
+                  </span>
+                </div>
+                {/* Total Amount */}
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Total Amount
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
                     ₹
-                    {calculatedTotals.balanceDue.toLocaleString("en-IN", {
+                    {(
+                      calculatedTotals.subtotal +
+                      calculatedTotals.totalLineDiscount
+                    ).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                {/* Total Discount */}
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Total Discount
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                    ₹
+                    {calculatedTotals.totalLineDiscount.toLocaleString(
+                      "en-IN",
+                      { minimumFractionDigits: 2 },
+                    )}
+                  </span>
+                </div>
+                {/* Taxable Amount */}
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Taxable Amount
+                  </span>
+                  <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                    ₹
+                    {calculatedTotals.subtotal.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
                     })}
                   </span>
                 </div>
+                {/* Tax Rows: CGST + SGST or IGST */}
+                {taxMode === "GST" ? (
+                  <>
+                    <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                      <span className="text-xs text-slate-600 dark:text-zinc-400">
+                        CGST ({((formData.taxRate || 3) / 2).toFixed(1)}%)
+                      </span>
+                      <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                        ₹
+                        {(calculatedTotals.taxAmount / 2).toLocaleString(
+                          "en-IN",
+                          { minimumFractionDigits: 2 },
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                      <span className="text-xs text-slate-600 dark:text-zinc-400">
+                        SGST ({((formData.taxRate || 3) / 2).toFixed(1)}%)
+                      </span>
+                      <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                        ₹
+                        {(calculatedTotals.taxAmount / 2).toLocaleString(
+                          "en-IN",
+                          { minimumFractionDigits: 2 },
+                        )}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                    <span className="text-xs text-slate-600 dark:text-zinc-400">
+                      IGST ({formData.taxRate || 3}%)
+                    </span>
+                    <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
+                      ₹
+                      {calculatedTotals.taxAmount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Grand Total Highlight Row */}
+              <div className="mt-3 flex items-center justify-between rounded-lg border border-primary-action/25 bg-primary-action/10 px-3 py-2.5">
+                <span className="text-sm font-bold text-slate-900 dark:text-zinc-100">
+                  Grand Total
+                </span>
+                <span className="text-base font-extrabold text-primary-action tracking-tight">
+                  ₹
+                  {calculatedTotals.grandTotal.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── CARD: Payment Details + Attachments (4 cols) ── */}
+          <div className="lg:col-span-4 space-y-3">
+            {/* Payment Details */}
+            <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+                <CreditCard className="h-4 w-4 text-primary-action" />
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                  Payment Details
+                </h3>
+              </div>
+              <div className="p-4 space-y-3">
+                {/* Payment Type Pills */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                    Payment Type
+                  </span>
+                  <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-zinc-800 dark:bg-zinc-850">
+                    {(["cash", "bank", "card", "upi"] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setPaymentTab(tab)}
+                        className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                          paymentTab === tab
+                            ? "bg-primary-action text-primary-action-foreground shadow-sm"
+                            : "text-slate-600 hover:bg-slate-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                        }`}
+                      >
+                        {tab === "cash"
+                          ? "Cash"
+                          : tab === "bank"
+                            ? "Bank"
+                            : tab === "card"
+                              ? "Card"
+                              : "UPI"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Received Amount + Balance */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                      Received Amount
+                    </Label>
+                    <AmountInput
+                      value={
+                        paymentTab === "cash"
+                          ? (formData.cashAmount ?? 0)
+                          : paymentTab === "card"
+                            ? (formData.cardAmount ?? 0)
+                            : (formData.bankAmount ?? 0)
+                      }
+                      onChange={(val) => {
+                        if (paymentTab === "cash")
+                          setFormData((prev) => ({ ...prev, cashAmount: val }));
+                        else if (paymentTab === "card")
+                          setFormData((prev) => ({ ...prev, cardAmount: val }));
+                        else
+                          setFormData((prev) => ({ ...prev, bankAmount: val }));
+                      }}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                      Balance
+                    </Label>
+                    <div className="flex h-8 items-center px-2 rounded-md border border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-850">
+                      <span
+                        className={`text-sm font-bold ${
+                          calculatedTotals.balanceDue <= 0
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-amber-600 dark:text-amber-400"
+                        }`}
+                      >
+                        ₹{" "}
+                        {calculatedTotals.balanceDue.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Attachments */}
+            <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
+                <Paperclip className="h-4 w-4 text-primary-action" />
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                  Attachments
+                </h3>
+              </div>
+              <div className="p-4">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setUploadedFiles((prev) => [
+                        ...prev,
+                        ...Array.from(e.target.files!).map((f) => f.name),
+                      ]);
+                    }
+                  }}
+                />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 py-4 text-center hover:border-primary-action/40 hover:bg-primary-action/10 transition-colors dark:border-zinc-700 dark:hover:border-primary-action"
+                >
+                  <UploadCloud className="h-6 w-6 text-slate-400 dark:text-zinc-500 mb-1" />
+                  <p className="text-xs font-medium text-slate-700 dark:text-zinc-300">
+                    Drag & drop files here or{" "}
+                    <span className="text-primary-action">click to upload</span>
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    PDF, Image (Max 5MB)
+                  </p>
+                </div>
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {uploadedFiles.map((f, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-zinc-400"
+                      >
+                        <Paperclip className="h-3 w-3" />
+                        <span className="truncate">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1909,34 +1678,37 @@ export const Purchase: React.FC = () => {
         showVoucherNavigation={true}
         onNavigatePrev={() => handleNavigateRecord("prev")}
         onNavigateNext={() => handleNavigateRecord("next")}
+        onTagPrint={() => setIsTagModalOpen(true)}
+        tagPrintText="Tag Print"
         onPrint={() => setIsPrintModalOpen(true)}
-        printText="Print Purchase Invoice"
+        printText="Print Invoice"
         onDelete={isEditing ? handleDelete : undefined}
         deleteText="Delete"
         onClear={handleClear}
         clearText="Clear"
         onBack={() => navigate(WEB_ROUTES.TRANSACTION.PURCHASE_LIST)}
-        backText="Back"
+        backText="Cancel"
         onSave={handleSave}
-        saveText={isEditing ? "Update" : "Save"}
+        saveText={isEditing ? "Update" : "Save & Print"}
         isSaving={isSaving}
         isSaveDisabled={isSaving}
       />
 
-      {/* ── PRINT PURCHASE INVOICE PREVIEW MODAL ── */}
+      {/* ── PRINT TAX INVOICE PREVIEW MODAL ── */}
       <Dialog open={isPrintModalOpen} onOpenChange={setIsPrintModalOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between text-base">
-              <span>Purchase Invoice Preview</span>
+              <span>Tax Invoice Preview</span>
               <Badge variant="outline" className="text-xs">
                 {formData.voucherNo}
               </Badge>
             </DialogTitle>
           </DialogHeader>
 
+          {/* Printable Invoice Container */}
           <div
-            id="printable-purchase-invoice"
+            id="printable-tax-invoice"
             className="border border-slate-200 p-6 rounded-lg bg-white text-slate-900 space-y-4"
           >
             {/* Company Header */}
@@ -1954,9 +1726,9 @@ export const Purchase: React.FC = () => {
               </div>
               <div className="text-right">
                 <Badge className="bg-amber-600 text-white font-bold">
-                  PURCHASE INVOICE
+                  PURCHASE TAX INVOICE
                 </Badge>
-                <p className="mt-1 text-xs font-bold">
+                <p className="mt-1 text-xs  font-bold">
                   Invoice #{formData.voucherNo}
                 </p>
                 <p className="text-xs text-slate-500">
@@ -1985,12 +1757,12 @@ export const Purchase: React.FC = () => {
                   </p>
                 )}
                 {formData.supplierGstNo && (
-                  <p className="text-slate-600">
+                  <p className="text-slate-600 ">
                     GSTIN: {formData.supplierGstNo}
                   </p>
                 )}
                 {formData.supplierPanNo && (
-                  <p className="text-slate-600">
+                  <p className="text-slate-600 ">
                     PAN: {formData.supplierPanNo}
                   </p>
                 )}
@@ -2006,7 +1778,7 @@ export const Purchase: React.FC = () => {
                 <p className="text-slate-700">
                   Purchaser:{" "}
                   <span className="font-semibold">
-                    {formData.purchaserName || "N/A"}
+                    {formData.purchaserName}
                   </span>
                 </p>
                 <p className="text-slate-700">
@@ -2038,7 +1810,7 @@ export const Purchase: React.FC = () => {
               <tbody className="divide-y divide-slate-200">
                 {(formData.itemLines || []).map((line, i) => (
                   <tr key={i}>
-                    <td className="p-1.5 text-center">{i + 1}</td>
+                    <td className="p-1.5 text-center ">{i + 1}</td>
                     <td className="p-1.5 font-medium">
                       {line.itemName || "Jewellery Item"}
                       {line.tagNo && (
@@ -2048,16 +1820,16 @@ export const Purchase: React.FC = () => {
                       )}
                     </td>
                     <td className="p-1.5">{line.purity || "22K"}</td>
-                    <td className="p-1.5 text-right">
+                    <td className="p-1.5 text-right ">
                       {Number(line.netWt || 0).toFixed(3)}g
                     </td>
-                    <td className="p-1.5 text-right">
+                    <td className="p-1.5 text-right ">
                       ₹{line.rate?.toLocaleString("en-IN")}
                     </td>
-                    <td className="p-1.5 text-right">
+                    <td className="p-1.5 text-right ">
                       ₹{line.labourAmount?.toLocaleString("en-IN")}
                     </td>
-                    <td className="p-1.5 text-right font-semibold">
+                    <td className="p-1.5 text-right  font-semibold">
                       ₹{line.amount?.toLocaleString("en-IN")}
                     </td>
                   </tr>
@@ -2069,12 +1841,15 @@ export const Purchase: React.FC = () => {
             <div className="flex justify-between items-start text-xs pt-2">
               <div className="max-w-xs text-[11px] text-slate-500 space-y-1">
                 <p className="font-semibold text-slate-700">Remarks / Terms:</p>
-                <p>{formData.remarks || "Standard purchase terms apply."}</p>
+                <p>
+                  {formData.remarks ||
+                    "All jewellery items are BIS Hallmarked. 100% Certified."}
+                </p>
               </div>
               <div className="w-64 space-y-1.5 text-right">
                 <div className="flex justify-between">
                   <span className="text-slate-600">Subtotal:</span>
-                  <span className="font-medium">
+                  <span className=" font-medium">
                     ₹
                     {calculatedTotals.subtotal.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
@@ -2084,7 +1859,7 @@ export const Purchase: React.FC = () => {
                 {calculatedTotals.totalLineDiscount > 0 && (
                   <div className="flex justify-between text-rose-600">
                     <span>Discount:</span>
-                    <span>
+                    <span className="">
                       -₹
                       {calculatedTotals.totalLineDiscount.toLocaleString(
                         "en-IN",
@@ -2095,7 +1870,7 @@ export const Purchase: React.FC = () => {
                 )}
                 <div className="flex justify-between">
                   <span className="text-slate-600">GST (3%):</span>
-                  <span>
+                  <span className="">
                     ₹
                     {calculatedTotals.taxAmount.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
@@ -2104,7 +1879,7 @@ export const Purchase: React.FC = () => {
                 </div>
                 <div className="flex justify-between border-t border-slate-300 pt-1 font-bold text-sm text-slate-900">
                   <span>Grand Total:</span>
-                  <span className="text-amber-800">
+                  <span className=" text-emerald-800">
                     ₹
                     {calculatedTotals.grandTotal.toLocaleString("en-IN", {
                       minimumFractionDigits: 2,
@@ -2134,8 +1909,65 @@ export const Purchase: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── TAG PRINT PREVIEW MODAL ── */}
+      <Dialog open={isTagModalOpen} onOpenChange={setIsTagModalOpen}>
+        <DialogContent className="max-w-md p-5">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-sm">
+              <Tag className="h-4 w-4 text-amber-600" />
+              <span>Print Jewellery Tags</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <p className="text-xs text-slate-500">
+              Printable jewelry barcode tags for line items:
+            </p>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {(formData.itemLines || []).map((line, i) => (
+                <div
+                  key={i}
+                  className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 text-xs dark:border-amber-900/40 dark:bg-amber-950/20"
+                >
+                  <div className="flex justify-between font-bold text-slate-900 dark:text-zinc-100">
+                    <span>{line.tagNo || `TAG-${i + 1}`}</span>
+                    <span>{line.purity || "22K"}</span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 dark:text-zinc-300 mt-1">
+                    {line.itemName || "Item"}
+                  </div>
+                  <div className="mt-1 flex justify-between  text-[11px] text-slate-700 dark:text-zinc-300">
+                    <span>GW: {Number(line.grossWt || 0).toFixed(3)}</span>
+                    <span>NW: {Number(line.netWt || 0).toFixed(3)}</span>
+                    <span className="font-semibold text-amber-800 dark:text-amber-300">
+                      ₹{line.amount?.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsTagModalOpen(false)}
+            >
+              Close
+            </Button>
+            <Button
+              size="sm"
+              className="bg-amber-600 hover:bg-amber-700 text-white text-xs"
+              onClick={() => window.print()}
+            >
+              <Printer className="h-3.5 w-3.5 mr-1" />
+              <span>Print Tags</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
-
-export default Purchase;

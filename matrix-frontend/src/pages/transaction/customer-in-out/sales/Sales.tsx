@@ -1,4 +1,4 @@
-﻿import { useAccountMasterData, useAccounts } from "@/api/accounts";
+import { useAccounts } from "@/api/accounts";
 import {
   generateVoucherNo,
   useDaybookGroups,
@@ -14,11 +14,11 @@ import {
   type Sale,
   type SaleLineItem,
 } from "@/api/sales";
+import { AccountHelp } from "@/components/common/AccountHelp";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
 import { PopupCellEditor } from "@/components/common/PopupCellEditor";
-import { PopupTable } from "@/components/common/PopupTable";
 import { SelectCellEditor } from "@/components/common/SelectCellEditor";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { WEB_ROUTES } from "@/config/webRoutes";
@@ -33,11 +33,7 @@ import {
   calculateTransactionTotals,
   getItemGroupUpdates,
 } from "@/utils/transactionCalculations";
-import type {
-  CellValueChangedEvent,
-  ColDef,
-  ICellRendererParams,
-} from "ag-grid-community";
+import type { CellValueChangedEvent, ColDef } from "ag-grid-community";
 import type { AgGridReact } from "ag-grid-react";
 import React, {
   useCallback,
@@ -51,7 +47,6 @@ import { useNavigate, useParams } from "react-router-dom";
 // UI Components
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
@@ -75,41 +70,22 @@ import {
 import { GridDeleteCell } from "@/components/common/GridDeleteCell";
 import type { RootState } from "@/store";
 import {
-  Barcode,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  ChevronDown,
   Coins,
   CreditCard,
-  Download,
   FileText,
   Paperclip,
-  Percent,
   Plus,
   Printer,
   Receipt,
-  Search,
   Settings2,
-  Sparkles,
   Tag,
   UploadCloud,
   User,
-  UserPlus,
-  Wallet,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 
-const BILL_MODES = [
-  "Debit Memo",
-  "Cash",
-  "Bank Transfer / UPI",
-  "Credit Card",
-  "Split Payment",
-];
-
 const DEFAULT_LINE_ITEM: SaleLineItem = {
-  id: "temp-1",
+  id: "",
   itemId: 0,
   itemName: "",
   itemCode: "",
@@ -144,12 +120,9 @@ export const Sales: React.FC = () => {
   const { data: daybooksResp } = useDaybooks();
   const { data: daybookGroupsResp } = useDaybookGroups();
   const { data: accountsResp } = useAccounts();
-  const { data: accountMasterResp } = useAccountMasterData();
   const { data: itemsResp } = useItems();
   const { data: itemGroupsResp } = useItemGroups();
-  const { data: existingSale, isLoading: isLoadingSale } = useSale(
-    isEditing ? saleId : undefined,
-  );
+  const { data: existingSale } = useSale(isEditing ? saleId : undefined);
   const { rateTypes, commonLists } = useSelector(
     (state: RootState) => state.inventory,
   );
@@ -163,75 +136,6 @@ export const Sales: React.FC = () => {
   const items = itemsResp?.data || [];
   const itemGroups = itemGroupsResp?.data || [];
   const allSales = salesListResp?.data || [];
-
-  const groupMap = useMemo(() => {
-    const map: Record<number, string> = {};
-    accountMasterResp?.accountGroups?.forEach((g) => {
-      map[g.id] = g.name;
-    });
-    return map;
-  }, [accountMasterResp]);
-
-  const typeMap = useMemo(() => {
-    const map: Record<number, string> = {};
-    accountMasterResp?.accountTypes?.forEach((t) => {
-      map[t.id] = t.name;
-    });
-    return map;
-  }, [accountMasterResp]);
-
-  const accountDropdownColumns = useMemo<ColDef[]>(
-    () => [
-      {
-        headerName: "Account Name",
-        field: "accountName",
-        minWidth: 200,
-        flex: 1,
-        valueGetter: (p) =>
-          p.data?.accountName ||
-          `${p.data?.firstName || ""} ${p.data?.lastName || ""}`.trim() ||
-          "-",
-      },
-      {
-        headerName: "ID",
-        field: "id",
-        type: "numericColumn",
-        width: 65,
-      },
-      {
-        headerName: "Short Name",
-        field: "userName",
-        width: 100,
-        valueGetter: (p) =>
-          p.data?.userName ||
-          (p.data?.firstName
-            ? p.data.firstName.slice(0, 4).toUpperCase()
-            : "-"),
-      },
-      {
-        headerName: "GroupName",
-        field: "accountGroupId",
-        valueGetter: (p) => groupMap[p.data?.accountGroupId] || "General",
-        minWidth: 120,
-        width: 130,
-      },
-      {
-        headerName: "Mobile No.",
-        field: "phone",
-        valueGetter: (p) => p.data?.mobile || p.data?.phone || "-",
-        minWidth: 120,
-        width: 130,
-      },
-      {
-        headerName: "Account Type",
-        field: "accountTypeId",
-        valueGetter: (p) => typeMap[p.data?.accountTypeId] || "Customer",
-        minWidth: 140,
-        width: 150,
-      },
-    ],
-    [groupMap, typeMap],
-  );
 
   const itemGroupPopupColumns = useMemo<ColDef[]>(
     () => [
@@ -298,9 +202,6 @@ export const Sales: React.FC = () => {
   const [customerTab, setCustomerTab] = useState<
     "general" | "shipping" | "kyc"
   >("general");
-  const [settlementTab, setSettlementTab] = useState<"receipt" | "remarks">(
-    "receipt",
-  );
   const [rightTab, setRightTab] = useState<"additional" | "shipping" | "notes">(
     "additional",
   );
@@ -1124,36 +1025,13 @@ export const Sales: React.FC = () => {
                 <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
                   Customer <span className="text-rose-500">*</span>
                 </Label>
-                <div className="flex gap-1.5">
-                  <PopupTable
-                    trigger={
-                      <button
-                        type="button"
-                        className="flex flex-1 h-8 items-center justify-between rounded-md border border-slate-200 bg-white px-2.5 text-xs text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-                      >
-                        <div className="flex items-center gap-2 truncate">
-                          <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                          <span className="truncate font-medium">
-                            {formData.accountName || "Walk-in Customer"}
-                          </span>
-                        </div>
-                        <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0 ml-1" />
-                      </button>
-                    }
-                    placement="bottom-start"
-                    apiEndpoint={API_ENDPOINTS.ACCOUNTS.BASE}
-                    columns={accountDropdownColumns}
-                    onSelect={handleSelectCustomer}
-                    searchPlaceholder="Search customer..."
-                  />
-                  <button
-                    type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-primary-action/10 hover:text-primary-action hover:border-primary-action/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 shrink-0"
-                    title="Add new customer"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                  </button>
-                </div>
+                <AccountHelp
+                  accountName={formData.accountName || "Walk-in Customer"}
+                  placeholder="Walk-in Customer"
+                  searchPlaceholder="Search customer..."
+                  onSelect={handleSelectCustomer}
+                  showAddButton
+                />
               </div>
 
               {/* Customer info card */}

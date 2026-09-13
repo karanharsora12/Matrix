@@ -302,14 +302,9 @@ export function getListingColumns(
   if (!menu)
     return options.includeAddEdit !== false ? [...ADD_EDIT_COLUMNS] : [];
 
-  const lower = String(menu).toLowerCase();
-  const matchedKey = Object.keys(BASE_LISTING_COLUMNS_MAP).find(
-    (k) => k.toLowerCase() === lower,
-  );
+  const matchedKey = BASE_LISTING_COLUMNS_MAP[menu];
 
-  let columns = matchedKey
-    ? BASE_LISTING_COLUMNS_MAP[matchedKey].map((col) => ({ ...col }))
-    : [];
+  let columns = matchedKey ? matchedKey.map((col) => ({ ...col })) : [];
 
   if (options.overrides) {
     columns = columns.map((col) => {
