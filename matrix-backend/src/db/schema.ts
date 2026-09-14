@@ -226,7 +226,6 @@ export const sales = pgTable("sales", {
   grandTotal: numeric("grand_total").default("0").notNull(),
 
   advanceAmount: numeric("advance_amount").default("0"),
-  urdAmount: numeric("urd_amount").default("0"),
   cashAmount: numeric("cash_amount").default("0"),
   bankAmount: numeric("bank_amount").default("0"),
   cardAmount: numeric("card_amount").default("0"),
@@ -234,14 +233,10 @@ export const sales = pgTable("sales", {
   schemeAmount: numeric("scheme_amount").default("0"),
   giftVoucherAmount: numeric("gift_voucher_amount").default("0"),
   salesReturnAmount: numeric("sales_return_amount").default("0"),
-  kasarAmount: numeric("kasar_amount").default("0"),
   tdsAmount: numeric("tds_amount").default("0"),
 
-  rateFixType: varchar("rate_fix_type", { length: 256 }),
   dueDate: timestamp("due_date"),
   deliveryPending: boolean("delivery_pending").default(false),
-
-  isActive: boolean("is_active").default(true).notNull(),
 
   addBy: integer("add_by").references((): AnyPgColumn => users.id),
   editBy: integer("edit_by").references((): AnyPgColumn => users.id),
