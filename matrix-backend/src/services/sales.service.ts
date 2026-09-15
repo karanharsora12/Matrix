@@ -12,6 +12,7 @@ import {
   rateTypes,
   users,
 } from "../db/schema";
+import { paymentSyncService } from "./payment-sync.service";
 
 const addByUser = alias(users, "sales_add_by_user");
 const editByUser = alias(users, "sales_edit_by_user");
@@ -247,6 +248,17 @@ export class SalesService {
           .returning();
       }
 
+      await paymentSyncService.syncTransactionPayments(tx, {
+        referenceType: "SALES",
+        referenceId: newSale.id,
+        voucherNo: newSale.voucherNo,
+        voucherDate: newSale.voucherDate,
+        accountId: newSale.accountId,
+        cashAmount: saleData.cashAmount,
+        bankAmount: saleData.bankAmount,
+        userId: saleData.addBy,
+      });
+
       return {
         ...newSale,
         itemLines: insertedItems,
@@ -420,6 +432,17 @@ export class SalesService {
         }
       }
 
+      await paymentSyncService.syncTransactionPayments(tx, {
+        referenceType: "SALES",
+        referenceId: updatedSale.id,
+        voucherNo: updatedSale.voucherNo,
+        voucherDate: updatedSale.voucherDate,
+        accountId: updatedSale.accountId,
+        cashAmount: updatedSale.cashAmount,
+        bankAmount: updatedSale.bankAmount,
+        userId: saleData.editBy,
+      });
+
       return {
         ...updatedSale,
         itemLines: finalItems,
@@ -429,6 +452,7 @@ export class SalesService {
 
   async deleteSale(id: number) {
     return await db.transaction(async (tx) => {
+      await paymentSyncService.deleteTransactionPayments(tx, "SALES", id);
       await tx.delete(salesItems).where(eq(salesItems.saleId, id));
       const [deleted] = await tx
         .delete(sales)

@@ -25,6 +25,8 @@ export interface Payment {
   accountName?: string;
   accountNo?: string;
   reference?: string;
+  referenceType?: string;
+  referenceId?: number;
   chequeNo?: string;
   chequeDate?: string;
   totalAmount: number;

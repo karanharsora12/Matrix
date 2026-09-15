@@ -12,6 +12,7 @@ import {
   rateTypes,
   users,
 } from "../db/schema";
+import { paymentSyncService } from "./payment-sync.service";
 
 const addByUser = alias(users, "purchases_add_by_user");
 const editByUser = alias(users, "purchases_edit_by_user");
@@ -179,6 +180,9 @@ export class PurchaseService {
           totalAmount: String(totalAmt),
           osAmount: String(purchaseData.osAmount ?? 0),
           advanceAmount: String(purchaseData.advanceAmount ?? 0),
+          cashAmount: String(purchaseData.cashAmount ?? 0),
+          bankAmount: String(purchaseData.bankAmount ?? 0),
+          cardAmount: String(purchaseData.cardAmount ?? 0),
           addBy: purchaseData.addBy ? Number(purchaseData.addBy) : null,
           editBy: purchaseData.editBy ? Number(purchaseData.editBy) : null,
         })
@@ -222,6 +226,17 @@ export class PurchaseService {
           .returning();
       }
 
+      await paymentSyncService.syncTransactionPayments(tx, {
+        referenceType: "PURCHASE",
+        referenceId: newPurchase.id,
+        voucherNo: newPurchase.voucherNo,
+        voucherDate: newPurchase.voucherDate,
+        accountId: newPurchase.accountId,
+        cashAmount: purchaseData.cashAmount,
+        bankAmount: purchaseData.bankAmount,
+        userId: purchaseData.addBy,
+      });
+
       return {
         ...newPurchase,
         itemLines: insertedItems,
@@ -259,6 +274,12 @@ export class PurchaseService {
         updateValues.osAmount = String(purchaseData.osAmount);
       if (purchaseData.advanceAmount !== undefined)
         updateValues.advanceAmount = String(purchaseData.advanceAmount);
+      if (purchaseData.cashAmount !== undefined)
+        updateValues.cashAmount = String(purchaseData.cashAmount);
+      if (purchaseData.bankAmount !== undefined)
+        updateValues.bankAmount = String(purchaseData.bankAmount);
+      if (purchaseData.cardAmount !== undefined)
+        updateValues.cardAmount = String(purchaseData.cardAmount);
       if (purchaseData.editBy !== undefined)
         updateValues.editBy = purchaseData.editBy ? Number(purchaseData.editBy) : null;
 
@@ -337,6 +358,17 @@ export class PurchaseService {
         }
       }
 
+      await paymentSyncService.syncTransactionPayments(tx, {
+        referenceType: "PURCHASE",
+        referenceId: updatedPurchase.id,
+        voucherNo: updatedPurchase.voucherNo,
+        voucherDate: updatedPurchase.voucherDate,
+        accountId: updatedPurchase.accountId,
+        cashAmount: updatedPurchase.cashAmount,
+        bankAmount: updatedPurchase.bankAmount,
+        userId: purchaseData.editBy,
+      });
+
       return {
         ...updatedPurchase,
         itemLines: finalItems,
@@ -346,6 +378,7 @@ export class PurchaseService {
 
   async deletePurchase(id: number) {
     return await db.transaction(async (tx) => {
+      await paymentSyncService.deleteTransactionPayments(tx, "PURCHASE", id);
       await tx.delete(purchaseItems).where(eq(purchaseItems.purchaseId, id));
       const [deleted] = await tx
         .delete(purchases)

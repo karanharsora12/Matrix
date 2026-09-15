@@ -297,6 +297,8 @@ export const payments = pgTable("payments", {
   accountNo: varchar("account_no", { length: 256 }),
   totalAmount: numeric("total_amount").default("0").notNull(),
   remarks: varchar("remarks", { length: 1024 }),
+  referenceType: varchar("reference_type", { length: 50 }),
+  referenceId: integer("reference_id"),
   isActive: boolean("is_active").default(true).notNull(),
   addBy: integer("add_by").references((): AnyPgColumn => users.id),
   editBy: integer("edit_by").references((): AnyPgColumn => users.id),
@@ -330,6 +332,9 @@ export const purchases = pgTable("purchases", {
   totalAmount: numeric("total_amount").default("0").notNull(),
   osAmount: numeric("os_amount").default("0"),
   advanceAmount: numeric("advance_amount").default("0"),
+  cashAmount: numeric("cash_amount").default("0"),
+  bankAmount: numeric("bank_amount").default("0"),
+  cardAmount: numeric("card_amount").default("0"),
 
   addBy: integer("add_by").references((): AnyPgColumn => users.id),
   editBy: integer("edit_by").references((): AnyPgColumn => users.id),

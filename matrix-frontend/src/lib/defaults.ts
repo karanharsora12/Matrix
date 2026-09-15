@@ -312,7 +312,11 @@ export function getListingColumns(
   let columns = matchedKey ? matchedKey.map((col) => ({ ...col })) : [];
 
   columns = columns.map((col) => {
-    if (col.field === "voucherDate" && !col.valueFormatter && !col.valueGetter) {
+    if (
+      col.field === "voucherDate" &&
+      !col.valueFormatter &&
+      !col.valueGetter
+    ) {
       return {
         ...col,
         valueFormatter: (p) => (p.node?.rowPinned ? "" : formatDate(p.value)),
