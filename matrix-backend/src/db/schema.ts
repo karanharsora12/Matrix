@@ -366,3 +366,73 @@ export const purchaseItems = pgTable("purchase_items", {
   amountWithTax: numeric("amount_with_tax").default("0").notNull(),
   discountAmount: numeric("discount_amount").default("0"),
 });
+
+// ─── Geographic Hierarchy ─────────────────────────────────────────────────────
+
+export const countries = pgTable("countries", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 256 }).notNull().unique(),
+  code: varchar("code", { length: 10 }),           // ISO 3166-1 alpha-2 e.g. "IN"
+  phoneCode: varchar("phone_code", { length: 20 }), // e.g. "+91"
+  isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const states = pgTable("states", {
+  id: serial("id").primaryKey(),
+  countryId: integer("country_id")
+    .references((): AnyPgColumn => countries.id)
+    .notNull(),
+  name: varchar("name", { length: 256 }).notNull(),
+  code: varchar("code", { length: 10 }),            // e.g. "GJ", "MH"
+  isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const cities = pgTable("cities", {
+  id: serial("id").primaryKey(),
+  stateId: integer("state_id")
+    .references((): AnyPgColumn => states.id)
+    .notNull(),
+  name: varchar("name", { length: 256 }).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const areas = pgTable("areas", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .references((): AnyPgColumn => cities.id)
+    .notNull(),
+  name: varchar("name", { length: 256 }).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const pincodes = pgTable("pincodes", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .references((): AnyPgColumn => cities.id)
+    .notNull(),
+  areaId: integer("area_id").references((): AnyPgColumn => areas.id),
+  pincode: varchar("pincode", { length: 20 }).notNull(),
+  officeName: varchar("office_name", { length: 256 }), // post office / locality name
+  isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+

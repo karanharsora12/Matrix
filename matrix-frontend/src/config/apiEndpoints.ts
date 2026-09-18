@@ -43,4 +43,16 @@ export const API_ENDPOINTS = {
     BASE: "/payments",
     BY_ID: (id: string | number) => `/payments/${id}`,
   },
+  GEO: {
+    COUNTRIES: "/geo/countries",
+    COUNTRY_BY_ID: (id: string | number) => `/geo/countries/${id}`,
+    STATES: "/geo/states",
+    STATE_BY_ID: (id: string | number) => `/geo/states/${id}`,
+    CITIES: "/geo/cities",
+    CITY_BY_ID: (id: string | number) => `/geo/cities/${id}`,
+    AREAS: "/geo/areas",
+    AREA_BY_ID: (id: string | number) => `/geo/areas/${id}`,
+    PINCODES: "/geo/pincodes",
+    PINCODE_BY_ID: (id: string | number) => `/geo/pincodes/${id}`,
+  },
 };

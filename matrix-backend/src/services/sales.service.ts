@@ -40,9 +40,9 @@ async function resolveRateTypeId(item: any, tx?: any): Promise<number | null> {
 
 export class SalesService {
   async getSales(options?: {
-    page?: number;
-    limit?: number;
-    fetchAll?: boolean;
+    page?: number | undefined;
+    limit?: number | undefined;
+    fetchAll?: boolean | undefined;
   }) {
     const page = Math.max(1, options?.page || 1);
     const limit = options?.fetchAll

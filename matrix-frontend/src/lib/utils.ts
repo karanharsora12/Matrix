@@ -96,18 +96,84 @@ export function buildRoute(
   return queryString ? `${finalPath}?${queryString}` : finalPath;
 }
 
-export const fmtINR = (
-  amount: number | string,
-  currency: string = "₹",
-): string => {
-  const numericValue = typeof amount === "string" ? parseFloat(amount) : amount;
+type FmtOptions = {
+  locale?: string;
+  minimumFractionDigits?: number;
+  maximumFractionDigits?: number;
+  useGrouping?: boolean;
+  compact?: boolean;
+  /** if true, keeps currency even when amount is 0/NaN */
+  trimCurrencyOnZero?: boolean;
+};
 
-  if (isNaN(numericValue)) {
-    return `${currency}0.00`;
+const CURRENCY_MAP: Record<string, string> = {
+  INR: "₹",
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  JPY: "¥",
+  AED: "AED ",
+  SAR: "SAR ",
+};
+
+export function parseNumber(
+  amount: number | string | null | undefined,
+  currencyOrOptions?: string | FmtOptions,
+  maybeOptions?: FmtOptions,
+): string {
+  let currency: string | undefined;
+  let options: FmtOptions = {};
+
+  if (
+    typeof currencyOrOptions === "object" &&
+    currencyOrOptions !== null &&
+    !Array.isArray(currencyOrOptions)
+  ) {
+    options = currencyOrOptions;
+    currency = undefined;
+  } else {
+    currency = currencyOrOptions as string | undefined;
+    options = maybeOptions ?? {};
   }
 
-  return `${currency}${numericValue.toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-};
+  if (currency) {
+    const upper = currency.trim().toUpperCase();
+    currency = CURRENCY_MAP[upper] ?? currency;
+    if (currency.trim() === "") currency = undefined;
+  } else {
+    currency = undefined;
+  }
+
+  const {
+    locale = "en-IN",
+    minimumFractionDigits = 2,
+    maximumFractionDigits = 2,
+    useGrouping = true,
+    compact = false,
+  } = options;
+
+  let numericValue: number;
+  if (typeof amount === "string") {
+    const cleaned = amount.replace(/[,₹$€£¥\s]/g, "").trim();
+    numericValue = parseFloat(cleaned);
+  } else if (typeof amount === "number") {
+    numericValue = amount;
+  } else {
+    numericValue = NaN;
+  }
+
+  const formatOpts: Intl.NumberFormatOptions = {
+    minimumFractionDigits,
+    maximumFractionDigits,
+    useGrouping,
+    ...(compact ? { notation: "compact" as const } : {}),
+  };
+
+  if (isNaN(numericValue) || !isFinite(numericValue)) {
+    const zero = (0).toLocaleString(locale, formatOpts);
+    return currency ? `${currency}${zero}` : zero;
+  }
+
+  const formatted = numericValue.toLocaleString(locale, formatOpts);
+  return currency ? `${currency}${formatted}` : formatted;
+}

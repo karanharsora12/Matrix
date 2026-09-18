@@ -13,7 +13,6 @@ import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
 import { PopupCellEditor } from "@/components/common/PopupCellEditor";
 import { PrintInvoiceModal } from "@/components/common/PrintInvoiceModal";
-import { SelectCellEditor } from "@/components/common/SelectCellEditor";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import {
@@ -21,7 +20,7 @@ import {
   getDaybooksByMenu,
   TransactionMenu,
 } from "@/constants/enums";
-import { decodeURL, fmtINR } from "@/lib/utils";
+import { decodeURL, parseNumber } from "@/lib/utils";
 import { todayISO, toISODate } from "@/utils/date";
 import {
   calculateLineItemAmount,
@@ -1311,7 +1310,7 @@ export const Purchase: React.FC = () => {
                     Total Amount
                   </span>
                   <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                    {fmtINR(
+                    {parseNumber(
                       calculatedTotals.subtotal +
                         calculatedTotals.totalLineDiscount,
                     )}
@@ -1323,7 +1322,7 @@ export const Purchase: React.FC = () => {
                     Total Discount
                   </span>
                   <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                    {fmtINR(calculatedTotals.totalLineDiscount)}
+                    {parseNumber(calculatedTotals.totalLineDiscount)}
                   </span>
                 </div>
                 {/* Taxable Amount */}
@@ -1332,7 +1331,7 @@ export const Purchase: React.FC = () => {
                     Taxable Amount
                   </span>
                   <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
-                    {fmtINR(calculatedTotals.subtotal)}
+                    {parseNumber(calculatedTotals.subtotal)}
                   </span>
                 </div>
               </div>
@@ -1343,7 +1342,7 @@ export const Purchase: React.FC = () => {
                   Grand Total
                 </span>
                 <span className="text-base font-extrabold text-primary-action tracking-tight">
-                  {fmtINR(calculatedTotals.grandTotal)}
+                  {parseNumber(calculatedTotals.grandTotal)}
                 </span>
               </div>
             </div>
@@ -1426,7 +1425,7 @@ export const Purchase: React.FC = () => {
                             : "text-amber-600 dark:text-amber-400"
                         }`}
                       >
-                        {fmtINR(calculatedTotals.balanceDue)}
+                        {parseNumber(calculatedTotals.balanceDue)}
                       </span>
                     </div>
                   </div>

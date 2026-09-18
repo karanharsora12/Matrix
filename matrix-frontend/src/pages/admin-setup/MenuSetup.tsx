@@ -88,6 +88,7 @@ const iconOptions = [
   "Car",
   "BookOpen",
   "Globe",
+  "MapPinned",
 ];
 
 interface MenuForm {

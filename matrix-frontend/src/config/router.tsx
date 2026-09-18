@@ -20,6 +20,11 @@ import ItemGroups from "../pages/master/inventory/ItemGroups";
 import Items from "../pages/master/inventory/Items";
 import DaybookGroups from "../pages/master/other-master/DaybookGroups";
 import Daybooks from "../pages/master/other-master/Daybooks";
+import CountriesList from "../pages/master/city-area-setup/CountriesList";
+import StatesList from "../pages/master/city-area-setup/StatesList";
+import CitiesList from "../pages/master/city-area-setup/CitiesList";
+import AreasList from "../pages/master/city-area-setup/AreasList";
+import PincodesList from "../pages/master/city-area-setup/PincodesList";
 import NotFound from "../pages/NotFound";
 import { WEB_ROUTES } from "./webRoutes";
 
@@ -82,6 +87,26 @@ export const router = createBrowserRouter([
           {
             path: WEB_ROUTES.MASTER.OTHER_MASTER.DAYBOOKS,
             element: <Daybooks />,
+          },
+          {
+            path: WEB_ROUTES.MASTER.CITY_AREA_SETUP.COUNTRIES,
+            element: <CountriesList />,
+          },
+          {
+            path: WEB_ROUTES.MASTER.CITY_AREA_SETUP.STATES,
+            element: <StatesList />,
+          },
+          {
+            path: WEB_ROUTES.MASTER.CITY_AREA_SETUP.CITIES,
+            element: <CitiesList />,
+          },
+          {
+            path: WEB_ROUTES.MASTER.CITY_AREA_SETUP.AREAS,
+            element: <AreasList />,
+          },
+          {
+            path: WEB_ROUTES.MASTER.CITY_AREA_SETUP.PINCODES,
+            element: <PincodesList />,
           },
           {
             path: WEB_ROUTES.TRANSACTION.SALES_LIST,

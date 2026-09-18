@@ -5,12 +5,13 @@ import { ListingHeader } from "@/components/common/ListingHeader";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import { useGridActions } from "@/hooks/useGridActions";
 import { MenuList, getListingColumns } from "@/lib/defaults";
-import { buildRoute, encodeURL } from "@/lib/utils";
+import { buildRoute, encodeURL, parseNumber } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import { formatDate } from "@/utils/date";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 
 const SalesList: React.FC = () => {
   const navigate = useNavigate();
@@ -18,37 +19,10 @@ const SalesList: React.FC = () => {
   const { gridRef, onExportExcel, onExportPdf, onPrint } = useGridActions();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: salesResponse, isLoading } = useSales();
-  const deleteMutation = useDeleteSale();
-  const sales = salesResponse?.data || [];
-
   const handleNavigate = (id?: number) => {
     const token = encodeURL({ id });
     navigate(buildRoute(WEB_ROUTES.TRANSACTION.SALES, { token }));
   };
-
-  const handleDelete = async (id: number) => {
-    const isConfirmed = await confirmAlert({
-      title: "Confirm Delete",
-      description:
-        "Are you sure you want to delete this sales voucher? This action cannot be undone.",
-      confirmText: "Delete",
-      variant: "danger",
-    });
-    if (isConfirmed) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const filteredData = sales.filter((sale) => {
-    const q = searchTerm.toLowerCase();
-    return (
-      sale.voucherNo?.toLowerCase().includes(q) ||
-      sale.daybookName?.toLowerCase().includes(q) ||
-      sale.reference?.toLowerCase().includes(q) ||
-      sale.accountName?.toLowerCase().includes(q)
-    );
-  });
 
   const columnDefs = useMemo<ColDef[]>(() => {
     return getListingColumns(MenuList.SALES, {
@@ -59,31 +33,11 @@ const SalesList: React.FC = () => {
         },
         grandTotal: {
           valueFormatter: (p) =>
-            p.node?.rowPinned
-              ? p.value
-              : (p.value || 0).toLocaleString("en-IN", {
-                  style: "currency",
-                  currency: "INR",
-                  minimumFractionDigits: 2,
-                }),
+            p.node?.rowPinned ? p.value : parseNumber(p.value),
         },
       },
     });
   }, []);
-
-  const summary = useMemo(() => {
-    const total = sales.reduce((s, x) => s + (x.grandTotal || 0), 0);
-    return [
-      {
-        daybookName: "TOTAL",
-        grandTotal: total.toLocaleString("en-IN", {
-          style: "currency",
-          currency: "INR",
-          minimumFractionDigits: 2,
-        }),
-      },
-    ];
-  }, [sales]);
 
   return (
     <div className="h-full flex flex-col p-6 space-y-6">
@@ -104,9 +58,8 @@ const SalesList: React.FC = () => {
 
       <DataGrid
         ref={gridRef}
-        rowData={filteredData}
         columnDefs={columnDefs}
-        pinnedBottomRowData={summary}
+        apiName={API_ENDPOINTS.SALES.BASE}
         gridOptions={{
           onRowDoubleClicked: (e) => {
             if (e.node.rowPinned) return;

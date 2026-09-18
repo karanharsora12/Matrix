@@ -29,11 +29,11 @@ function formatPaymentDetailRow(row: any) {
 
 export class PaymentService {
   async getPayments(options?: {
-    page?: number;
-    limit?: number;
-    fetchAll?: boolean;
-    transactionType?: string;
-    search?: string;
+    page?: number | undefined;
+    limit?: number | undefined;
+    fetchAll?: boolean | undefined;
+    transactionType?: string | undefined;
+    search?: string | undefined;
   }) {
     const page = Math.max(1, options?.page || 1);
     const limit = options?.fetchAll

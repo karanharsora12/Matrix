@@ -1,5 +1,6 @@
 import type { ColDef } from "ag-grid-community";
 import { formatDate, formatDateTime, dateComparator } from "@/utils/date";
+import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
 
 export const MenuList = {
   // Inventory
@@ -32,6 +33,13 @@ export const MenuList = {
   // Admin Setup
   MENU_SETUP: "MenuSetup",
   USERS: "Users",
+
+  // City / Area Setup
+  COUNTRIES: "Countries",
+  STATES: "States",
+  CITIES: "Cities",
+  AREAS: "Areas",
+  PINCODES: "Pincodes",
 } as const;
 
 export const ADD_EDIT_COLUMNS: ColDef[] = [
@@ -288,6 +296,77 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ColDef[]> = {
     { field: "showListingTotalRight", headerName: "Total", width: 70 },
     { field: "exportRight", headerName: "Export", width: 70 },
     { field: "printRight", headerName: "Print", width: 70 },
+  ],
+
+  [MenuList.COUNTRIES]: [
+    { field: "id", headerName: "ID", width: 70, type: "numericColumn" },
+    { field: "name", headerName: "Country Name", minWidth: 180 },
+    { field: "code", headerName: "Code", width: 80 },
+    { field: "phoneCode", headerName: "Phone Code", width: 110 },
+    {
+      field: "isActive",
+      headerName: "Active",
+      width: 80,
+      cellRenderer: ActiveCellRenderer,
+    },
+  ],
+
+  [MenuList.STATES]: [
+    { field: "id", headerName: "ID", width: 70, type: "numericColumn" },
+    { field: "name", headerName: "State Name", minWidth: 180 },
+    { field: "code", headerName: "Code", width: 80 },
+    { field: "countryName", headerName: "Country", width: 140 },
+    {
+      field: "isActive",
+      headerName: "Active",
+      width: 80,
+      cellRenderer: ActiveCellRenderer,
+    },
+  ],
+
+  [MenuList.CITIES]: [
+    { field: "id", headerName: "ID", width: 70, type: "numericColumn" },
+    { field: "name", headerName: "City Name", minWidth: 180 },
+    { field: "stateName", headerName: "State", width: 160 },
+    { field: "countryName", headerName: "Country", width: 140 },
+    {
+      field: "isActive",
+      headerName: "Active",
+      width: 80,
+      cellRenderer: ActiveCellRenderer,
+    },
+  ],
+
+  [MenuList.AREAS]: [
+    { field: "id", headerName: "ID", width: 70, type: "numericColumn" },
+    { field: "name", headerName: "Area Name", minWidth: 180 },
+    { field: "cityName", headerName: "City", width: 160 },
+    { field: "stateName", headerName: "State", width: 140 },
+    {
+      field: "isActive",
+      headerName: "Active",
+      width: 80,
+      cellRenderer: ActiveCellRenderer,
+    },
+  ],
+
+  [MenuList.PINCODES]: [
+    { field: "id", headerName: "ID", width: 70, type: "numericColumn" },
+    { field: "pincode", headerName: "Pincode", width: 110 },
+    {
+      field: "officeName",
+      headerName: "Office / Area",
+      minWidth: 180,
+    },
+    { field: "cityName", headerName: "City", width: 160 },
+    { field: "areaName", headerName: "Area", width: 140 },
+    { field: "stateName", headerName: "State", width: 140 },
+    {
+      field: "isActive",
+      headerName: "Active",
+      width: 80,
+      cellRenderer: ActiveCellRenderer,
+    },
   ],
 };
 

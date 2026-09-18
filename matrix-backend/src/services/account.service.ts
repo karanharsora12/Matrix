@@ -21,10 +21,10 @@ export class AccountService {
   async getAccountsPage(options: {
     page: number;
     limit: number;
-    search?: string;
-    sortField?: string;
-    sortDirection?: "asc" | "desc";
-    fetchAll?: boolean;
+    search?: string | undefined;
+    sortField?: string | undefined;
+    sortDirection?: "asc" | "desc" | undefined;
+    fetchAll?: boolean | undefined;
   }) {
     const page = Math.max(1, options.page || 1);
     const limit = options.fetchAll

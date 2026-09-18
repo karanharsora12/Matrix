@@ -22,6 +22,13 @@ export const WEB_ROUTES = {
       DAYBOOK_GROUPS: "/master/other-master/daybook-groups",
       DAYBOOKS: "/master/other-master/daybooks",
     },
+    CITY_AREA_SETUP: {
+      COUNTRIES: "/master/city-area-setup/countries",
+      STATES: "/master/city-area-setup/states",
+      CITIES: "/master/city-area-setup/cities",
+      AREAS: "/master/city-area-setup/areas",
+      PINCODES: "/master/city-area-setup/pincodes",
+    },
   },
   TRANSACTION: {
     SALES_LIST: "/transactions/customer-in-out/sales",
