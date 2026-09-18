@@ -14,7 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "db:export": "node export-data.js",
     "db:import": "node import-data.js",
-    "geo:import": "tsx src/db/geo-import.ts"
+    "geo:import": "tsx src/db/geo-import.ts",
+    "geo:seed": "tsx src/db/geo-import.ts && tsx src/db/pincode-import.ts"
   },
   "keywords": [],
   "author": "",
