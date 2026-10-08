@@ -3,10 +3,8 @@ import {
   Printer,
   FileDown,
   ExternalLink,
-  Loader2,
   CheckCircle2,
   XCircle,
-  ChevronDown,
 } from "lucide-react";
 import {
   Dialog,
@@ -15,7 +13,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/date";
 import { downloadInvoicePdf, openInvoicePdfInNewTab } from "@/api/report";
@@ -70,8 +67,10 @@ export interface PrintInvoiceModalProps {
     address?: string;
     gstin?: string;
     phone?: string;
+    email?: string;
   };
 }
+
 
 export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
   open,
@@ -83,7 +82,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
   voucherDate,
   partyTitle,
   party,
-  billMode = "Debit Memo",
+  billMode = "Cash",
   staffTitle,
   staffName,
   reference,
@@ -97,22 +96,21 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
   remarks,
   companyInfo = {
     name: "MATRIX JEWELLERS & LUXURY RETAIL",
-    address: "402, Matrix Heights, CG Road, Navrangpura, Ahmedabad - 380009",
+    address: "402, Matrix Heights, CG Road, Navrangpura",
+    city: "Ahmedabad, Gujarat - 380009",
     gstin: "24AAACM4901P1Z8",
     phone: "+91 79 2640 9811",
+    email: "contact@matrixjewellers.com",
   },
 }) => {
   const isPurchase = invoiceType === "purchase";
-  const defaultBadgeText = isPurchase
-    ? "PURCHASE TAX INVOICE"
-    : "RETAIL TAX INVOICE";
+  const defaultBadgeText = isPurchase ? "PURCHASE INVOICE" : "TAX INVOICE";
   const defaultPartyTitle = isPurchase ? "Purchased From:" : "Billed To:";
   const defaultStaffTitle = isPurchase ? "Purchaser:" : "Salesman:";
   const defaultPartyName = isPurchase ? "Unknown Supplier" : "Walk-in Customer";
 
   const [isDownloadingPdf, setIsDownloadingPdf] = React.useState(false);
   const [isOpeningPdf, setIsOpeningPdf] = React.useState(false);
-  const [showRemarks, setShowRemarks] = React.useState(false);
   const [statusMessage, setStatusMessage] = React.useState<{
     text: string;
     type: "success" | "error";
@@ -173,358 +171,397 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
     }
   };
 
+  const displayTitle = badgeText || defaultBadgeText;
+
+  // Calculate taxes assuming equally split CGST and SGST for simplicity (common in India)
+  // If actual calculation requires IGST vs CGST/SGST based on state, it would need more props.
+  const halfTax = taxAmount / 2;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1100px] w-[95vw] max-h-[95vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl border-0 shadow-2xl">
-        {/* ── Compact Header ── */}
-        <DialogHeader className="px-5 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white shrink-0">
+      <DialogContent className="max-w-[850px] w-[95vw] max-h-[95vh] overflow-hidden flex flex-col p-0 gap-0 border-0 shadow-2xl rounded-sm print:max-w-none print:w-full print:h-auto print:max-h-none print:shadow-none print:bg-white print:border-none print:p-0 print:m-0 [&>button]:print:hidden">
+        {/* Preview UI Header - Hidden when printing */}
+        <DialogHeader className="px-5 py-3 border-b border-black bg-slate-50 shrink-0 print:hidden">
           <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 border border-amber-200">
-                <Printer className="h-4 w-4 text-amber-700" />
-              </div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-slate-900">
-                  Invoice Preview
-                </h2>
-                <Badge
-                  variant="outline"
-                  className="text-[10px] font-mono px-2 py-0.5"
-                >
-                  {voucherNo}
-                </Badge>
-                <Badge className="text-[10px] font-bold bg-amber-600 text-white px-2 py-0.5">
-                  {badgeText || defaultBadgeText}
-                </Badge>
-              </div>
+            <div className="flex items-center gap-2 text-black">
+              <Printer className="h-5 w-5" />
+              <h2 className="text-base font-semibold">Print Preview</h2>
             </div>
-            {/* Status */}
             {statusMessage && (
               <div
-                className={`flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-lg ${
+                className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md ${
                   statusMessage.type === "error"
                     ? "bg-rose-50 text-rose-700 border border-rose-200"
                     : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                 }`}
               >
                 {statusMessage.type === "success" ? (
-                  <CheckCircle2 className="h-3 w-3 shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
                 ) : (
-                  <XCircle className="h-3 w-3 shrink-0" />
+                  <XCircle className="h-4 w-4 shrink-0" />
                 )}
-                <span className="font-medium">{statusMessage.text}</span>
+                <span>{statusMessage.text}</span>
               </div>
             )}
           </DialogTitle>
         </DialogHeader>
 
-        {/* ── Printable Invoice Container ── */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 min-h-0">
+        {/* Printable Area */}
+        <div className="flex-1 overflow-y-auto min-h-0 bg-slate-100 print:bg-white print:overflow-visible">
+          {/* A4 Size Container */}
           <div
             id="printable-tax-invoice"
-            className="mx-auto border border-slate-200 rounded-xl bg-white text-slate-900 shadow-sm overflow-hidden"
+            className="w-[210mm] min-h-[297mm] mx-auto bg-white p-8 sm:my-8 my-0 border border-black print:border-none print:m-0 print:w-full print:h-auto text-black text-sm font-sans"
           >
-            {/* ── Company Header (Compact) ── */}
-            <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 px-6 py-4 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/2" />
-              <div className="relative flex justify-between items-start">
+            {/* Header Section */}
+            <div className="flex justify-between items-start pb-4 border-b-2 border-black">
+              <div className="flex gap-4">
+                
                 <div>
-                  <h1 className="text-lg font-black tracking-tight leading-tight">
+                  <h1 className="text-xl font-bold uppercase tracking-wide text-black">
                     {companyInfo.name}
                   </h1>
-                  <p className="text-amber-100 text-[10px] mt-1 max-w-md leading-relaxed">
-                    {companyInfo.address}
-                  </p>
-                  <p className="text-[10px] text-amber-100 mt-1">
-                    GSTIN: {companyInfo.gstin} • {companyInfo.phone}
-                  </p>
-                </div>
-                <div className="text-right shrink-0 ml-4">
-                  <div className="inline-flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-md px-2 py-1 border border-white/30">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">
-                      {badgeText || defaultBadgeText}
-                    </span>
+                  <div className="text-xs text-black mt-1 space-y-0.5">
+                    <p>{companyInfo.address}</p>
+                    <p>{(companyInfo as any).city}</p>
+                    <p>
+                      GSTIN:{" "}
+                      <span className="font-semibold">{companyInfo.gstin}</span>
+                    </p>
+                    <p>
+                      Phone: {companyInfo.phone} | Email: {companyInfo.email}
+                    </p>
                   </div>
-                  <p className="text-sm font-black mt-1.5">#{voucherNo}</p>
-                  <p className="text-amber-100 text-[10px]">
-                    {formatDate(voucherDate)}
+                </div>
+              </div>
+
+              <div className="text-right">
+                <h2 className="text-xl font-bold uppercase tracking-wider text-black mb-2 border-b-[3px] border-black inline-block pb-1">
+                  {displayTitle}
+                </h2>
+                <div className="text-sm mt-2">
+                  <p>
+                    <span className="text-black mr-2">Invoice No:</span>
+                    <span className="font-semibold">{voucherNo}</span>
+                  </p>
+                  <p className="mt-1">
+                    <span className="text-black mr-2">Invoice Date:</span>
+                    <span className="font-semibold">
+                      {formatDate(voucherDate)}
+                    </span>
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* ── Party Info & Terms (Side by Side - Compact) ── */}
-            <div className="px-6 py-3 grid grid-cols-2 gap-4 border-b border-slate-100 bg-slate-50/50">
-              {/* Party */}
-              <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+            {/* Customer & Payment Info */}
+            <div className="mt-6 flex border border-black">
+              {/* BILL TO */}
+              <div className="flex-1 p-3 border-r border-black">
+                <h3 className="text-xs font-bold text-black uppercase tracking-wider border-b border-black pb-1 mb-2">
                   {partyTitle || defaultPartyTitle}
-                </p>
-                <div className="bg-white rounded-lg p-2.5 border border-slate-100">
-                  <p className="font-bold text-xs text-slate-900 truncate">
+                </h3>
+                <div className="text-sm text-black space-y-1">
+                  <p className="font-bold text-base">
                     {party?.name || defaultPartyName}
                   </p>
-                  <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500">
-                    {party?.phone && <span>Ph: {party.phone}</span>}
-                    {party?.city && <span>• {party.city}</span>}
-                    {party?.state && <span>, {party.state}</span>}
-                  </div>
-                  {(party?.gstNo || party?.panNo) && (
-                    <div className="flex gap-3 mt-1 pt-1 border-t border-slate-50 text-[9px] text-slate-400">
-                      {party?.gstNo && (
-                        <span>
-                          GSTIN: <b className="text-slate-600">{party.gstNo}</b>
-                        </span>
-                      )}
-                      {party?.panNo && (
-                        <span>
-                          PAN: <b className="text-slate-600">{party.panNo}</b>
-                        </span>
-                      )}
-                    </div>
+                  {party?.address && <p>{party.address}</p>}
+                  {(party?.city || party?.state) && (
+                    <p>
+                      {party.city}
+                      {party.city && party.state ? ", " : ""}
+                      {party.state}
+                    </p>
+                  )}
+                  {party?.phone && <p>Ph: {party.phone}</p>}
+                  {party?.gstNo && (
+                    <p className="pt-1">
+                      GSTIN:{" "}
+                      <span className="font-semibold">{party.gstNo}</span>
+                    </p>
                   )}
                 </div>
               </div>
-              {/* Terms */}
-              <div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                  Payment & Terms
-                </p>
-                <div className="bg-white rounded-lg p-2.5 border border-slate-100 grid grid-cols-2 gap-x-4 gap-y-1">
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">Mode</span>
-                    <Badge
-                      variant="outline"
-                      className="text-[9px] font-semibold h-4 px-1.5"
-                    >
-                      {billMode}
-                    </Badge>
-                  </div>
+
+              {/* PAYMENT DETAILS */}
+              <div className="flex-1 p-3">
+                <h3 className="text-xs font-bold text-black uppercase tracking-wider border-b border-black pb-1 mb-2">
+                  Payment Details
+                </h3>
+                <div className="grid grid-cols-[100px_1fr] gap-y-1.5 text-sm text-black">
+                  <div className="text-black">Mode:</div>
+                  <div className="font-semibold">{billMode}</div>
+
+                  <div className="text-black">Rate Type:</div>
+                  <div className="font-semibold">{rateFixType}</div>
+
+                  <div className="text-black">Reference:</div>
+                  <div className="font-semibold">{reference || "N/A"}</div>
+
+                  <div className="text-black">Terms:</div>
+                  <div className="font-semibold">Immediate</div>
+
                   {staffName && (
-                    <div className="flex justify-between text-[10px]">
-                      <span className="text-slate-400">
+                    <>
+                      <div className="text-black">
                         {staffTitle || defaultStaffTitle}
-                      </span>
-                      <span className="font-semibold text-slate-700">
-                        {staffName}
-                      </span>
-                    </div>
+                      </div>
+                      <div className="font-semibold">{staffName}</div>
+                    </>
                   )}
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">Reference</span>
-                    <span className="font-semibold text-slate-700">
-                      {reference || "N/A"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">Rate Type</span>
-                    <span className="font-semibold text-slate-700">
-                      {rateFixType}
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* ── Items Table (Dense) ── */}
-            <div className="px-6 py-2">
-              <table className="w-full text-[10px]">
+            {/* Item Table */}
+            <div className="mt-6">
+              <table className="w-full border-collapse border border-black text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider w-6">
+                  <tr>
+                    <th className="border border-black px-2 py-2 text-left font-bold w-12">
                       #
                     </th>
-                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider">
-                      Item
+                    <th className="border border-black px-2 py-2 text-left font-bold">
+                      Item Description
                     </th>
-                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider w-16">
+                    <th className="border border-black px-2 py-2 text-left font-bold w-24">
                       Code
                     </th>
-                    <th className="py-1.5 px-1.5 text-left font-bold text-slate-400 uppercase tracking-wider w-12">
+                    <th className="border border-black px-2 py-2 text-left font-bold w-20">
                       Purity
                     </th>
-                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-16">
+                    <th className="border border-black px-2 py-2 text-right font-bold w-24">
                       Net Wt
                     </th>
-                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-16">
+                    <th className="border border-black px-2 py-2 text-right font-bold w-24">
                       Rate
                     </th>
-                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-16">
+                    <th className="border border-black px-2 py-2 text-right font-bold w-24">
                       Labour
                     </th>
-                    <th className="py-1.5 px-1.5 text-right font-bold text-slate-400 uppercase tracking-wider w-20">
+                    <th className="border border-black px-2 py-2 text-right font-bold w-32">
                       Amount
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {itemLines.map((line, i) => (
-                    <tr
-                      key={i}
-                      className="border-b border-slate-50 last:border-0 hover:bg-amber-50/30"
-                    >
-                      <td className="py-1.5 px-1.5 text-slate-300 font-medium">
-                        {i + 1}
-                      </td>
-                      <td className="py-1.5 px-1.5">
-                        <span className="font-semibold text-slate-800">
-                          {line.itemName || "Item"}
-                        </span>
-                        {line.tagNo && line.tagNo !== line.itemCode && (
-                          <span className="text-[8px] text-slate-400 ml-1">
-                            [{line.tagNo}]
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-1.5 px-1.5 text-slate-500 font-mono">
-                        {line.itemCode || line.tagNo || "-"}
-                      </td>
-                      <td className="py-1.5 px-1.5">
-                        <span className="inline-flex px-1 py-0.5 rounded bg-amber-100 text-amber-700 text-[8px] font-bold">
-                          {line.purity || "22K"}
-                        </span>
-                      </td>
-                      <td className="py-1.5 px-1.5 text-right font-medium text-slate-700 tabular-nums">
-                        {Number(line.netWt || 0).toFixed(3)}g
-                      </td>
-                      <td className="py-1.5 px-1.5 text-right text-slate-600 tabular-nums">
-                        ₹{Number(line.rate || 0).toLocaleString("en-IN")}
-                      </td>
-                      <td className="py-1.5 px-1.5 text-right text-slate-600 tabular-nums">
-                        ₹
-                        {Number(line.labourAmount || 0).toLocaleString("en-IN")}
-                      </td>
-                      <td className="py-1.5 px-1.5 text-right font-bold text-slate-900 tabular-nums">
-                        ₹{Number(line.amount || 0).toLocaleString("en-IN")}
+                  {itemLines.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="border border-black px-2 py-8 text-center text-black"
+                      >
+                        No items found
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    itemLines.map((line, i) => (
+                      <tr key={i}>
+                        <td className="border border-black px-2 py-1.5 text-center">
+                          {i + 1}
+                        </td>
+                        <td className="border border-black px-2 py-1.5">
+                          {line.itemName || "Item"}
+                          {line.tagNo && line.tagNo !== line.itemCode && (
+                            <span className="text-black ml-1 text-xs">
+                              [{line.tagNo}]
+                            </span>
+                          )}
+                        </td>
+                        <td className="border border-black px-2 py-1.5">
+                          {line.itemCode || line.tagNo || "-"}
+                        </td>
+                        <td className="border border-black px-2 py-1.5">
+                          {line.purity || "22K"}
+                        </td>
+                        <td className="border border-black px-2 py-1.5 text-right tabular-nums">
+                          {Number(line.netWt || 0).toFixed(3)}
+                        </td>
+                        <td className="border border-black px-2 py-1.5 text-right tabular-nums">
+                          ₹{Number(line.rate || 0).toLocaleString("en-IN")}
+                        </td>
+                        <td className="border border-black px-2 py-1.5 text-right tabular-nums">
+                          ₹
+                          {Number(line.labourAmount || 0).toLocaleString(
+                            "en-IN",
+                          )}
+                        </td>
+                        <td className="border border-black px-2 py-1.5 text-right tabular-nums font-semibold">
+                          ₹{Number(line.amount || 0).toLocaleString("en-IN")}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                  {/* Empty rows to fill space if needed, optional */}
                 </tbody>
               </table>
             </div>
 
-            {/* ── Remarks (Collapsible) & Totals ── */}
-            <div className="px-6 py-3 bg-slate-50 border-t border-slate-200">
-              <div className="flex gap-4 items-start">
-                {/* Remarks - Collapsible */}
-                <div className="flex-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowRemarks(!showRemarks)}
-                    className="flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 hover:text-slate-600 transition-colors"
-                  >
-                    <ChevronDown
-                      className={`h-3 w-3 transition-transform ${showRemarks ? "rotate-180" : ""}`}
-                    />
-                    Remarks / Terms
-                  </button>
-                  {showRemarks && (
-                    <div className="bg-white rounded-lg p-2 border border-slate-100 text-[10px] text-slate-600 leading-relaxed mt-1">
-                      {remarks ||
-                        "All jewellery items are BIS Hallmarked. 100% Certified."}
-                    </div>
+            {/* Totals Section */}
+            <div className="mt-4 flex justify-end">
+              <div className="w-72 border border-black">
+                <div className="p-3 space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span className="tabular-nums">
+                      ₹
+                      {subtotal.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Discount</span>
+                    <span className="tabular-nums">
+                      - ₹
+                      {discountAmount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Taxable Amount</span>
+                    <span className="tabular-nums">
+                      ₹
+                      {(subtotal - discountAmount).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  {halfTax > 0 && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>CGST ({(taxRate / 2).toFixed(1)}%)</span>
+                        <span className="tabular-nums">
+                          ₹
+                          {halfTax.toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>SGST ({(taxRate / 2).toFixed(1)}%)</span>
+                        <span className="tabular-nums">
+                          ₹
+                          {halfTax.toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    </>
                   )}
-                </div>
+                  <div className="flex justify-between border-b border-black pb-2">
+                    <span>Round Off</span>
+                    <span className="tabular-nums">
+                      ₹
+                      {(
+                        grandTotal -
+                        (subtotal - discountAmount + taxAmount)
+                      ).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
 
-                {/* Totals */}
-                <div className="w-56 shrink-0">
-                  <div className="bg-white rounded-lg border border-slate-100 overflow-hidden">
-                    <div className="p-2.5 space-y-1.5">
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-slate-400">Subtotal</span>
-                        <span className="font-semibold text-slate-700 tabular-nums">
-                          ₹
-                          {subtotal.toLocaleString("en-IN", {
-                            minimumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                      {discountAmount > 0 && (
-                        <div className="flex justify-between text-[10px]">
-                          <span className="text-rose-500">Discount</span>
-                          <span className="font-semibold text-rose-600 tabular-nums">
-                            -₹
-                            {discountAmount.toLocaleString("en-IN", {
-                              minimumFractionDigits: 2,
-                            })}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-slate-400">GST ({taxRate}%)</span>
-                        <span className="font-semibold text-slate-700 tabular-nums">
-                          ₹
-                          {taxAmount.toLocaleString("en-IN", {
-                            minimumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="border-t border-slate-200 bg-gradient-to-r from-amber-50 to-amber-100/50 px-2.5 py-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[11px] font-bold text-slate-900">
-                          Grand Total
-                        </span>
-                        <span className="text-sm font-black text-amber-700 tabular-nums">
-                          ₹
-                          {grandTotal.toLocaleString("en-IN", {
-                            minimumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                    </div>
+                  <div className="flex justify-between pt-1 font-bold text-lg text-black">
+                    <span>GRAND TOTAL</span>
+                    <span className="tabular-nums">
+                      ₹
+                      {grandTotal.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Amount formatted */}
+            <div className="mt-6 border-t border-black pt-3">
+              <p className="text-sm">
+                <span className="font-bold mr-2">Amount:</span>
+                <span className="font-semibold">
+                  ₹{grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+              </p>
+            </div>
+
+            {/* Remarks and Terms */}
+            <div className="mt-6 text-sm">
+              <p className="font-bold mb-1">Remarks:</p>
+              <p className="text-black min-h-[40px] border-b border-dotted border-black">
+                {remarks || ""}
+              </p>
+
+              <div className="mt-4">
+                <p className="font-bold mb-1">Terms & Conditions:</p>
+                <ol className="list-decimal list-inside text-xs text-black space-y-1">
+                  <li>
+                    Goods/services once sold will be subject to company terms.
+                  </li>
+                  <li>
+                    Payment should be made according to agreed payment terms.
+                  </li>
+                  <li>Any dispute is subject to applicable jurisdiction.</li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Signatures */}
+            <div className="mt-16 flex justify-between px-8 text-sm">
+              <div className="text-center">
+                <div className="w-48 border-b border-black mb-2"></div>
+                <p className="font-bold">Customer Signature</p>
+              </div>
+              <div className="text-center">
+                <div className="w-48 border-b border-black mb-2"></div>
+                <p className="font-bold">Authorized Signatory</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-12 pt-4 border-t border-black flex justify-between text-xs text-black">
+              <p>Thank you for your business.</p>
+              <p>Page 1 of 1</p>
+            </div>
           </div>
         </div>
 
-        {/* ── Footer Actions ── */}
-        <DialogFooter className="px-5 py-3 border-t border-slate-200 bg-gradient-to-r from-slate-50 to-white shrink-0 gap-2 sm:justify-end">
+        {/* Action Buttons - Hidden when printing */}
+        <DialogFooter className="px-5 py-3 border-t border-black bg-slate-50 shrink-0 sm:justify-end gap-2 print:hidden">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => onOpenChange(false)}
-            className="h-8 border-slate-200 hover:bg-slate-100 text-slate-700 text-xs"
+            className="border-black"
           >
             Close
           </Button>
-
           {voucherId && (
             <>
               <Button
                 variant="outline"
-                size="sm"
-                className="h-8 gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-50 text-xs"
+                className="gap-2"
                 onClick={handleOpenPdf}
                 disabled={isOpeningPdf || isDownloadingPdf}
               >
-                <ExternalLink className="h-3.5 w-3.5" />
+                <ExternalLink className="h-4 w-4" />
                 View PDF
               </Button>
-
               <Button
                 variant="outline"
-                size="sm"
-                className="h-8 gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-50 text-xs"
+                className="gap-2"
                 onClick={handleDownloadPdf}
                 disabled={isOpeningPdf || isDownloadingPdf}
               >
-                <FileDown className="h-3.5 w-3.5" />
-                Download
+                <FileDown className="h-4 w-4" />
+                Download PDF
               </Button>
             </>
           )}
-
           <Button
-            size="sm"
-            className="h-8 gap-1.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-md shadow-amber-200 text-xs"
+            className="gap-2 bg-slate-900 hover:bg-slate-800 text-white"
             onClick={() => window.print()}
           >
-            <Printer className="h-3.5 w-3.5" />
-            <span className="font-semibold">Print</span>
+            <Printer className="h-4 w-4" />
+            Print
           </Button>
         </DialogFooter>
       </DialogContent>

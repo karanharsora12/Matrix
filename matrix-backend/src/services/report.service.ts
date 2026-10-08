@@ -130,311 +130,177 @@ const invoiceTemplate = `
   <meta charset="utf-8">
   <title>{{invoiceTitle}} - {{voucherNo}}</title>
   <style>
-    @page {
-      size: A4;
-      margin: 12mm 15mm;
-    }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-      font-size: 11px;
-      color: #1e293b;
-      line-height: 1.4;
-      background: #ffffff;
-    }
-    .invoice-container {
-      border: 1px solid #cbd5e1;
-      padding: 20px;
-      border-radius: 4px;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 2px solid #b45309;
-      padding-bottom: 12px;
-      margin-bottom: 14px;
-    }
-    .company-title {
-      font-size: 18px;
-      font-weight: 800;
-      color: #b45309;
-      letter-spacing: -0.5px;
-      text-transform: uppercase;
-    }
-    .company-subtitle {
-      font-size: 10px;
-      color: #64748b;
-      margin-top: 2px;
-    }
-    .doc-badge {
-      display: inline-block;
-      background: #b45309;
-      color: #ffffff;
-      padding: 4px 10px;
-      border-radius: 3px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      text-align: right;
-    }
-    .doc-meta {
-      text-align: right;
-      margin-top: 5px;
-      font-size: 10px;
-    }
-    .meta-grid {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-    .meta-card {
-      flex: 1;
-      border: 1px solid #e2e8f0;
-      background-color: #f8fafc;
-      padding: 8px 12px;
-      border-radius: 4px;
-    }
-    .meta-card-title {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: #64748b;
-      margin-bottom: 4px;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 2px;
-    }
-    .meta-card-name {
-      font-size: 12px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-    .items-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 14px;
-      font-size: 10px;
-    }
-    .items-table th {
-      background-color: #f1f5f9;
-      color: #334155;
-      font-weight: 700;
-      text-align: left;
-      padding: 6px 8px;
-      border: 1px solid #cbd5e1;
-    }
-    .items-table td {
-      padding: 6px 8px;
-      border: 1px solid #e2e8f0;
-    }
-    .items-table tr:nth-child(even) {
-      background-color: #fafbfc;
-    }
-    .text-center { text-align: center; }
-    .text-right { text-align: right; }
-    .font-semibold { font-weight: 600; }
-    .font-bold { font-weight: 700; }
-
-    .totals-layout {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      margin-top: 8px;
-    }
-    .terms-box {
-      flex: 1;
-      font-size: 9.5px;
-      color: #475569;
-    }
-    .terms-title {
-      font-weight: 700;
-      color: #1e293b;
-      margin-bottom: 3px;
-    }
-    .amount-words-box {
-      margin-top: 8px;
-      padding: 6px 8px;
-      background-color: #f8fafc;
-      border: 1px dashed #cbd5e1;
-      border-radius: 3px;
-      font-size: 9.5px;
-    }
-    .totals-table {
-      width: 260px;
-      border-collapse: collapse;
-      font-size: 10.5px;
-    }
-    .totals-table td {
-      padding: 4px 6px;
-    }
-    .totals-table tr.total-row td {
-      border-top: 1.5px solid #0f172a;
-      border-bottom: 1.5px solid #0f172a;
-      font-weight: 800;
-      font-size: 12px;
-      color: #0f172a;
-    }
-    .footer-signatures {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 25px;
-      padding-top: 15px;
-      border-top: 1px solid #e2e8f0;
-      font-size: 9.5px;
-    }
-    .sign-box {
-      text-align: center;
-      width: 170px;
-    }
-    .sign-line {
-      border-top: 1px solid #94a3b8;
-      margin-top: 35px;
-      padding-top: 4px;
-      font-weight: 600;
-    }
+    @page { size: A4; margin: 12mm 15mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color: #000; background: #fff; }
   </style>
 </head>
 <body>
-  <div class="invoice-container">
+  <div style="width: 100%;">
     <!-- Header -->
-    <div class="header">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 16px; border-bottom: 1px solid #000;">
       <div>
-        <div class="company-title">{{company.name}}</div>
-        <div class="company-subtitle">{{company.address}}</div>
-        <div class="company-subtitle">GSTIN: <strong>{{company.gstin}}</strong> &bull; Phone: {{company.phone}}</div>
+        <h1 style="font-size: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">{{company.name}}</h1>
+        <div style="font-size: 12px; margin-top: 4px;">
+          <p>{{company.address}}</p>
+          <p>GSTIN: <strong>{{company.gstin}}</strong></p>
+          <p>Phone: {{company.phone}}</p>
+        </div>
       </div>
-      <div>
-        <div class="doc-badge">{{invoiceTitle}}</div>
-        <div class="doc-meta">
-          <div><strong>Invoice #:</strong> {{voucherNo}}</div>
-          <div><strong>Date:</strong> {{voucherDate}}</div>
+      <div style="text-align: right;">
+        <h2 style="font-size: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #000; display: inline-block; padding-bottom: 4px; margin-bottom: 8px;">{{invoiceTitle}}</h2>
+        <div style="font-size: 14px; margin-top: 8px;">
+          <p><span style="margin-right: 8px;">Invoice No:</span><strong>{{voucherNo}}</strong></p>
+          <p style="margin-top: 4px;"><span style="margin-right: 8px;">Invoice Date:</span><strong>{{voucherDate}}</strong></p>
         </div>
       </div>
     </div>
 
-    <!-- Meta Grid -->
-    <div class="meta-grid">
-      <div class="meta-card">
-        <div class="meta-card-title">{{partyTitle}}</div>
-        <div class="meta-card-name">{{partyName}}</div>
-        {{#if partyPhone}}<div>Phone: {{partyPhone}}</div>{{/if}}
-        {{#if partyAddress}}<div>Address: {{partyAddress}}</div>{{/if}}
-        {{#if partyGst}}<div>GSTIN: {{partyGst}}</div>{{/if}}
+    <!-- Customer & Payment Info -->
+    <div style="margin-top: 16px; display: flex; border: 1px solid #000;">
+      <!-- BILL TO -->
+      <div style="flex: 1; padding: 8px; border-right: 1px solid #000;">
+        <h3 style="font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 8px;">{{partyTitle}}</h3>
+        <div style="font-size: 14px; line-height: 1.4;">
+          <p style="font-weight: bold; font-size: 16px;">{{partyName}}</p>
+          {{#if partyAddress}}<p>{{partyAddress}}</p>{{/if}}
+          {{#if partyPhone}}<p>Ph: {{partyPhone}}</p>{{/if}}
+          {{#if partyGst}}<p style="padding-top: 4px;">GSTIN: <strong>{{partyGst}}</strong></p>{{/if}}
+        </div>
       </div>
-      <div class="meta-card">
-        <div class="meta-card-title">Voucher Details</div>
-        <div><strong>Bill Mode:</strong> {{billMode}}</div>
-        <div><strong>Daybook:</strong> {{daybookName}}</div>
-        {{#if staffName}}<div><strong>{{staffTitle}}:</strong> {{staffName}}</div>{{/if}}
-        {{#if reference}}<div><strong>Ref:</strong> {{reference}}</div>{{/if}}
-        {{#if rateFixType}}<div><strong>Rate Type:</strong> {{rateFixType}}</div>{{/if}}
+      
+      <!-- PAYMENT DETAILS -->
+      <div style="flex: 1; padding: 8px;">
+        <h3 style="font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 8px;">Payment Details</h3>
+        <table style="font-size: 14px; width: 100%; border: none;">
+          <tr><td style="width: 100px; padding-bottom: 2px;">Mode:</td><td style="padding-bottom: 2px;"><strong>{{billMode}}</strong></td></tr>
+          <tr><td style="padding-bottom: 2px;">Rate Type:</td><td style="padding-bottom: 2px;"><strong>{{rateFixType}}</strong></td></tr>
+          <tr><td style="padding-bottom: 2px;">Reference:</td><td style="padding-bottom: 2px;"><strong>{{reference}}</strong></td></tr>
+          <tr><td style="padding-bottom: 2px;">Terms:</td><td style="padding-bottom: 2px;"><strong>Immediate</strong></td></tr>
+          {{#if staffName}}
+          <tr><td style="padding-bottom: 2px;">{{staffTitle}}:</td><td style="padding-bottom: 2px;"><strong>{{staffName}}</strong></td></tr>
+          {{/if}}
+        </table>
       </div>
     </div>
 
-    <!-- Items Table -->
-    <table class="items-table">
-      <thead>
-        <tr>
-          <th class="text-center" style="width: 25px;">#</th>
-          <th>Item Description</th>
-          <th>Item Code / Tag</th>
-          <th class="text-right">Qty</th>
-          <th class="text-right">Gross Wt</th>
-          <th class="text-right">Net Wt</th>
-          <th class="text-right">Rate (₹)</th>
-          <th class="text-right">Labour (₹)</th>
-          <th class="text-right">Amount (₹)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each items}}
-        <tr>
-          <td class="text-center">{{idx}}</td>
-          <td class="font-semibold">
-            {{name}}
-            {{#if groupName}}<span style="color:#64748b; font-size: 9px; font-weight: normal; display: block;">({{groupName}})</span>{{/if}}
-          </td>
-          <td>{{code}}</td>
-          <td class="text-right">{{qty}}</td>
-          <td class="text-right">{{grossWt}}g</td>
-          <td class="text-right font-semibold">{{netWt}}g</td>
-          <td class="text-right">₹{{rate}}</td>
-          <td class="text-right">₹{{labourAmount}}</td>
-          <td class="text-right font-bold">₹{{amount}}</td>
-        </tr>
-        {{/each}}
-      </tbody>
-      <tfoot>
-        <tr style="background-color: #f8fafc; font-weight: bold;">
-          <td colspan="4" class="text-right">Total:</td>
-          <td class="text-right">{{totalGrossWt}}g</td>
-          <td class="text-right">{{totalNetWt}}g</td>
-          <td colspan="2"></td>
-          <td class="text-right">₹{{subtotalFormatted}}</td>
-        </tr>
-      </tfoot>
-    </table>
-
-    <!-- Totals Layout -->
-    <div class="totals-layout">
-      <div class="terms-box">
-        <div class="terms-title">Terms & Conditions:</div>
-        <div>1. All gold/diamond jewellery certified as per BIS Hallmarking standards.</div>
-        <div>2. Subject to Ahmedabad jurisdiction.</div>
-        <div>3. Goods once sold will only be exchanged or taken back as per showroom exchange policy.</div>
-        {{#if remarks}}
-          <div style="margin-top: 4px;"><strong>Remarks:</strong> {{remarks}}</div>
-        {{/if}}
-
-        <div class="amount-words-box">
-          <strong>Amount in Words:</strong><br>
-          <em>{{amountInWords}}</em>
-        </div>
-      </div>
-
-      <table class="totals-table">
-        <tr>
-          <td>Subtotal (Taxable):</td>
-          <td class="text-right font-semibold">₹{{subtotalFormatted}}</td>
-        </tr>
-        {{#if discountFormatted}}
-        <tr style="color: #e11d48;">
-          <td>Discount:</td>
-          <td class="text-right font-semibold">-₹{{discountFormatted}}</td>
-        </tr>
-        {{/if}}
-        <tr>
-          <td>GST ({{taxRate}}%):</td>
-          <td class="text-right font-semibold">₹{{taxFormatted}}</td>
-        </tr>
-        {{#if roundOffFormatted}}
-        <tr>
-          <td>Round Off:</td>
-          <td class="text-right">₹{{roundOffFormatted}}</td>
-        </tr>
-        {{/if}}
-        <tr class="total-row">
-          <td>Grand Total:</td>
-          <td class="text-right">₹{{grandTotalFormatted}}</td>
-        </tr>
+    <!-- Item Table -->
+    <div style="margin-top: 16px;">
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 14px;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid #000; padding: 4px 8px; text-align: left; font-weight: bold; width: 30px;">#</th>
+            <th style="border: 1px solid #000; padding: 4px 8px; text-align: left; font-weight: bold;">Item Description</th>
+            <th style="border: 1px solid #000; padding: 4px 8px; text-align: left; font-weight: bold; width: 90px;">Code</th>
+            <th style="border: 1px solid #000; padding: 4px 8px; text-align: left; font-weight: bold; width: 80px;">Purity</th>
+            <th style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-weight: bold; width: 90px;">Net Wt</th>
+            <th style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-weight: bold; width: 90px;">Rate</th>
+            <th style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-weight: bold; width: 90px;">Labour</th>
+            <th style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-weight: bold; width: 120px;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each items}}
+          <tr>
+            <td style="border: 1px solid #000; padding: 4px 8px; text-align: center;">{{idx}}</td>
+            <td style="border: 1px solid #000; padding: 4px 8px;">
+              {{name}}
+              {{#if groupName}}<span style="font-size: 12px; margin-left: 4px;">[{{groupName}}]</span>{{/if}}
+            </td>
+            <td style="border: 1px solid #000; padding: 4px 8px;">{{code}}</td>
+            <td style="border: 1px solid #000; padding: 4px 8px;">22K</td>
+            <td style="border: 1px solid #000; padding: 4px 8px; text-align: right;">{{netWt}}g</td>
+            <td style="border: 1px solid #000; padding: 4px 8px; text-align: right;">₹{{rate}}</td>
+            <td style="border: 1px solid #000; padding: 4px 8px; text-align: right;">₹{{labourAmount}}</td>
+            <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-weight: 600;">₹{{amount}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
       </table>
     </div>
 
+    <!-- Totals Section -->
+    <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+      <div style="width: 280px; border: 1px solid #000;">
+        <div style="padding: 8px; font-size: 14px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>Subtotal</span>
+            <span>₹{{subtotalFormatted}}</span>
+          </div>
+          {{#if discountFormatted}}
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>Discount</span>
+            <span>- ₹{{discountFormatted}}</span>
+          </div>
+          {{/if}}
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>Taxable Amount</span>
+            <span>₹{{taxableAmountFormatted}}</span>
+          </div>
+          {{#if taxFormatted}}
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>CGST ({{halfTaxRate}}%)</span>
+            <span>₹{{halfTaxFormatted}}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>SGST ({{halfTaxRate}}%)</span>
+            <span>₹{{halfTaxFormatted}}</span>
+          </div>
+          {{/if}}
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 4px;">
+            <span>Round Off</span>
+            <span>₹{{roundOffFormatted}}</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding-top: 4px; font-weight: bold; font-size: 16px;">
+            <span>GRAND TOTAL</span>
+            <span>₹{{grandTotalFormatted}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Amount formatted -->
+    <div style="margin-top: 16px; border-top: 1px solid #000; padding-top: 8px;">
+      <p style="font-size: 14px;">
+        <span style="font-weight: bold; margin-right: 8px;">Amount:</span>
+        <span style="font-weight: 600;">₹{{grandTotalFormatted}}</span>
+      </p>
+    </div>
+
+    <!-- Remarks and Terms -->
+    <div style="margin-top: 16px; font-size: 14px;">
+      <p style="font-weight: bold; margin-bottom: 4px;">Remarks:</p>
+      <p style="min-height: 30px; border-bottom: 1px solid #000; padding-bottom: 4px;">
+        {{remarks}}
+      </p>
+      
+      <div style="margin-top: 16px;">
+        <p style="font-weight: bold; margin-bottom: 4px;">Terms & Conditions:</p>
+        <ol style="margin-left: 20px; font-size: 12px; margin-top: 4px; padding-left: 0;">
+          <li style="margin-bottom: 4px;">Goods/services once sold will be subject to company terms.</li>
+          <li style="margin-bottom: 4px;">Payment should be made according to agreed payment terms.</li>
+          <li style="margin-bottom: 4px;">Any dispute is subject to applicable jurisdiction.</li>
+        </ol>
+      </div>
+    </div>
+
     <!-- Signatures -->
-    <div class="footer-signatures">
-      <div class="sign-box">
-        <div class="sign-line">Customer Signature</div>
+    <div style="margin-top: 48px; display: flex; justify-content: space-between; padding: 0 32px; font-size: 14px;">
+      <div style="text-align: center;">
+        <div style="width: 192px; border-bottom: 1px solid #000; margin-bottom: 4px;"></div>
+        <p style="font-weight: bold;">Customer Signature</p>
       </div>
-      <div class="sign-box">
-        <div style="font-weight: 700; color: #b45309;">For {{company.name}}</div>
-        <div class="sign-line">Authorized Signatory</div>
+      <div style="text-align: center;">
+        <div style="width: 192px; border-bottom: 1px solid #000; margin-bottom: 4px;"></div>
+        <p style="font-weight: bold;">Authorized Signatory</p>
       </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="margin-top: 32px; padding-top: 8px; border-top: 1px solid #000; display: flex; justify-content: space-between; font-size: 12px;">
+      <p>Thank you for your business.</p>
+      <p>Page 1 of 1</p>
     </div>
   </div>
 </body>
@@ -506,9 +372,12 @@ export class ReportService {
       discountFormatted: discount > 0 ? formatCurrency(discount) : null,
       taxRate: Number(sale.taxRate || 3),
       taxFormatted: formatCurrency(tax),
-      roundOffFormatted: roundOff !== 0 ? formatCurrency(roundOff) : null,
+      roundOffFormatted: roundOff !== 0 ? formatCurrency(roundOff) : "0.00",
+      taxableAmountFormatted: formatCurrency(subtotal - discount),
+      halfTaxRate: 1.5,
+      halfTaxFormatted: formatCurrency(tax / 2),
       grandTotalFormatted: formatCurrency(grandTotal),
-      amountInWords: numberToWords(grandTotal),
+      
       remarks: sale.remarks || "",
     };
 
@@ -594,7 +463,7 @@ export class ReportService {
       taxFormatted: formatCurrency(tax),
       roundOffFormatted: null,
       grandTotalFormatted: formatCurrency(grandTotal),
-      amountInWords: numberToWords(grandTotal),
+      
       remarks: purchase.remarks || "",
     };
 
