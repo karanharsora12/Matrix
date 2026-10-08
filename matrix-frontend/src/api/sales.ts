@@ -49,7 +49,10 @@ export interface Sale {
   customerAltPhone?: string;
   customerAddress1?: string;
   customerAddress2?: string;
+  customerCityId?: number;
   customerCity?: string;
+  customerAreaId?: number;
+  customerArea?: string;
   customerPincode?: string;
   customerState?: string;
   customerGstNo?: string;

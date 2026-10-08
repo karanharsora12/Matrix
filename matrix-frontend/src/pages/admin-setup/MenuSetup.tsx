@@ -39,6 +39,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { ListingCard } from "@/components/common/ListingCard";
 
 const iconOptions = [
   "LayoutDashboard",
@@ -284,7 +285,7 @@ export default function MenuSetup() {
     const hasChildren = data.children && data.children.length > 0;
     return (
       <div
-        className="flex items-center gap-2 h-full"
+        className="flex items-center gap-2 h-full flex-1"
         style={{ paddingLeft: `${data.depth * 20}px` }}
       >
         {hasChildren ? (
@@ -311,7 +312,7 @@ export default function MenuSetup() {
   const ActionsRenderer = (params: ICellRendererParams) => {
     if (!params.data) return null;
     return (
-      <div className="flex items-center justify-end gap-2 h-full pr-2">
+      <div className="p-3 h-full flex flex-col">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -426,194 +427,196 @@ export default function MenuSetup() {
   );
 
   return (
-    <div className="p-6 h-full flex flex-col gap-6">
-      <ListingHeader
-        title="Menu Setup"
-        onAdd={handleAdd}
-        addText="Add Menu"
-        searchProps={{
-          value: search,
-          onChange: (e) => setSearch(e.target.value),
-          placeholder: "Search menus...",
-        }}
-        onRefresh={fetchMenus}
-        onExportExcel={() => onExportExcel("Menu_Setup")}
-        onExportPdf={() => onExportPdf("Menu Setup List", "Menu_Setup")}
-        onPrint={() => onPrint("Menu Setup List")}
-      />
+    <div className="p-2 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Menu Setup"
+          onAdd={handleAdd}
+          addText="Add Menu"
+          searchProps={{
+            value: search,
+            onChange: (e) => setSearch(e.target.value),
+            placeholder: "Search menus...",
+          }}
+          onRefresh={fetchMenus}
+          onExportExcel={() => onExportExcel("Menu_Setup")}
+          onExportPdf={() => onExportPdf("Menu Setup List", "Menu_Setup")}
+          onPrint={() => onPrint("Menu Setup List")}
+        />
 
-      <DataGrid
-        ref={gridRef}
-        rowData={visibleRows}
-        columnDefs={columnDefs}
-        gridOptions={{
-          rowHeight: 40,
-          pagination: false,
-          rowDragManaged: true,
-          animateRows: true,
-          defaultColDef: {
-            filter: false,
-            floatingFilter: false,
-          },
-          onRowDoubleClicked: (e) => {
-            if (e.node.rowPinned) return;
-            handleEdit(e.data);
-          },
-        }}
-      />
+        <DataGrid
+          ref={gridRef}
+          rowData={visibleRows}
+          columnDefs={columnDefs}
+          gridOptions={{
+            rowHeight: 40,
+            pagination: false,
+            rowDragManaged: true,
+            animateRows: true,
+            defaultColDef: {
+              filter: false,
+              floatingFilter: false,
+            },
+            onRowDoubleClicked: (e) => {
+              if (e.node.rowPinned) return;
+              handleEdit(e.data);
+            },
+          }}
+        />
 
-      <SideModal
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        title={isEditing ? "Edit Menu" : "Add New Menu"}
-        width="lg"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!form.menuName || !form.menuCaption}
-              className="gap-2"
-            >
-              {isEditing ? "Update Menu" : "Create Menu"}
-            </Button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="menuName" className="text-sm font-medium">
-              Menu Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="menuName"
-              value={form.menuName}
-              onChange={(e) => set("menuName", e.target.value)}
-              placeholder="e.g. admin_setup"
-              className="h-9"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="menuCaption" className="text-sm font-medium">
-              Caption <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="menuCaption"
-              value={form.menuCaption}
-              onChange={(e) => set("menuCaption", e.target.value)}
-              placeholder="e.g. Admin Setup"
-              className="h-9"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Icon</Label>
-            <Select
-              value={form.menuIcon}
-              onValueChange={(v) => set("menuIcon", v)}
-            >
-              <SelectTrigger
-                className="h-9"
-                clearable={!!form.menuIcon}
-                onClear={() => set("menuIcon", "")}
+        <SideModal
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          title={isEditing ? "Edit Menu" : "Add New Menu"}
+          width="lg"
+          footer={
+            <>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={!form.menuName || !form.menuCaption}
+                className="gap-2"
               >
-                <SelectValue placeholder="Select an icon" />
+                {isEditing ? "Update Menu" : "Create Menu"}
+              </Button>
+            </>
+          }
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="menuName" className="text-sm font-medium">
+                Menu Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="menuName"
+                value={form.menuName}
+                onChange={(e) => set("menuName", e.target.value)}
+                placeholder="e.g. admin_setup"
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="menuCaption" className="text-sm font-medium">
+                Caption <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="menuCaption"
+                value={form.menuCaption}
+                onChange={(e) => set("menuCaption", e.target.value)}
+                placeholder="e.g. Admin Setup"
+                className="h-9"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Icon</Label>
+              <Select
+                value={form.menuIcon}
+                onValueChange={(v) => set("menuIcon", v)}
+              >
+                <SelectTrigger
+                  className="h-9"
+                  clearable={!!form.menuIcon}
+                  onClear={() => set("menuIcon", "")}
+                >
+                  <SelectValue placeholder="Select an icon" />
+                </SelectTrigger>
+                <SelectContent>
+                  {iconOptions.map((icon) => {
+                    const Ic = (LucideIcons as any)[icon];
+                    return (
+                      <SelectItem key={icon} value={icon}>
+                        <div className="flex items-center gap-2">
+                          {Ic && <Ic className="h-3.5 w-3.5" />}
+                          <span>{icon}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="menuPath" className="text-sm font-medium">
+                Path
+              </Label>
+              <Input
+                id="menuPath"
+                value={form.menuPath}
+                onChange={(e) => set("menuPath", e.target.value)}
+                placeholder="e.g. /admin-setup"
+                className="h-9"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Parent Menu</Label>
+            <Select
+              value={form.parentMenuId || "none"}
+              onValueChange={(v) => set("parentMenuId", v === "none" ? "" : v)}
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="None (Root level)" />
               </SelectTrigger>
               <SelectContent>
-                {iconOptions.map((icon) => {
-                  const Ic = (LucideIcons as any)[icon];
-                  return (
-                    <SelectItem key={icon} value={icon}>
-                      <div className="flex items-center gap-2">
-                        {Ic && <Ic className="h-3.5 w-3.5" />}
-                        <span>{icon}</span>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
+                <SelectItem value="none">None (Root level)</SelectItem>
+                {parentMenus.map((m) => (
+                  <SelectItem key={m.id} value={String(m.id)}>
+                    {"\u00A0\u00A0".repeat(m.depth)}
+                    {m.menuCaption}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="menuPath" className="text-sm font-medium">
-              Path
-            </Label>
-            <Input
-              id="menuPath"
-              value={form.menuPath}
-              onChange={(e) => set("menuPath", e.target.value)}
-              placeholder="e.g. /admin-setup"
-              className="h-9"
-            />
-          </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Parent Menu</Label>
-          <Select
-            value={form.parentMenuId || "none"}
-            onValueChange={(v) => set("parentMenuId", v === "none" ? "" : v)}
-          >
-            <SelectTrigger className="h-9">
-              <SelectValue placeholder="None (Root level)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None (Root level)</SelectItem>
-              {parentMenus.map((m) => (
-                <SelectItem key={m.id} value={String(m.id)}>
-                  {"\u00A0\u00A0".repeat(m.depth)}
-                  {m.menuCaption}
-                </SelectItem>
+          <div>
+            <h4 className="text-sm font-semibold mb-3">Access Rights</h4>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { key: "listRight" as const, label: "List", icon: List },
+                { key: "viewRight" as const, label: "View", icon: Eye },
+                { key: "addRight" as const, label: "Add", icon: Plus },
+                { key: "editRight" as const, label: "Edit", icon: Edit2 },
+                {
+                  key: "showListingTotalRight" as const,
+                  label: "Show Total",
+                  icon: ArrowUpRight,
+                },
+                { key: "printRight" as const, label: "Print", icon: Printer },
+                {
+                  key: "exportRight" as const,
+                  label: "Export",
+                  icon: Download,
+                },
+              ].map(({ key, label, icon: Ic }) => (
+                <label
+                  key={key}
+                  className={cn(
+                    "flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all",
+                    form[key]
+                      ? "border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30"
+                      : "border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800/50",
+                  )}
+                >
+                  <Checkbox
+                    checked={form[key]}
+                    onChange={(e) => set(key, e.target.checked)}
+                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  />
+                  <Ic className="h-3.5 w-3.5 text-zinc-500" />
+                  <span className="text-sm">{label}</span>
+                </label>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <h4 className="text-sm font-semibold mb-3">Access Rights</h4>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { key: "listRight" as const, label: "List", icon: List },
-              { key: "viewRight" as const, label: "View", icon: Eye },
-              { key: "addRight" as const, label: "Add", icon: Plus },
-              { key: "editRight" as const, label: "Edit", icon: Edit2 },
-              {
-                key: "showListingTotalRight" as const,
-                label: "Show Total",
-                icon: ArrowUpRight,
-              },
-              { key: "printRight" as const, label: "Print", icon: Printer },
-              {
-                key: "exportRight" as const,
-                label: "Export",
-                icon: Download,
-              },
-            ].map(({ key, label, icon: Ic }) => (
-              <label
-                key={key}
-                className={cn(
-                  "flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all",
-                  form[key]
-                    ? "border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30"
-                    : "border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800/50",
-                )}
-              >
-                <Checkbox
-                  checked={form[key]}
-                  onChange={(e) => set(key, e.target.checked)}
-                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
-                <Ic className="h-3.5 w-3.5 text-zinc-500" />
-                <span className="text-sm">{label}</span>
-              </label>
-            ))}
+            </div>
           </div>
-        </div>
-      </SideModal>
+        </SideModal>
+      </ListingCard>
     </div>
   );
 }

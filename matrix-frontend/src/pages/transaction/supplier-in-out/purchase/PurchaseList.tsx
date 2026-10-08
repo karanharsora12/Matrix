@@ -10,6 +10,7 @@ import type { ColDef } from "ag-grid-community";
 import { formatDate } from "@/utils/date";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ListingCard } from "@/components/common/ListingCard";
 
 const PurchaseList: React.FC = () => {
   const navigate = useNavigate();
@@ -130,37 +131,39 @@ const PurchaseList: React.FC = () => {
   }, [purchases]);
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Purchase"
-        addText="Add Purchase"
-        onAdd={() => handleNavigate(0)}
-        searchProps={{
-          value: searchTerm,
-          onChange: (e) => setSearchTerm(e.target.value),
-          placeholder: "Search purchase vouchers...",
-        }}
-        onRefresh={() =>
-          queryClient.invalidateQueries({ queryKey: ["purchases"] })
-        }
-        onExportExcel={() => onExportExcel("Purchase")}
-        onExportPdf={() => onExportPdf("Purchase List", "Purchase")}
-        onPrint={() => onPrint("Purchase List")}
-      />
+    <div className="p-3 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Purchase"
+          addText="Add Purchase"
+          onAdd={() => handleNavigate(0)}
+          searchProps={{
+            value: searchTerm,
+            onChange: (e) => setSearchTerm(e.target.value),
+            placeholder: "Search purchase vouchers...",
+          }}
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ["purchases"] })
+          }
+          onExportExcel={() => onExportExcel("Purchase")}
+          onExportPdf={() => onExportPdf("Purchase List", "Purchase")}
+          onPrint={() => onPrint("Purchase List")}
+        />
 
-      <DataGrid
-        ref={gridRef}
-        rowData={filteredData}
-        columnDefs={columnDefs}
-        pinnedBottomRowData={summary}
-        gridOptions={{
-          onRowDoubleClicked: (e) => {
-            if (e.node.rowPinned) return;
-            handleNavigate(e.data.id);
-          },
-          pagination: false,
-        }}
-      />
+        <DataGrid
+          ref={gridRef}
+          rowData={filteredData}
+          columnDefs={columnDefs}
+          pinnedBottomRowData={summary}
+          gridOptions={{
+            onRowDoubleClicked: (e) => {
+              if (e.node.rowPinned) return;
+              handleNavigate(e.data.id);
+            },
+            pagination: false,
+          }}
+        />
+      </ListingCard>
     </div>
   );
 };

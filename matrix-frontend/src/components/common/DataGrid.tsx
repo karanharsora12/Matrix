@@ -57,8 +57,7 @@ const getGridResponse = <TData,>(payload: unknown): GridApiResponse<TData> => {
 const lightTheme = themeQuartz.withParams({
   backgroundColor: "hsl(0 0% 100%)",
   foregroundColor: "hsl(240 10% 3.9%)",
-  headerBackgroundColor:
-    "color-mix(in srgb, var(--primary-action) 14%, white)",
+  headerBackgroundColor: "color-mix(in srgb, var(--primary-action) 14%, white)",
   headerTextColor: "hsl(240 10% 3.9%)",
   headerFontWeight: 600,
   headerFontSize: 13,
@@ -75,7 +74,7 @@ const lightTheme = themeQuartz.withParams({
   rangeSelectionBorderColor: "var(--primary-action)",
   oddRowBackgroundColor: "hsl(0 0% 100%)",
   borderRadius: 6,
-  wrapperBorderRadius: 0,
+  wrapperBorderRadius: 6,
   cellHorizontalPadding: 12,
   headerCellHoverBackgroundColor:
     "color-mix(in srgb, var(--primary-action) 22%, white)",
@@ -91,8 +90,7 @@ const lightTheme = themeQuartz.withParams({
 const darkTheme = themeQuartz.withPart(colorSchemeDark).withParams({
   backgroundColor: "hsl(240 10% 5.5%)",
   foregroundColor: "hsl(0 0% 98%)",
-  headerBackgroundColor:
-    "color-mix(in srgb, var(--primary-action) 32%, black)",
+  headerBackgroundColor: "color-mix(in srgb, var(--primary-action) 32%, black)",
   headerTextColor: "color-mix(in srgb, var(--primary-action) 45%, white)",
   headerFontWeight: 600,
   headerFontSize: 13,
@@ -242,7 +240,7 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
       rowData ?? (usesInfiniteScroll ? undefined : apiRowData);
 
     return (
-      <div className="h-full w-full ag-grid-custom">
+      <div className="flex-1 min-h-0 h-full w-full ag-grid-custom">
         <AgGridReact
           ref={ref}
           theme={theme}
@@ -256,6 +254,8 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
           onGridReady={handleGridReady}
           rowSelection="single"
           animateRows={true}
+          rowHeight={38}
+          headerHeight={44}
           pinnedBottomRowData={pinnedBottomRowData ?? apiSummary}
           {...restGridOptions}
         />

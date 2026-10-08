@@ -11,6 +11,7 @@ import type { ColDef } from "ag-grid-community";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
+import { ListingCard } from "@/components/common/ListingCard";
 
 const Accounts: React.FC = () => {
   const navigate = useNavigate();
@@ -96,7 +97,11 @@ const Accounts: React.FC = () => {
         headerName: "Active",
         width: 60,
         cellRenderer: ActiveCellRenderer,
-        cellStyle: { display: "flex", justifyContent: "center", alignItems: "center" },
+        cellStyle: {
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        },
       },
       {
         headerName: "",
@@ -116,35 +121,36 @@ const Accounts: React.FC = () => {
   const accountApiInput = useMemo(() => ({ search: searchTerm }), [searchTerm]);
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Accounts"
-        subtitle="Manage financial accounts, types and groups"
-        onAdd={handleAdd}
-        addText="Add Account"
-        searchProps={{
-          value: searchTerm,
-          onChange: (e) => setSearchTerm(e.target.value),
-          placeholder: "Search accounts...",
-        }}
-        onRefresh={() => gridRef.current?.api.refreshInfiniteCache()}
-        onExportExcel={() => onExportExcel("Accounts")}
-        onExportPdf={() => onExportPdf("Accounts List", "Accounts")}
-        onPrint={() => onPrint("Accounts List")}
-      />
+    <div className="p-3 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Accounts"
+          onAdd={handleAdd}
+          addText="Add Account"
+          searchProps={{
+            value: searchTerm,
+            onChange: (e) => setSearchTerm(e.target.value),
+            placeholder: "Search accounts...",
+          }}
+          onRefresh={() => gridRef.current?.api.refreshInfiniteCache()}
+          onExportExcel={() => onExportExcel("Accounts")}
+          onExportPdf={() => onExportPdf("Accounts List", "Accounts")}
+          onPrint={() => onPrint("Accounts List")}
+        />
 
-      <DataGrid
-        ref={gridRef}
-        apiName={API_ENDPOINTS.ACCOUNTS.BASE}
-        apiInput={accountApiInput}
-        columnDefs={columnDefs}
-        gridOptions={{
-          onRowDoubleClicked: (e) => {
-            if (e.node.rowPinned) return;
-            handleEdit(e.data);
-          },
-        }}
-      />
+        <DataGrid
+          ref={gridRef}
+          apiName={API_ENDPOINTS.ACCOUNTS.BASE}
+          apiInput={accountApiInput}
+          columnDefs={columnDefs}
+          gridOptions={{
+            onRowDoubleClicked: (e) => {
+              if (e.node.rowPinned) return;
+              handleEdit(e.data);
+            },
+          }}
+        />
+      </ListingCard>
     </div>
   );
 };

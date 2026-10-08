@@ -6,6 +6,7 @@ import { useGridActions } from "@/hooks/useGridActions";
 import { MenuList, getListingColumns } from "@/lib/defaults";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
+import { ListingCard } from "@/components/common/ListingCard";
 
 const PincodesList: React.FC = () => {
   const queryClient = useQueryClient();
@@ -17,24 +18,26 @@ const PincodesList: React.FC = () => {
   );
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Pincodes"
-        subtitle="Manage pincodes for city & area setup"
-        onRefresh={() =>
-          queryClient.invalidateQueries({ queryKey: ["geo-pincodes"] })
-        }
-        onExportExcel={() => onExportExcel("Pincodes")}
-        onExportPdf={() => onExportPdf("Pincodes List", "Pincodes")}
-        onPrint={() => onPrint("Pincodes List")}
-      />
+    <div className="p-3 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Pincodes"
+          subtitle="Manage pincodes for city & area setup"
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ["geo-pincodes"] })
+          }
+          onExportExcel={() => onExportExcel("Pincodes")}
+          onExportPdf={() => onExportPdf("Pincodes List", "Pincodes")}
+          onPrint={() => onPrint("Pincodes List")}
+        />
 
-      <DataGrid
-        ref={gridRef}
-        columnDefs={columnDefs}
-        apiName={API_ENDPOINTS.GEO.PINCODES}
-        gridOptions={{ pagination: false }}
-      />
+        <DataGrid
+          ref={gridRef}
+          columnDefs={columnDefs}
+          apiName={API_ENDPOINTS.GEO.PINCODES}
+          gridOptions={{ pagination: false }}
+        />
+      </ListingCard>
     </div>
   );
 };

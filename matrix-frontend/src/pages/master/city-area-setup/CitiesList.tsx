@@ -6,6 +6,7 @@ import { useGridActions } from "@/hooks/useGridActions";
 import { MenuList, getListingColumns } from "@/lib/defaults";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
+import { ListingCard } from "@/components/common/ListingCard";
 
 const CitiesList: React.FC = () => {
   const queryClient = useQueryClient();
@@ -17,24 +18,25 @@ const CitiesList: React.FC = () => {
   );
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Cities"
-        subtitle="Manage cities for city & area setup"
-        onRefresh={() =>
-          queryClient.invalidateQueries({ queryKey: ["geo-cities"] })
-        }
-        onExportExcel={() => onExportExcel("Cities")}
-        onExportPdf={() => onExportPdf("Cities List", "Cities")}
-        onPrint={() => onPrint("Cities List")}
-      />
+    <div className="p-3 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Cities"
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ["geo-cities"] })
+          }
+          onExportExcel={() => onExportExcel("Cities")}
+          onExportPdf={() => onExportPdf("Cities List", "Cities")}
+          onPrint={() => onPrint("Cities List")}
+        />
 
-      <DataGrid
-        ref={gridRef}
-        columnDefs={columnDefs}
-        apiName={API_ENDPOINTS.GEO.CITIES}
-        gridOptions={{ pagination: false }}
-      />
+        <DataGrid
+          ref={gridRef}
+          columnDefs={columnDefs}
+          apiName={API_ENDPOINTS.GEO.CITIES}
+          gridOptions={{ pagination: false }}
+        />
+      </ListingCard>
     </div>
   );
 };

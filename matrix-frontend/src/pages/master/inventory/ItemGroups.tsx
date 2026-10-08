@@ -30,6 +30,7 @@ import {
 import type { ColDef } from "ag-grid-community";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { MenuList, getListingColumns } from "@/lib/defaults";
+import { ListingCard } from "@/components/common/ListingCard";
 
 const ItemGroups: React.FC = () => {
   const queryClient = useQueryClient();
@@ -181,184 +182,188 @@ const ItemGroups: React.FC = () => {
   }, [metals, rateTypes, handleDelete]);
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Item Groups"
-        subtitle="Manage inventory item groups"
-        onAdd={handleAdd}
-        addText="Add Item Group"
-        searchProps={{
-          value: searchTerm,
-          onChange: (e) => setSearchTerm(e.target.value),
-          placeholder: "Search item groups...",
-        }}
-        onRefresh={() =>
-          queryClient.invalidateQueries({ queryKey: ["itemGroups"] })
-        }
-        onExportExcel={() => onExportExcel("Item_Groups")}
-        onExportPdf={() => onExportPdf("Item Groups List", "Item_Groups")}
-        onPrint={() => onPrint("Item Groups List")}
-      />
+    <div className="p-3 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Item Groups"
+          onAdd={handleAdd}
+          addText="Add Item Group"
+          searchProps={{
+            value: searchTerm,
+            onChange: (e) => setSearchTerm(e.target.value),
+            placeholder: "Search item groups...",
+          }}
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ["itemGroups"] })
+          }
+          onExportExcel={() => onExportExcel("Item_Groups")}
+          onExportPdf={() => onExportPdf("Item Groups List", "Item_Groups")}
+          onPrint={() => onPrint("Item Groups List")}
+        />
 
-      <DataGrid
-        ref={gridRef}
-        columnDefs={columnDefs}
-        apiName={API_ENDPOINTS.INVENTORY.ITEM_GROUPS}
-        infiniteScroll={false}
-        gridOptions={{
-          onRowDoubleClicked: (e) => {
-            if (e.node.rowPinned) return;
-            handleEdit(e.data);
-          },
-          pagination: false,
-        }}
-      />
+        <DataGrid
+          ref={gridRef}
+          columnDefs={columnDefs}
+          apiName={API_ENDPOINTS.INVENTORY.ITEM_GROUPS}
+          infiniteScroll={false}
+          gridOptions={{
+            onRowDoubleClicked: (e) => {
+              if (e.node.rowPinned) return;
+              handleEdit(e.data);
+            },
+            pagination: false,
+          }}
+        />
 
-      <Modal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={editingItem ? "Edit Item Group" : "Add Item Group"}
-        width="lg"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save</Button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Item Group Name</Label>
-            <Input
-              value={formData.itemGroupName || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, itemGroupName: e.target.value })
-              }
-              placeholder="e.g. Rings"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Short Name</Label>
-            <Input
-              value={formData.shortName || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, shortName: e.target.value })
-              }
-              placeholder="e.g. RNG"
-            />
-          </div>
+        <Modal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          title={editingItem ? "Edit Item Group" : "Add Item Group"}
+          width="lg"
+          footer={
+            <>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave}>Save</Button>
+            </>
+          }
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Item Group Name</Label>
+              <Input
+                value={formData.itemGroupName || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, itemGroupName: e.target.value })
+                }
+                placeholder="e.g. Rings"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Short Name</Label>
+              <Input
+                value={formData.shortName || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, shortName: e.target.value })
+                }
+                placeholder="e.g. RNG"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label>Metal Type</Label>
-            <Select
-              value={formData.metalTypeId?.toString() || ""}
-              onValueChange={(val) =>
-                setFormData({ ...formData, metalTypeId: parseInt(val) })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Metal" />
-              </SelectTrigger>
-              <SelectContent>
-                {metals.map((m) => (
-                  <SelectItem key={m.id} value={m.id.toString()}>
-                    {m.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <Label>Metal Type</Label>
+              <Select
+                value={formData.metalTypeId?.toString() || ""}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, metalTypeId: parseInt(val) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Metal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {metals.map((m) => (
+                    <SelectItem key={m.id} value={m.id.toString()}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label>Measure Unit Code</Label>
-            <Select
-              value={formData.measureUnitCode || ""}
-              onValueChange={(val) =>
-                setFormData({ ...formData, measureUnitCode: val })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Unit" />
-              </SelectTrigger>
-              <SelectContent>
-                {measureUnits.map((u) => (
-                  <SelectItem key={u.id} value={u.listValue}>
-                    {u.listValue}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <Label>Measure Unit Code</Label>
+              <Select
+                value={formData.measureUnitCode || ""}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, measureUnitCode: val })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {measureUnits.map((u) => (
+                    <SelectItem key={u.id} value={u.listValue}>
+                      {u.listValue}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label>Sales Rate</Label>
-            <AmountInput
-              value={formData.salesRate}
-              onChange={(val) =>
-                setFormData({
-                  ...formData,
-                  salesRate: val,
-                })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Sales Rate Type</Label>
-            <Select
-              value={formData.salesRateTypeId?.toString() || ""}
-              onValueChange={(val) =>
-                setFormData({ ...formData, salesRateTypeId: parseInt(val) })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Rate Type" />
-              </SelectTrigger>
-              <SelectContent>
-                {rateTypes.map((r) => (
-                  <SelectItem key={r.id} value={r.id.toString()}>
-                    {r.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <Label>Sales Rate</Label>
+              <AmountInput
+                value={formData.salesRate}
+                onChange={(val) =>
+                  setFormData({
+                    ...formData,
+                    salesRate: val,
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Sales Rate Type</Label>
+              <Select
+                value={formData.salesRateTypeId?.toString() || ""}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, salesRateTypeId: parseInt(val) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Rate Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rateTypes.map((r) => (
+                    <SelectItem key={r.id} value={r.id.toString()}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label>Purchase Rate</Label>
-            <AmountInput
-              value={formData.purchaseRate}
-              onChange={(val) =>
-                setFormData({
-                  ...formData,
-                  purchaseRate: val,
-                })
-              }
-            />
+            <div className="space-y-2">
+              <Label>Purchase Rate</Label>
+              <AmountInput
+                value={formData.purchaseRate}
+                onChange={(val) =>
+                  setFormData({
+                    ...formData,
+                    purchaseRate: val,
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Purchase Rate Type</Label>
+              <Select
+                value={formData.purchaseRateTypeId?.toString() || ""}
+                onValueChange={(val) =>
+                  setFormData({
+                    ...formData,
+                    purchaseRateTypeId: parseInt(val),
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Rate Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rateTypes.map((r) => (
+                    <SelectItem key={r.id} value={r.id.toString()}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Purchase Rate Type</Label>
-            <Select
-              value={formData.purchaseRateTypeId?.toString() || ""}
-              onValueChange={(val) =>
-                setFormData({ ...formData, purchaseRateTypeId: parseInt(val) })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Rate Type" />
-              </SelectTrigger>
-              <SelectContent>
-                {rateTypes.map((r) => (
-                  <SelectItem key={r.id} value={r.id.toString()}>
-                    {r.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </Modal>
+        </Modal>
+      </ListingCard>
     </div>
   );
 };

@@ -12,6 +12,7 @@ import { formatDate } from "@/utils/date";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
+import { ListingCard } from "@/components/common/ListingCard";
 
 const SalesList: React.FC = () => {
   const navigate = useNavigate();
@@ -40,34 +41,38 @@ const SalesList: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Sales"
-        addText="Add Sales"
-        onAdd={() => handleNavigate(0)}
-        searchProps={{
-          value: searchTerm,
-          onChange: (e) => setSearchTerm(e.target.value),
-          placeholder: "Search sales...",
-        }}
-        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["sales"] })}
-        onExportExcel={() => onExportExcel("Sales")}
-        onExportPdf={() => onExportPdf("Sales List", "Sales")}
-        onPrint={() => onPrint("Sales List")}
-      />
+    <div className="p-3 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Sales"
+          addText="Add Sales"
+          onAdd={() => handleNavigate(0)}
+          searchProps={{
+            value: searchTerm,
+            onChange: (e) => setSearchTerm(e.target.value),
+            placeholder: "Search sales...",
+          }}
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ["sales"] })
+          }
+          onExportExcel={() => onExportExcel("Sales")}
+          onExportPdf={() => onExportPdf("Sales List", "Sales")}
+          onPrint={() => onPrint("Sales List")}
+        />
 
-      <DataGrid
-        ref={gridRef}
-        columnDefs={columnDefs}
-        apiName={API_ENDPOINTS.SALES.BASE}
-        gridOptions={{
-          onRowDoubleClicked: (e) => {
-            if (e.node.rowPinned) return;
-            handleNavigate(e.data.id);
-          },
-          pagination: false,
-        }}
-      />
+        <DataGrid
+          ref={gridRef}
+          columnDefs={columnDefs}
+          apiName={API_ENDPOINTS.SALES.BASE}
+          gridOptions={{
+            onRowDoubleClicked: (e) => {
+              if (e.node.rowPinned) return;
+              handleNavigate(e.data.id);
+            },
+            pagination: false,
+          }}
+        />
+      </ListingCard>
     </div>
   );
 };

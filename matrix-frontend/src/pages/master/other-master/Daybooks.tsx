@@ -27,6 +27,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import { useMemo, useState } from "react";
 import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
+import { ListingCard } from "@/components/common/ListingCard";
 
 export default function Daybooks() {
   const queryClient = useQueryClient();
@@ -192,7 +193,11 @@ export default function Daybooks() {
         headerName: "Active",
         width: 60,
         cellRenderer: ActiveCellRenderer,
-        cellStyle: { display: "flex", justifyContent: "center", alignItems: "center" },
+        cellStyle: {
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        },
       },
       {
         headerName: "",
@@ -221,184 +226,186 @@ export default function Daybooks() {
   }, [daybooks, searchTerm]);
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Daybooks"
-        subtitle="Manage financial daybook registers"
-        onAdd={handleAdd}
-        addText="Add Daybook"
-        searchProps={{
-          value: searchTerm,
-          onChange: (e) => setSearchTerm(e.target.value),
-          placeholder: "Search daybooks...",
-        }}
-        onRefresh={() =>
-          queryClient.invalidateQueries({ queryKey: ["daybooks"] })
-        }
-        onExportExcel={() => onExportExcel("Daybooks")}
-        onExportPdf={() => onExportPdf("Daybooks List", "Daybooks")}
-        onPrint={() => onPrint("Daybooks List")}
-      />
-
-      {!isDaybooksLoading && (
-        <DataGrid
-          ref={gridRef}
-          rowData={filteredData}
-          columnDefs={columnDefs}
-          gridOptions={{
-            onRowDoubleClicked: (e) => {
-              if (e.node.rowPinned) return;
-              handleEdit(e.data);
-            },
-            pagination: false,
+    <div className="p-3 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Daybooks"
+          subtitle="Manage financial daybook registers"
+          onAdd={handleAdd}
+          addText="Add Daybook"
+          searchProps={{
+            value: searchTerm,
+            onChange: (e) => setSearchTerm(e.target.value),
+            placeholder: "Search daybooks...",
           }}
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ["daybooks"] })
+          }
+          onExportExcel={() => onExportExcel("Daybooks")}
+          onExportPdf={() => onExportPdf("Daybooks List", "Daybooks")}
+          onPrint={() => onPrint("Daybooks List")}
         />
-      )}
 
-      <Modal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={editingDaybook ? "Edit Daybook" : "Add Daybook"}
-        width="lg"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={
-                !formData.daybookName ||
-                !formData.shortName ||
-                !formData.daybookGroupId ||
-                !formData.voucherPrefix
-              }
-            >
-              {editingDaybook ? "Update Daybook" : "Save Daybook"}
-            </Button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-2 gap-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="daybookName" className="text-sm font-medium">
-              Daybook Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="daybookName"
-              value={formData.daybookName || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, daybookName: e.target.value })
-              }
-              placeholder="e.g. Wholesale Sales"
-              className="h-9"
-            />
-          </div>
+        {!isDaybooksLoading && (
+          <DataGrid
+            ref={gridRef}
+            rowData={filteredData}
+            columnDefs={columnDefs}
+            gridOptions={{
+              onRowDoubleClicked: (e) => {
+                if (e.node.rowPinned) return;
+                handleEdit(e.data);
+              },
+              pagination: false,
+            }}
+          />
+        )}
 
-          <div className="space-y-2">
-            <Label htmlFor="shortName" className="text-sm font-medium">
-              Short Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="shortName"
-              value={formData.shortName || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, shortName: e.target.value })
-              }
-              placeholder="e.g. WSAL"
-              className="h-9"
-            />
-          </div>
+        <Modal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          title={editingDaybook ? "Edit Daybook" : "Add Daybook"}
+          width="lg"
+          footer={
+            <>
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={
+                  !formData.daybookName ||
+                  !formData.shortName ||
+                  !formData.daybookGroupId ||
+                  !formData.voucherPrefix
+                }
+              >
+                {editingDaybook ? "Update Daybook" : "Save Daybook"}
+              </Button>
+            </>
+          }
+        >
+          <div className="grid grid-cols-2 gap-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="daybookName" className="text-sm font-medium">
+                Daybook Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="daybookName"
+                value={formData.daybookName || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, daybookName: e.target.value })
+                }
+                placeholder="e.g. Wholesale Sales"
+                className="h-9"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              Day Book Group <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={formData.daybookGroupId?.toString() || ""}
-              onValueChange={(val) =>
-                setFormData({ ...formData, daybookGroupId: parseInt(val) })
-              }
-            >
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Select Group" />
-              </SelectTrigger>
-              <SelectContent>
-                {daybookGroups.map((g) => (
-                  <SelectItem key={g.id} value={g.id.toString()}>
-                    {g.groupName} ({g.shortName})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="shortName" className="text-sm font-medium">
+                Short Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="shortName"
+                value={formData.shortName || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, shortName: e.target.value })
+                }
+                placeholder="e.g. WSAL"
+                className="h-9"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="voucherPrefix" className="text-sm font-medium">
-              Voucher Prefix <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="voucherPrefix"
-              value={formData.voucherPrefix || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, voucherPrefix: e.target.value })
-              }
-              placeholder="e.g. INV"
-              className="h-9"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                Day Book Group <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.daybookGroupId?.toString() || ""}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, daybookGroupId: parseInt(val) })
+                }
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select Group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {daybookGroups.map((g) => (
+                    <SelectItem key={g.id} value={g.id.toString()}>
+                      {g.groupName} ({g.shortName})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2 col-span-2">
-            <Label htmlFor="description" className="text-sm font-medium">
-              Description
-            </Label>
-            <Input
-              id="description"
-              value={formData.description || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="e.g. Wholesale steel sales"
-              className="h-9"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="voucherPrefix" className="text-sm font-medium">
+                Voucher Prefix <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="voucherPrefix"
+                value={formData.voucherPrefix || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, voucherPrefix: e.target.value })
+                }
+                placeholder="e.g. INV"
+                className="h-9"
+              />
+            </div>
 
-          <div className="flex items-center space-x-2 pt-1">
-            <Checkbox
-              id="allowManualNumber"
-              checked={formData.allowManualNumber ?? false}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  allowManualNumber: !!e.target?.checked,
-                })
-              }
-            />
-            <Label
-              htmlFor="allowManualNumber"
-              className="text-sm font-medium cursor-pointer"
-            >
-              Allow Manual Numbering
-            </Label>
-          </div>
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Description
+              </Label>
+              <Input
+                id="description"
+                value={formData.description || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="e.g. Wholesale steel sales"
+                className="h-9"
+              />
+            </div>
 
-          <div className="flex items-center space-x-2 pt-1">
-            <Checkbox
-              id="isActive"
-              checked={formData.isActive ?? true}
-              onChange={(e) =>
-                setFormData({ ...formData, isActive: !!e.target.value })
-              }
-            />
-            <Label
-              htmlFor="isActive"
-              className="text-sm font-medium cursor-pointer"
-            >
-              Is Active
-            </Label>
+            <div className="flex items-center space-x-2 pt-1">
+              <Checkbox
+                id="allowManualNumber"
+                checked={formData.allowManualNumber ?? false}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    allowManualNumber: !!e.target?.checked,
+                  })
+                }
+              />
+              <Label
+                htmlFor="allowManualNumber"
+                className="text-sm font-medium cursor-pointer"
+              >
+                Allow Manual Numbering
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-1">
+              <Checkbox
+                id="isActive"
+                checked={formData.isActive ?? true}
+                onChange={(e) =>
+                  setFormData({ ...formData, isActive: !!e.target.value })
+                }
+              />
+              <Label
+                htmlFor="isActive"
+                className="text-sm font-medium cursor-pointer"
+              >
+                Is Active
+              </Label>
+            </div>
           </div>
-        </div>
-      </Modal>
+        </Modal>
+      </ListingCard>
     </div>
   );
 }

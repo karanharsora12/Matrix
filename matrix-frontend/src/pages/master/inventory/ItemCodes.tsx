@@ -30,6 +30,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import React, { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
+import { ListingCard } from "@/components/common/ListingCard";
 
 const ItemCodes: React.FC = () => {
   const queryClient = useQueryClient();
@@ -203,170 +204,173 @@ const ItemCodes: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Item Codes"
-        subtitle="Manage your specific item variants and codes"
-        onAdd={handleAdd}
-        addText="Add Item Code"
-        searchProps={{
-          value: searchTerm,
-          onChange: (e) => setSearchTerm(e.target.value),
-          placeholder: "Search item codes...",
-        }}
-        onRefresh={() =>
-          queryClient.invalidateQueries({ queryKey: ["itemCodes"] })
-        }
-        onExportExcel={() => onExportExcel("ItemCodes")}
-        onExportPdf={() => onExportPdf("Item Codes List", "ItemCodes")}
-        onPrint={() => onPrint("Item Codes List")}
-      />
+    <div className="p-3 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Item Codes"
+          onAdd={handleAdd}
+          addText="Add Item Code"
+          searchProps={{
+            value: searchTerm,
+            onChange: (e) => setSearchTerm(e.target.value),
+            placeholder: "Search item codes...",
+          }}
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ["itemCodes"] })
+          }
+          onExportExcel={() => onExportExcel("ItemCodes")}
+          onExportPdf={() => onExportPdf("Item Codes List", "ItemCodes")}
+          onPrint={() => onPrint("Item Codes List")}
+        />
 
-      <DataGrid
-        ref={gridRef}
-        apiName={API_ENDPOINTS.INVENTORY.ITEM_CODES}
-        infiniteScroll={false}
-        columnDefs={columnDefs}
-        gridOptions={{
-          onRowDoubleClicked: (e) => {
-            if (e.node.rowPinned) return;
-            handleEdit(e.data);
-          },
-          pagination: false,
-        }}
-      />
+        <DataGrid
+          ref={gridRef}
+          apiName={API_ENDPOINTS.INVENTORY.ITEM_CODES}
+          infiniteScroll={false}
+          columnDefs={columnDefs}
+          gridOptions={{
+            onRowDoubleClicked: (e) => {
+              if (e.node.rowPinned) return;
+              handleEdit(e.data);
+            },
+            pagination: false,
+          }}
+        />
 
-      <Modal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={editingItemCode ? "Edit Item Code" : "Add Item Code"}
-        width="lg"
-        footer={
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isActive"
-                checked={formData.isActive}
-                onChange={(e) =>
-                  setFormData({ ...formData, isActive: e.target.checked })
-                }
-              />
-              <Label
-                htmlFor="isActive"
-                className="cursor-pointer font-normal text-sm"
-              >
-                Is Active
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                Save
-              </Button>
-            </div>
-          </div>
-        }
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2 col-span-2 sm:col-span-1">
-            <Label htmlFor="itemCodeName">Item Code</Label>
-            <Input
-              id="itemCodeName"
-              value={formData.itemCodeName || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, itemCodeName: e.target.value })
-              }
-              placeholder="e.g. TSHIRT-RED-L"
-            />
-          </div>
-
-          <div className="space-y-2 col-span-2 sm:col-span-1">
-            <Label>Item</Label>
-            <Select
-              value={formData.itemId ? formData.itemId.toString() : ""}
-              onValueChange={(val) =>
-                setFormData({
-                  ...formData,
-                  itemId: parseInt(val, 10),
-                  attributeValues: [],
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Item" />
-              </SelectTrigger>
-              <SelectContent>
-                {items.map((item) => (
-                  <SelectItem key={item.id} value={item.id.toString()}>
-                    {item.itemName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {selectedItem &&
-            selectedItem.attributes &&
-            selectedItem.attributes.length > 0 && (
-              <div className="col-span-2 space-y-4 pt-2 border-t mt-2">
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Attributes for {selectedItem.itemName}
+        <Modal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          title={editingItemCode ? "Edit Item Code" : "Add Item Code"}
+          width="lg"
+          footer={
+            <div className="flex w-full items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={(e) =>
+                    setFormData({ ...formData, isActive: e.target.checked })
+                  }
+                />
+                <Label
+                  htmlFor="isActive"
+                  className="cursor-pointer font-normal text-sm"
+                >
+                  Is Active
                 </Label>
-                <div className="grid grid-cols-2 gap-4">
-                  {selectedItem.attributes.map((attrCategoryId) => {
-                    const category = commonLists.find(
-                      (c) => c.id === attrCategoryId,
-                    );
-                    const categoryName = category
-                      ? category.listValue
-                      : `Category ${attrCategoryId}`;
-                    const options = allAttributes.filter(
-                      (a) => a.attributeNameId === attrCategoryId,
-                    );
-                    const selectedVal =
-                      getSelectedAttributeValueForCategory(attrCategoryId);
-
-                    return (
-                      <div key={attrCategoryId} className="space-y-2">
-                        <Label>{categoryName}</Label>
-                        <Select
-                          value={selectedVal}
-                          onValueChange={(val) =>
-                            handleAttributeChange(
-                              attrCategoryId,
-                              parseInt(val, 10),
-                            )
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={`Select ${categoryName}`}
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {options.map((opt) => (
-                              <SelectItem
-                                key={opt.id}
-                                value={opt.id.toString()}
-                              >
-                                {opt.attributeValue}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
-            )}
-        </div>
-      </Modal>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          }
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2 col-span-2 sm:col-span-1">
+              <Label htmlFor="itemCodeName">Item Code</Label>
+              <Input
+                id="itemCodeName"
+                value={formData.itemCodeName || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, itemCodeName: e.target.value })
+                }
+                placeholder="e.g. TSHIRT-RED-L"
+              />
+            </div>
+
+            <div className="space-y-2 col-span-2 sm:col-span-1">
+              <Label>Item</Label>
+              <Select
+                value={formData.itemId ? formData.itemId.toString() : ""}
+                onValueChange={(val) =>
+                  setFormData({
+                    ...formData,
+                    itemId: parseInt(val, 10),
+                    attributeValues: [],
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Item" />
+                </SelectTrigger>
+                <SelectContent>
+                  {items.map((item) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {item.itemName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedItem &&
+              selectedItem.attributes &&
+              selectedItem.attributes.length > 0 && (
+                <div className="col-span-2 space-y-4 pt-2 border-t mt-2">
+                  <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Attributes for {selectedItem.itemName}
+                  </Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedItem.attributes.map((attrCategoryId) => {
+                      const category = commonLists.find(
+                        (c) => c.id === attrCategoryId,
+                      );
+                      const categoryName = category
+                        ? category.listValue
+                        : `Category ${attrCategoryId}`;
+                      const options = allAttributes.filter(
+                        (a) => a.attributeNameId === attrCategoryId,
+                      );
+                      const selectedVal =
+                        getSelectedAttributeValueForCategory(attrCategoryId);
+
+                      return (
+                        <div key={attrCategoryId} className="space-y-2">
+                          <Label>{categoryName}</Label>
+                          <Select
+                            value={selectedVal}
+                            onValueChange={(val) =>
+                              handleAttributeChange(
+                                attrCategoryId,
+                                parseInt(val, 10),
+                              )
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue
+                                placeholder={`Select ${categoryName}`}
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {options.map((opt) => (
+                                <SelectItem
+                                  key={opt.id}
+                                  value={opt.id.toString()}
+                                >
+                                  {opt.attributeValue}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+          </div>
+        </Modal>
+      </ListingCard>
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { useGridActions } from "@/hooks/useGridActions";
 import { MenuList, getListingColumns } from "@/lib/defaults";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
+import { ListingCard } from "@/components/common/ListingCard";
 
 const AreasList: React.FC = () => {
   const queryClient = useQueryClient();
@@ -17,24 +18,26 @@ const AreasList: React.FC = () => {
   );
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Areas"
-        subtitle="Manage areas for city & area setup"
-        onRefresh={() =>
-          queryClient.invalidateQueries({ queryKey: ["geo-areas"] })
-        }
-        onExportExcel={() => onExportExcel("Areas")}
-        onExportPdf={() => onExportPdf("Areas List", "Areas")}
-        onPrint={() => onPrint("Areas List")}
-      />
+    <div className="p-3 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Areas"
+          subtitle="Manage areas for city & area setup"
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ["geo-areas"] })
+          }
+          onExportExcel={() => onExportExcel("Areas")}
+          onExportPdf={() => onExportPdf("Areas List", "Areas")}
+          onPrint={() => onPrint("Areas List")}
+        />
 
-      <DataGrid
-        ref={gridRef}
-        columnDefs={columnDefs}
-        apiName={API_ENDPOINTS.GEO.AREAS}
-        gridOptions={{ pagination: false }}
-      />
+        <DataGrid
+          ref={gridRef}
+          columnDefs={columnDefs}
+          apiName={API_ENDPOINTS.GEO.AREAS}
+          gridOptions={{ pagination: false }}
+        />
+      </ListingCard>
     </div>
   );
 };

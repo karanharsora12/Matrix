@@ -8,6 +8,7 @@ import {
   type SaleLineItem,
 } from "@/api/sales";
 import { AccountHelp } from "@/components/common/AccountHelp";
+import { AddressHelp } from "@/components/common/AddressHelp";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
 import { FormFooter } from "@/components/common/FormFooter";
@@ -916,58 +917,47 @@ export const Sales: React.FC = () => {
                 </div>
               </div>
 
-              {/* Customer Phone & City */}
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
-                    Phone
-                  </Label>
-                  <Input
-                    value={formData.customerPhone || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerPhone: e.target.value,
-                      }))
-                    }
-                    placeholder="9876543210"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
-                    City
-                  </Label>
-                  <Input
-                    value={formData.customerCity || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerCity: e.target.value,
-                      }))
-                    }
-                    placeholder="Ahmedabad"
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
-
+              {/* Customer Phone */}
               <div className="space-y-1">
                 <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
-                  Address
+                  Phone
                 </Label>
                 <Input
-                  value={formData.customerAddress1 || ""}
+                  value={formData.customerPhone || ""}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      customerAddress1: e.target.value,
+                      customerPhone: e.target.value,
                     }))
                   }
-                  placeholder="Address Line 1"
+                  placeholder="9876543210"
                   className="h-8 text-xs"
                 />
               </div>
+
+              <AddressHelp
+                value={{
+                  address1: formData.customerAddress1,
+                  cityId: formData.customerCityId as number | undefined,
+                  cityName: formData.customerCity,
+                  areaId: formData.customerAreaId as number | undefined,
+                  areaName: formData.customerArea,
+                  pincode: formData.customerPincode,
+                }}
+                onChange={(addr) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    customerAddress1: addr.address1,
+                    customerCityId: addr.cityId,
+                    customerCity: addr.cityName,
+                    customerAreaId: addr.areaId,
+                    customerArea: addr.areaName,
+                    customerPincode: addr.pincode,
+                  }))
+                }
+                showAddress
+                addressPlaceholder="Address Line 1"
+              />
             </div>
           </div>
 

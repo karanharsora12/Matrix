@@ -20,6 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import React, { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
+import { ListingCard } from "@/components/common/ListingCard";
 
 const Items: React.FC = () => {
   const queryClient = useQueryClient();
@@ -144,114 +145,119 @@ const Items: React.FC = () => {
   }, [commonLists, handleDelete]);
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
-      <ListingHeader
-        title="Items"
-        subtitle="Manage your items and attributes"
-        onAdd={handleAdd}
-        addText="Add Item"
-        searchProps={{
-          value: searchTerm,
-          onChange: (e) => setSearchTerm(e.target.value),
-          placeholder: "Search items...",
-        }}
-        onRefresh={() => queryClient.invalidateQueries({ queryKey: ["items"] })}
-        onExportExcel={() => onExportExcel("Items")}
-        onExportPdf={() => onExportPdf("Items List", "Items")}
-        onPrint={() => onPrint("Items List")}
-      />
+    <div className="p-3 h-full flex flex-col">
+      <ListingCard>
+        <ListingHeader
+          title="Items"
+          onAdd={handleAdd}
+          addText="Add Item"
+          searchProps={{
+            value: searchTerm,
+            onChange: (e) => setSearchTerm(e.target.value),
+            placeholder: "Search items...",
+          }}
+          onRefresh={() =>
+            queryClient.invalidateQueries({ queryKey: ["items"] })
+          }
+          onExportExcel={() => onExportExcel("Items")}
+          onExportPdf={() => onExportPdf("Items List", "Items")}
+          onPrint={() => onPrint("Items List")}
+        />
 
-      <DataGrid
-        ref={gridRef}
-        apiName={API_ENDPOINTS.INVENTORY.ITEMS}
-        infiniteScroll={false}
-        columnDefs={columnDefs}
-        gridOptions={{
-          onRowDoubleClicked: (e) => {
-            if (e.node.rowPinned) return;
-            handleEdit(e.data);
-          },
-          pagination: false,
-        }}
-      />
+        <DataGrid
+          ref={gridRef}
+          apiName={API_ENDPOINTS.INVENTORY.ITEMS}
+          infiniteScroll={false}
+          columnDefs={columnDefs}
+          gridOptions={{
+            onRowDoubleClicked: (e) => {
+              if (e.node.rowPinned) return;
+              handleEdit(e.data);
+            },
+            pagination: false,
+          }}
+        />
 
-      <Modal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        title={editingItem ? "Edit Item" : "Add Item"}
-        width="lg"
-        footer={
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isActive"
-                checked={formData.isActive}
+        <Modal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          title={editingItem ? "Edit Item" : "Add Item"}
+          width="lg"
+          footer={
+            <div className="flex w-full items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={(e) =>
+                    setFormData({ ...formData, isActive: e.target.checked })
+                  }
+                />
+                <Label
+                  htmlFor="isActive"
+                  className="cursor-pointer font-normal text-sm"
+                >
+                  Is Active
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          }
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="itemName">Item Name</Label>
+              <Input
+                id="itemName"
+                value={formData.itemName || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, isActive: e.target.checked })
+                  setFormData({ ...formData, itemName: e.target.value })
                 }
+                placeholder="e.g. Steel Pipe"
               />
-              <Label
-                htmlFor="isActive"
-                className="cursor-pointer font-normal text-sm"
-              >
-                Is Active
-              </Label>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                Save
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="shortName">Short Name</Label>
+              <Input
+                id="shortName"
+                value={formData.shortName || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, shortName: e.target.value })
+                }
+                placeholder="e.g. SP"
+              />
             </div>
-          </div>
-        }
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="itemName">Item Name</Label>
-            <Input
-              id="itemName"
-              value={formData.itemName || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, itemName: e.target.value })
-              }
-              placeholder="e.g. Steel Pipe"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="shortName">Short Name</Label>
-            <Input
-              id="shortName"
-              value={formData.shortName || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, shortName: e.target.value })
-              }
-              placeholder="e.g. SP"
-            />
-          </div>
 
-          <div className="col-span-2 space-y-3 pt-2">
-            <Label>Attributes</Label>
-            <MultiSelect
-              options={attributeTypes.map((type) => ({
-                label: type.listValue,
-                value: type.id,
-              }))}
-              selected={formData.attributes || []}
-              onChange={(selected) =>
-                setFormData({ ...formData, attributes: selected as number[] })
-              }
-              placeholder="Select Attributes..."
-              contentClassName="w-[450px]"
-            />
+            <div className="col-span-2 space-y-3 pt-2">
+              <Label>Attributes</Label>
+              <MultiSelect
+                options={attributeTypes.map((type) => ({
+                  label: type.listValue,
+                  value: type.id,
+                }))}
+                selected={formData.attributes || []}
+                onChange={(selected) =>
+                  setFormData({ ...formData, attributes: selected as number[] })
+                }
+                placeholder="Select Attributes..."
+                contentClassName="w-[450px]"
+              />
+            </div>
           </div>
-        </div>
-      </Modal>
+        </Modal>
+      </ListingCard>
     </div>
   );
 };
