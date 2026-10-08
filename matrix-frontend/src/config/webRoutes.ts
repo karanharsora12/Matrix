@@ -43,5 +43,9 @@ export const WEB_ROUTES = {
     RECEIPT: "/transactions/receipt/:token",
     CASH_RECEIPT_LIST: "/transactions/receipt/cash-receipt",
     CASH_RECEIPT: "/transactions/receipt/cash-receipt/:token",
+    REPAIRING_RECEIPT_LIST: "/transactions/repairing/repairing-receipt",
+    REPAIRING_RECEIPT: "/transactions/repairing/repairing-receipt/:token",
+    REPAIRING_BILL_LIST: "/transactions/repairing/repairing-bill",
+    REPAIRING_BILL: "/transactions/repairing/repairing-bill/:token",
   },
 };

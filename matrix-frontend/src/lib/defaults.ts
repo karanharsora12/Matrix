@@ -93,7 +93,6 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ColDef[]> = {
       width: 100,
       type: "numericColumn",
     },
-    { field: "measureUnitCode", headerName: "MU", width: 80 },
   ],
 
   [MenuList.ITEMS]: [

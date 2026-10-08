@@ -185,7 +185,6 @@ export class SalesService {
           grandTotal: String(grandTotal),
 
           advanceAmount: String(saleData.advanceAmount ?? 0),
-          urdAmount: String(saleData.urdAmount ?? 0),
           cashAmount: String(saleData.cashAmount ?? 0),
           bankAmount: String(saleData.bankAmount ?? 0),
           cardAmount: String(saleData.cardAmount ?? 0),
@@ -193,12 +192,8 @@ export class SalesService {
           schemeAmount: String(saleData.schemeAmount ?? 0),
           giftVoucherAmount: String(saleData.giftVoucherAmount ?? 0),
           salesReturnAmount: String(saleData.salesReturnAmount ?? 0),
-          kasarAmount: String(saleData.kasarAmount ?? 0),
           tdsAmount: String(saleData.tdsAmount ?? 0),
-
-          rateFixType: saleData.rateFixType || null,
           deliveryPending: Boolean(saleData.deliveryPending),
-          isActive: saleData.isActive ?? true,
 
           addBy: saleData.addBy ? Number(saleData.addBy) : null,
           editBy: saleData.editBy ? Number(saleData.editBy) : null,
@@ -316,8 +311,6 @@ export class SalesService {
 
       if (saleData.advanceAmount !== undefined)
         updateValues.advanceAmount = String(saleData.advanceAmount);
-      if (saleData.urdAmount !== undefined)
-        updateValues.urdAmount = String(saleData.urdAmount);
       if (saleData.cashAmount !== undefined)
         updateValues.cashAmount = String(saleData.cashAmount);
       if (saleData.bankAmount !== undefined)
@@ -332,13 +325,8 @@ export class SalesService {
         updateValues.giftVoucherAmount = String(saleData.giftVoucherAmount);
       if (saleData.salesReturnAmount !== undefined)
         updateValues.salesReturnAmount = String(saleData.salesReturnAmount);
-      if (saleData.kasarAmount !== undefined)
-        updateValues.kasarAmount = String(saleData.kasarAmount);
       if (saleData.tdsAmount !== undefined)
         updateValues.tdsAmount = String(saleData.tdsAmount);
-
-      if (saleData.rateFixType !== undefined)
-        updateValues.rateFixType = saleData.rateFixType;
       if (saleData.deliveryPending !== undefined)
         updateValues.deliveryPending = Boolean(saleData.deliveryPending);
       if (saleData.isActive !== undefined)

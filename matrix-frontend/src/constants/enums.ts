@@ -12,6 +12,7 @@ export const TransactionMenu = {
   CONTRA: "CONTRA",
   CREDIT_NOTE: "CREDIT_NOTE",
   DEBIT_NOTE: "DEBIT_NOTE",
+  REPAIRING: "REPAIRING",
 } as const;
 
 export type TransactionMenu =
@@ -66,6 +67,7 @@ export const TRANSACTION_MENU_DAYBOOK_GROUP_MAP: Record<string, string[]> = {
   [TransactionMenu.CONTRA]: ["CTR"],
   [TransactionMenu.CREDIT_NOTE]: ["SAL"],
   [TransactionMenu.DEBIT_NOTE]: ["PUR"],
+  [TransactionMenu.REPAIRING]: ["REP"],
 };
 
 export function getDaybooksByMenu<

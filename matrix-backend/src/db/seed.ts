@@ -2090,6 +2090,12 @@ async function main() {
         description: "Bank transactions and daybooks",
         isActive: true,
       },
+      {
+        groupName: "Repairing",
+        shortName: "REP",
+        description: "Repairing transactions",
+        isActive: true,
+      },
     ];
 
     for (const grp of daybookGroupList) {
@@ -2111,6 +2117,7 @@ async function main() {
     const cashGroupId = daybookGroupMap.get("CASH") || 3;
     const bankGroupId = daybookGroupMap.get("BANK") || 4;
     const jrnGroupId = daybookGroupMap.get("JRN") || 5;
+    const repGroupId = daybookGroupMap.get("REP") || 9;
 
     const daybooksList = [
       {
@@ -2201,6 +2208,24 @@ async function main() {
         voucherPrefix: "JV",
         allowManualNumber: true,
         description: "Adjustment journal entries",
+        isActive: true,
+      },
+      {
+        daybookName: "Repairing Receipt",
+        shortName: "REPRCT",
+        daybookGroupId: repGroupId,
+        voucherPrefix: "RR-",
+        allowManualNumber: false,
+        description: "Repairing Receipts (Orders)",
+        isActive: true,
+      },
+      {
+        daybookName: "Repairing Bill",
+        shortName: "REPBIL",
+        daybookGroupId: repGroupId,
+        voucherPrefix: "RB-",
+        allowManualNumber: false,
+        description: "Repairing Bills (Sales)",
         isActive: true,
       },
     ];

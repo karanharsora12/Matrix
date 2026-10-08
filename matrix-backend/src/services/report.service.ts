@@ -499,7 +499,6 @@ export class ReportService {
       staffTitle: "Salesman",
       staffName: sale.salesmanName || "",
       reference: sale.reference || "",
-      rateFixType: sale.rateFixType || "Fix",
       items,
       totalGrossWt: totalGrossWt.toFixed(3),
       totalNetWt: totalNetWt.toFixed(3),

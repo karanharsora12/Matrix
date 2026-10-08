@@ -1,3 +1,7 @@
+import RepairingReceipt from "@/pages/transaction/repairing/repairing-receipt/RepairingReceipt";
+import RepairingReceiptList from "@/pages/transaction/repairing/repairing-receipt/RepairingReceiptList";
+import RepairingBill from "@/pages/transaction/repairing/repairing-bill/RepairingBill";
+import RepairingBillList from "@/pages/transaction/repairing/repairing-bill/RepairingBillList";
 import Sales from "@/pages/transaction/customer-in-out/sales/Sales";
 import SalesList from "@/pages/transaction/customer-in-out/sales/SalesList";
 import CashPayment from "@/pages/transaction/payments/cash-payment/CashPayment";
@@ -139,6 +143,22 @@ export const router = createBrowserRouter([
           {
             path: WEB_ROUTES.TRANSACTION.CASH_RECEIPT,
             element: <CashReceipt />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.REPAIRING_RECEIPT_LIST,
+            element: <RepairingReceiptList />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.REPAIRING_RECEIPT,
+            element: <RepairingReceipt />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.REPAIRING_BILL_LIST,
+            element: <RepairingBillList />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.REPAIRING_BILL,
+            element: <RepairingBill />,
           },
         ],
       },
