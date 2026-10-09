@@ -1,4 +1,4 @@
-matrix-backend/node_modules
-matrix-frontend/node_modules
+node_modules/
+**/node_modules/
 
 matrix-backend/src/db/geo-data/cities_raw.json
