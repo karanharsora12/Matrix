@@ -181,7 +181,7 @@ const Items: React.FC = () => {
         <Modal
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
-          title={editingItem ? "Edit Item" : "Add Item"}
+          title="Item"
           width="lg"
           footer={
             <div className="flex w-full items-center justify-between">

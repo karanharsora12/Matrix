@@ -23,6 +23,20 @@ export class MenuController {
     }
   }
 
+  async updateOrder(req: Request, res: Response) {
+    try {
+      const items = req.body;
+      if (!Array.isArray(items)) {
+        return res.status(400).json({ error: "Expected an array of items" });
+      }
+      const result = await menuService.updateOrder(items);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error updating menu order:", error);
+      res.status(500).json({ error: error.message || "Internal server error" });
+    }
+  }
+
   async updateMenu(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id as string);

@@ -117,7 +117,6 @@ const VOUCHER_TYPES = [
 
 interface VoucherLine extends PaymentDetail {}
 
-
 const emptyLine = (): VoucherLine => ({
   accountId: 0,
   accountName: "",
@@ -503,7 +502,7 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
             </div>
             <div>
               <h1 className="text-lg font-bold text-slate-900 dark:text-zinc-100 leading-tight">
-                {isEditing ? `Edit ${meta.title}` : meta.title}
+                {meta.title}
               </h1>
               <p className="text-[11px] text-slate-500 dark:text-zinc-400">
                 {meta.subtitle}

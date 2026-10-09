@@ -240,7 +240,7 @@ const ItemCodes: React.FC = () => {
         <Modal
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
-          title={editingItemCode ? "Edit Item Code" : "Add Item Code"}
+          title="Item Code"
           width="lg"
           footer={
             <div className="flex w-full items-center justify-between">

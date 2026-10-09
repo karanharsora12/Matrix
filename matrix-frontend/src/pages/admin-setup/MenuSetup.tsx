@@ -8,12 +8,6 @@ import { GridDeleteCell } from "@/components/common/GridDeleteCell";
 import { useGridActions } from "@/hooks/useGridActions";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -33,10 +27,8 @@ import {
   Edit2,
   Eye,
   List,
-  MoreHorizontal,
   Plus,
   Printer,
-  Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ListingCard } from "@/components/common/ListingCard";
@@ -98,6 +90,7 @@ interface MenuForm {
   menuCaption: string;
   menuIcon: string;
   menuPath: string;
+  orderNo: number | string;
   parentMenuId: string;
   listRight: boolean;
   viewRight: boolean;
@@ -113,6 +106,7 @@ const emptyForm: MenuForm = {
   menuCaption: "",
   menuIcon: "Box",
   menuPath: "",
+  orderNo: "",
   parentMenuId: "",
   listRight: false,
   viewRight: false,
@@ -204,6 +198,8 @@ export default function MenuSetup() {
       menuCaption: menu.menuCaption || "",
       menuIcon: menu.menuIcon || "Box",
       menuPath: menu.menuPath || "",
+      orderNo:
+        menu.orderNo !== undefined && menu.orderNo !== null ? menu.orderNo : "",
       parentMenuId: menu.parentMenuId ? String(menu.parentMenuId) : "",
       listRight: !!menu.listRight,
       viewRight: !!menu.viewRight,
@@ -249,6 +245,7 @@ export default function MenuSetup() {
     try {
       const payload = {
         ...form,
+        orderNo: form.orderNo !== "" ? Number(form.orderNo) : 0,
         parentMenuId: form.parentMenuId ? parseInt(form.parentMenuId) : null,
       };
       if (form.id) {
@@ -309,34 +306,6 @@ export default function MenuSetup() {
     );
   };
 
-  const ActionsRenderer = (params: ICellRendererParams) => {
-    if (!params.data) return null;
-    return (
-      <div className="p-3 h-full flex flex-col">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36">
-            <DropdownMenuItem onClick={() => handleEdit(params.data)}>
-              <Edit2 className="mr-2 h-3.5 w-3.5" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => handleDelete(params.data.id)}
-              className="text-red-600 focus:text-red-600"
-            >
-              <Trash2 className="mr-2 h-3.5 w-3.5" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
-  };
-
   const BooleanRenderer = (params: ICellRendererParams) => {
     return (
       <div className="flex items-center justify-center h-full">
@@ -355,9 +324,16 @@ export default function MenuSetup() {
         headerName: "Caption",
         field: "menuCaption",
         cellRenderer: CaptionRenderer,
-        minWidth: 280,
+        minWidth: 260,
         flex: 2,
         rowDrag: true,
+      },
+      {
+        headerName: "Order",
+        field: "orderNo",
+        width: 80,
+        flex: 0,
+        editable: true,
       },
       { headerName: "Name", field: "menuName", flex: 1, minWidth: 150 },
       { headerName: "Path", field: "menuPath", flex: 1, minWidth: 150 },
@@ -459,7 +435,27 @@ export default function MenuSetup() {
             },
             onRowDoubleClicked: (e) => {
               if (e.node.rowPinned) return;
+              if ((e as any).colDef?.field === "orderNo") return;
               handleEdit(e.data);
+            },
+            onRowDragEnd: async (e) => {
+              const updatedItems: { id: number; orderNo: number }[] = [];
+              e.api.forEachNode((node: any, index: number) => {
+                if (node.data && node.data.id) {
+                  updatedItems.push({ id: node.data.id, orderNo: index + 1 });
+                }
+              });
+              if (updatedItems.length > 0) {
+                try {
+                  await apiClient.put(
+                    API_ENDPOINTS.MENUS.REORDER,
+                    updatedItems,
+                  );
+                  fetchMenus();
+                } catch (error) {
+                  console.error("Failed to reorder menus:", error);
+                }
+              }
             },
           }}
         />
@@ -467,7 +463,7 @@ export default function MenuSetup() {
         <SideModal
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          title={isEditing ? "Edit Menu" : "Add New Menu"}
+          title="Menu Setup"
           width="lg"
           footer={
             <>
@@ -554,25 +550,42 @@ export default function MenuSetup() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Parent Menu</Label>
-            <Select
-              value={form.parentMenuId || "none"}
-              onValueChange={(v) => set("parentMenuId", v === "none" ? "" : v)}
-            >
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="None (Root level)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None (Root level)</SelectItem>
-                {parentMenus.map((m) => (
-                  <SelectItem key={m.id} value={String(m.id)}>
-                    {"\u00A0\u00A0".repeat(m.depth)}
-                    {m.menuCaption}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Parent Menu</Label>
+              <Select
+                value={form.parentMenuId || "none"}
+                onValueChange={(v) =>
+                  set("parentMenuId", v === "none" ? "" : v)
+                }
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="None (Root level)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None (Root level)</SelectItem>
+                  {parentMenus.map((m) => (
+                    <SelectItem key={m.id} value={String(m.id)}>
+                      {"\u00A0\u00A0".repeat(m.depth)}
+                      {m.menuCaption}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="orderNo" className="text-sm font-medium">
+                Order / Sequence
+              </Label>
+              <Input
+                id="orderNo"
+                type="number"
+                value={form.orderNo}
+                onChange={(e) => set("orderNo", e.target.value)}
+                placeholder="e.g. 1, 2, 3..."
+                className="h-9"
+              />
+            </div>
           </div>
 
           <div>

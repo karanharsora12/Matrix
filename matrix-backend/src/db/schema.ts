@@ -29,6 +29,7 @@ export const menus = pgTable("menus", {
   parentMenuId: integer("parent_menu_id").references(
     (): AnyPgColumn => menus.id,
   ),
+  orderNo: integer("order_no").default(0).notNull(),
   listRight: boolean("list_right").default(false).notNull(),
   viewRight: boolean("view_right").default(false).notNull(),
   addRight: boolean("add_right").default(false).notNull(),

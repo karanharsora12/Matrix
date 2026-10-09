@@ -111,9 +111,7 @@ const AccountForm: React.FC = () => {
       <div className="flex-1 overflow-y-auto">
         <div className="w-full pb-24">
           <div className="border-b border-gray-200 bg-white px-6 py-3">
-            <h1 className="text-xl font-semibold text-gray-900">
-              {isEditing ? "Edit Account" : "Add Account"}
-            </h1>
+            <h1 className="text-xl font-semibold text-gray-900">Account</h1>
           </div>
 
           <div className="px-6 py-6">

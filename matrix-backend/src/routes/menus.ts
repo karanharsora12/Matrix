@@ -5,6 +5,7 @@ const router = Router();
 
 router.post("/", menuController.getMenus);
 router.post("/create", menuController.createMenu);
+router.put("/reorder", menuController.updateOrder);
 router.put("/:id", menuController.updateMenu);
 router.delete("/:id", menuController.deleteMenu);
 

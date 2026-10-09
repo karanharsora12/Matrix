@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   },
   MENUS: {
     BASE: "/menus",
+    REORDER: "/menus/reorder",
     BY_ID: (id: string | number) => `/menus/${id}`,
   },
   INVENTORY: {

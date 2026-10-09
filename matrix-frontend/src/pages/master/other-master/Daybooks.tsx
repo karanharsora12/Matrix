@@ -264,7 +264,7 @@ export default function Daybooks() {
         <Modal
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
-          title={editingDaybook ? "Edit Daybook" : "Add Daybook"}
+          title="Daybook"
           width="lg"
           footer={
             <>

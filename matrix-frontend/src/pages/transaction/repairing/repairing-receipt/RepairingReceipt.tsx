@@ -815,22 +815,14 @@ export const RepairingReceipt: React.FC = () => {
     <div className="min-h-full flex flex-col bg-[#f5f6fa] dark:bg-zinc-950">
       <div className="bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 px-5 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Left: cart icon + title */}
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-action/10 border border-primary-action/25">
-              <Receipt className="h-5 w-5 text-primary-action" />
-            </div>
             <div>
               <h1 className="text-lg font-bold text-slate-900 dark:text-zinc-100 leading-tight">
-                RepairingReceipt Invoice
+                Repairing Invoice
               </h1>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                Create and manage your repairing-receipt transactions
-              </p>
             </div>
           </div>
 
-          {/* Right: Invoice type selector + invoice number + settings */}
           <div className="flex items-center gap-2">
             <Select
               value={formData.daybookId ? String(formData.daybookId) : ""}

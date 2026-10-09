@@ -218,7 +218,7 @@ const ItemGroups: React.FC = () => {
         <Modal
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
-          title={editingItem ? "Edit Item Group" : "Add Item Group"}
+          title="Item Group"
           width="lg"
           footer={
             <>

@@ -210,7 +210,7 @@ export default function DaybookGroups() {
         <Modal
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
-          title={editingGroup ? "Edit Day Book Group" : "Add Day Book Group"}
+          title="Day Book Group"
           footer={
             <>
               <Button variant="outline" onClick={() => setIsModalOpen(false)}>
