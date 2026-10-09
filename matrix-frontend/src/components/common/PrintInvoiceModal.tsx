@@ -61,6 +61,9 @@ export interface PrintInvoiceModalProps {
   taxAmount?: number;
   taxRate?: number;
   grandTotal?: number;
+  advanceAmount?: number;
+  receivedAmount?: number;
+  balanceDue?: number;
   remarks?: string;
   companyInfo?: {
     name?: string;
@@ -93,6 +96,9 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
   taxAmount = 0,
   taxRate = 3,
   grandTotal = 0,
+  advanceAmount,
+  receivedAmount,
+  balanceDue,
   remarks,
   companyInfo = {
     name: "MATRIX JEWELLERS & LUXURY RETAIL",
@@ -470,6 +476,42 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                       })}
                     </span>
                   </div>
+
+                  {advanceAmount != null && advanceAmount > 0 && (
+                    <div className="flex justify-between border-t border-black/20 pt-1 text-xs">
+                      <span>Less: Advance Received</span>
+                      <span className="tabular-nums">
+                        - ₹
+                        {advanceAmount.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                  )}
+
+                  {receivedAmount != null && receivedAmount > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span>Less: Payment Received</span>
+                      <span className="tabular-nums">
+                        - ₹
+                        {receivedAmount.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                  )}
+
+                  {balanceDue != null && (
+                    <div className="flex justify-between border-t border-black pt-1 font-bold text-sm">
+                      <span>Balance Due</span>
+                      <span className="tabular-nums">
+                        ₹
+                        {balanceDue.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

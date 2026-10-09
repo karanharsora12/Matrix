@@ -25,6 +25,14 @@ router.delete(
 );
 
 // Daybooks CRUD
+router.get(
+  "/references",
+  daybookController.getDaybookReferences.bind(daybookController),
+);
+router.post(
+  "/references",
+  daybookController.getDaybookReferences.bind(daybookController),
+);
 router.post("/", daybookController.getDaybooks.bind(daybookController));
 router.get("/:id", daybookController.getDaybookById.bind(daybookController));
 router.get(

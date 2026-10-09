@@ -31,6 +31,7 @@ export const API_ENDPOINTS = {
     GROUPS: "/daybooks/groups",
     GROUP_BY_ID: (id: string | number) => `/daybooks/groups/${id}`,
     GENERATE_VOUCHER_NO: "/daybooks/generate-voucher-no",
+    REFERENCES: "/daybooks/references",
   },
   SALES: {
     BASE: "/sales",

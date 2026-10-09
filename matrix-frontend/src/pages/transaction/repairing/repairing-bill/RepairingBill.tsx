@@ -11,6 +11,7 @@ import { AccountHelp } from "@/components/common/AccountHelp";
 import { AddressHelp } from "@/components/common/AddressHelp";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
+import { DaybookReferenceModal } from "@/components/common/DaybookReferenceModal";
 import { FormFooter } from "@/components/common/FormFooter";
 import { PopupCellEditor } from "@/components/common/PopupCellEditor";
 import { PrintInvoiceModal } from "@/components/common/PrintInvoiceModal";
@@ -74,9 +75,9 @@ import {
   CreditCard,
   FileText,
   Paperclip,
-  Plus,
   Printer,
   Receipt,
+  Search,
   Settings2,
   Tag,
   UploadCloud,
@@ -214,10 +215,21 @@ export const RepairingBill: React.FC = () => {
   >("cash");
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [isRefModalOpen, setIsRefModalOpen] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
   const [placeOfSupply, setPlaceOfSupply] = useState("Gujarat (24)");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+
+  const repDaybookGroup = useMemo(
+    () =>
+      daybookGroups.find(
+        (g: any) =>
+          g.shortName === "REP" ||
+          g.groupName?.toLowerCase().includes("repair"),
+      ),
+    [daybookGroups],
+  );
 
   const [formData, setFormData] = useState<Partial<Sale>>({
     voucherDate: todayISO(),
@@ -235,14 +247,7 @@ export const RepairingBill: React.FC = () => {
         dueDate: existingSale.dueDate
           ? toISODate(existingSale.dueDate)
           : undefined,
-        itemLines:
-          existingSale.itemLines && existingSale.itemLines.length > 0
-            ? existingSale.itemLines
-            : [
-                {
-                  ...DEFAULT_LINE_ITEM,
-                },
-              ],
+        itemLines: existingSale.itemLines || [],
       }));
     }
   }, [existingSale, isEditing, daybooks]);
@@ -351,15 +356,52 @@ export const RepairingBill: React.FC = () => {
     [],
   );
 
-  const handleAddLineItem = useCallback(() => {
-    const newLine: SaleLineItem = {
-      ...DEFAULT_LINE_ITEM,
-    };
-    setFormData((prev) => ({
-      ...prev,
-      itemLines: [...(prev.itemLines || []), newLine],
-    }));
-  }, []);
+  const handleSelectReferenceVoucher = useCallback(
+    (voucher: any, selectedItems: any[]) => {
+      if (!voucher || !selectedItems || selectedItems.length === 0) return;
+
+      const lines: SaleLineItem[] = selectedItems.map((item: any) => {
+        const line: SaleLineItem = {
+          id: "",
+          itemId: item.itemId,
+          itemName: item.itemName,
+          itemCode: item.itemCode || item.tagNo || "",
+          itemGroupId: item.itemGroupId || 0,
+          itemGroupName: item.itemGroupName || "",
+          tagNo: item.tagNo || item.itemCode || "",
+          pcs: Number(item.pcs ?? 1),
+          grossWt: Number(item.grossWt ?? 0),
+          netWt: Number(item.netWt ?? 0),
+          adjustedWt: Number(item.adjustedWt ?? 0),
+          fineWt: Number(item.fineWt ?? 0),
+          rate: Number(item.rate ?? 0),
+          rateType: item.rateType || "",
+          rateTypeId: item.rateTypeId,
+          tax: item.tax || "",
+          labourAmount: Number(item.labourAmount ?? 0),
+          otherAmount: Number(item.otherAmount ?? 0),
+          discountAmount: Number(item.discountAmount ?? 0),
+          amount: Number(item.amount ?? 0),
+        };
+        return calculateLineItemAmount(line);
+      });
+
+      setFormData((prev) => ({
+        ...prev,
+        reference: voucher.voucherNo,
+        accountId: voucher.accountId || prev.accountId,
+        accountName: voucher.accountName || prev.accountName,
+        customerPhone: voucher.customerPhone || prev.customerPhone,
+        customerEmail: voucher.customerEmail || prev.customerEmail,
+        customerAddress1: voucher.customerAddress || prev.customerAddress1,
+        salesmanName: voucher.salesmanName || prev.salesmanName,
+        advanceAmount: Number(voucher.advanceAmount || 0),
+        remarks: prev.remarks || voucher.remarks || `Ref: ${voucher.voucherNo}`,
+        itemLines: lines,
+      }));
+    },
+    [],
+  );
 
   const handleDeleteLineItem = useCallback((index: number) => {
     setFormData((prev) => {
@@ -758,7 +800,9 @@ export const RepairingBill: React.FC = () => {
     };
 
     if (payload.itemLines.length === 0) {
-      alert("Please add at least one valid item to save the sale.");
+      alert(
+        "Please take reference from a Repairing Receipt to add items before saving the bill.",
+      );
       return;
     }
 
@@ -767,7 +811,7 @@ export const RepairingBill: React.FC = () => {
         { id: saleId, data: payload },
         {
           onSuccess: () => {
-            navigate(WEB_ROUTES.TRANSACTION.REPAIRING_BILL_LIST);
+            setIsPrintModalOpen(true);
           },
           onError: (err: any) => {
             alert(err?.message || "Failed to update repairing-bill voucher");
@@ -776,8 +820,16 @@ export const RepairingBill: React.FC = () => {
       );
     } else {
       createMutation.mutate(payload as any, {
-        onSuccess: () => {
-          navigate(WEB_ROUTES.TRANSACTION.REPAIRING_BILL_LIST);
+        onSuccess: (res: any) => {
+          const created = res?.data || res || {};
+          if (created.id) {
+            setFormData((prev) => ({
+              ...prev,
+              id: created.id,
+              voucherNo: created.voucherNo || prev.voucherNo,
+            }));
+          }
+          setIsPrintModalOpen(true);
         },
         onError: (err: any) => {
           alert(err?.message || "Failed to create repairing-bill voucher");
@@ -822,7 +874,7 @@ export const RepairingBill: React.FC = () => {
             </div>
             <div>
               <h1 className="text-lg font-bold text-slate-900 dark:text-zinc-100 leading-tight">
-                RepairingBill Invoice
+                Repairing Bill
               </h1>
               <p className="text-[11px] text-slate-500 dark:text-zinc-400">
                 Create and manage your repairing-bill transactions
@@ -1014,17 +1066,30 @@ export const RepairingBill: React.FC = () => {
                   <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
                     Reference No.
                   </Label>
-                  <Input
-                    value={formData.reference || ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        reference: e.target.value,
-                      }))
-                    }
-                    className="h-8 text-xs"
-                    placeholder="e.g. PO/Ref No."
-                  />
+                  <div className="flex gap-1.5">
+                    <Input
+                      value={formData.reference || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          reference: e.target.value,
+                        }))
+                      }
+                      className="h-8 text-xs flex-1"
+                      placeholder="e.g. RR-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsRefModalOpen(true)}
+                      className="h-8 px-2.5 text-xs text-slate-600 dark:text-zinc-300 hover:text-primary-action shrink-0 gap-1"
+                      title="Select Reference Voucher"
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline text-[11px]">Ref</span>
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[11px] font-medium text-slate-600 dark:text-zinc-400">
@@ -1197,14 +1262,22 @@ export const RepairingBill: React.FC = () => {
               </h3>
             </div>
             <div className="flex items-center gap-1.5">
+              {formData.reference && (
+                <Badge
+                  variant="outline"
+                  className="text-xs font-semibold text-primary-action border-primary-action/30 bg-primary-action/5 mr-1"
+                >
+                  Ref: {formData.reference}
+                </Badge>
+              )}
               <Button
                 type="button"
                 size="sm"
-                onClick={handleAddLineItem}
+                onClick={() => setIsRefModalOpen(true)}
                 className="h-7 gap-1.5 bg-primary-action hover:bg-primary-action/90 text-primary-action-foreground text-xs font-medium px-3"
               >
-                <Plus className="h-3.5 w-3.5" />
-                Add Item
+                <Search className="h-3.5 w-3.5" />
+                Take Reference from Repairing Receipt
               </Button>
             </div>
           </div>
@@ -1229,15 +1302,24 @@ export const RepairingBill: React.FC = () => {
             />
           </div>
 
-          <div className="border-t border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2">
-            <button
+          <div className="border-t border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-2 flex items-center justify-between text-xs">
+            <span className="text-slate-500">
+              {formData.itemLines && formData.itemLines.length > 0
+                ? `Items imported from reference receipt ${formData.reference ? `(${formData.reference})` : ""} with labour charges.`
+                : "No items loaded. Click 'Take Reference from Repairing Receipt' to import items and labour."}
+            </span>
+            <Button
               type="button"
-              onClick={handleAddLineItem}
-              className="flex items-center gap-1.5 text-xs font-medium text-primary-action hover:text-primary-action/80"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsRefModalOpen(true)}
+              className="h-6 text-xs text-primary-action hover:text-primary-action/80 gap-1 font-semibold"
             >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Add New Row</span>
-            </button>
+              <Search className="h-3 w-3" />
+              {formData.itemLines && formData.itemLines.length > 0
+                ? "Change Reference"
+                : "Select Reference"}
+            </Button>
           </div>
         </div>
 
@@ -1292,6 +1374,14 @@ export const RepairingBill: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
                   <span className="text-xs text-slate-600 dark:text-zinc-400">
+                    Labour Charges
+                  </span>
+                  <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                    {parseNumber(calculatedTotals.totalLabour)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50">
+                  <span className="text-xs text-slate-600 dark:text-zinc-400">
                     Total Amount
                   </span>
                   <span className="text-xs font-medium text-slate-900 dark:text-zinc-100">
@@ -1317,6 +1407,30 @@ export const RepairingBill: React.FC = () => {
                     {parseNumber(calculatedTotals.subtotal)}
                   </span>
                 </div>
+                {Number(formData.advanceAmount || 0) > 0 && (
+                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50 text-emerald-600 dark:text-emerald-400">
+                    <span className="text-xs">Less: Advance (Receipt)</span>
+                    <span className="text-xs font-semibold">
+                      - {parseNumber(formData.advanceAmount)}
+                    </span>
+                  </div>
+                )}
+                {Number(formData.cashAmount || 0) +
+                  Number(formData.bankAmount || 0) +
+                  Number(formData.cardAmount || 0) >
+                  0 && (
+                  <div className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-zinc-800/50 text-blue-600 dark:text-blue-400">
+                    <span className="text-xs">Less: Received Now</span>
+                    <span className="text-xs font-semibold">
+                      -{" "}
+                      {parseNumber(
+                        Number(formData.cashAmount || 0) +
+                          Number(formData.bankAmount || 0) +
+                          Number(formData.cardAmount || 0),
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Grand Total Highlight Row */}
@@ -1341,6 +1455,15 @@ export const RepairingBill: React.FC = () => {
                 </h3>
               </div>
               <div className="p-4 space-y-3">
+                {Number(formData.advanceAmount || 0) > 0 && (
+                  <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-700 dark:text-emerald-300">
+                    <span>Advance from {formData.reference || "Receipt"}:</span>
+                    <span className="font-bold">
+                      {parseNumber(formData.advanceAmount)}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
                     Payment Type
@@ -1371,9 +1494,47 @@ export const RepairingBill: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
-                      Received Amount
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+                        Received Amount
+                      </Label>
+                      {calculatedTotals.balanceDue > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const due = Math.max(
+                              0,
+                              calculatedTotals.balanceDue,
+                            );
+                            if (paymentTab === "cash") {
+                              setFormData((prev) => ({
+                                ...prev,
+                                cashAmount: Number(
+                                  (prev.cashAmount || 0) + due,
+                                ),
+                              }));
+                            } else if (paymentTab === "card") {
+                              setFormData((prev) => ({
+                                ...prev,
+                                cardAmount: Number(
+                                  (prev.cardAmount || 0) + due,
+                                ),
+                              }));
+                            } else {
+                              setFormData((prev) => ({
+                                ...prev,
+                                bankAmount: Number(
+                                  (prev.bankAmount || 0) + due,
+                                ),
+                              }));
+                            }
+                          }}
+                          className="text-[10px] text-primary-action hover:underline font-semibold"
+                        >
+                          Receive Full
+                        </button>
+                      )}
+                    </div>
                     <AmountInput
                       value={
                         paymentTab === "cash"
@@ -1395,7 +1556,7 @@ export const RepairingBill: React.FC = () => {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
-                      Balance
+                      Balance Due
                     </Label>
                     <div className="flex h-8 items-center px-2 rounded-md border border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-850">
                       <span
@@ -1488,8 +1649,14 @@ export const RepairingBill: React.FC = () => {
 
       <PrintInvoiceModal
         open={isPrintModalOpen}
-        onOpenChange={setIsPrintModalOpen}
+        onOpenChange={(open) => {
+          setIsPrintModalOpen(open);
+          if (!open && !isEditing && formData.id) {
+            navigate(WEB_ROUTES.TRANSACTION.REPAIRING_BILL_LIST);
+          }
+        }}
         invoiceType="repairing-bill"
+        badgeText="TAX INVOICE / REPAIRING BILL"
         voucherId={formData.id}
         voucherNo={formData.voucherNo}
         voucherDate={formData.voucherDate}
@@ -1502,17 +1669,39 @@ export const RepairingBill: React.FC = () => {
           gstNo: formData.customerGstNo,
           panNo: formData.customerPanNo,
         }}
-        billMode={formData.billMode}
-        staffTitle="RepairingBillman:"
+        partyTitle="Customer:"
+        billMode={
+          formData.billMode ||
+          (formData.cashAmount ? "Cash" : formData.bankAmount ? "Bank" : "Cash")
+        }
+        staffTitle="Handled By:"
         staffName={formData.salesmanName}
         reference={formData.reference}
         rateFixType={formData.rateFixType}
-        itemLines={formData.itemLines}
+        itemLines={(formData.itemLines || []).map((l: any) => ({
+          itemName: l.itemName,
+          itemCode: l.itemCode,
+          tagNo: l.tagNo,
+          purity: l.purity,
+          grossWt: l.grossWt,
+          netWt: l.netWt,
+          rate: l.rate,
+          labourAmount: l.labourAmount,
+          discountAmount: l.discountAmount,
+          amount: l.amount,
+        }))}
         subtotal={calculatedTotals.subtotal}
-        discountAmount={calculatedTotals.totalLineDiscount}
+        discountAmount={calculatedTotals.totalLineDiscount + couponDiscount}
         taxAmount={calculatedTotals.taxAmount}
         taxRate={Number(formData.taxRate || 3)}
         grandTotal={calculatedTotals.grandTotal}
+        advanceAmount={Number(formData.advanceAmount || 0)}
+        receivedAmount={
+          Number(formData.cashAmount || 0) +
+          Number(formData.bankAmount || 0) +
+          Number(formData.cardAmount || 0)
+        }
+        balanceDue={calculatedTotals.balanceDue}
         remarks={formData.remarks}
       />
 
@@ -1588,6 +1777,15 @@ export const RepairingBill: React.FC = () => {
             </Button>
           </DialogFooter>
         </DialogContent>
+        <DaybookReferenceModal
+          isOpen={isRefModalOpen}
+          onClose={() => setIsRefModalOpen(false)}
+          daybookGroupId={repDaybookGroup?.id}
+          daybookGroupShortName="REP"
+          accountId={formData.accountId}
+          title="Take Reference from Repairing Receipt"
+          onSelectVoucher={handleSelectReferenceVoucher}
+        />
       </Dialog>
     </div>
   );

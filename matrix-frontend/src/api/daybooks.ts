@@ -194,3 +194,26 @@ export const generateVoucherNo = async (
   );
   return data;
 };
+
+export interface DaybookReferenceParams {
+  daybookGroupId?: number | string;
+  daybookGroupShortName?: string;
+  daybookId?: number | string;
+  daybookShortName?: string;
+  accountId?: number;
+  voucherNo?: string;
+  search?: string;
+  status?: "pending" | "all";
+  page?: number;
+  limit?: number;
+}
+
+export const getDaybookReferences = async (
+  params: DaybookReferenceParams,
+): Promise<ApiResponse<any[]>> => {
+  const { data } = await apiClient.post<ApiResponse<any[]>>(
+    API_ENDPOINTS.DAYBOOKS.REFERENCES,
+    params,
+  );
+  return data;
+};

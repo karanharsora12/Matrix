@@ -246,6 +246,45 @@ export class DaybookController {
       });
     }
   }
+  async getDaybookReferences(req: Request, res: Response) {
+    try {
+      const params = req.body;
+
+      const data = await daybookService.getDaybookReferences({
+        daybookGroupId: params.daybookGroupId
+          ? parseInt(String(params.daybookGroupId), 10)
+          : undefined,
+        daybookGroupShortName: params.daybookGroupShortName
+          ? String(params.daybookGroupShortName)
+          : undefined,
+        daybookId: params.daybookId
+          ? parseInt(String(params.daybookId), 10)
+          : undefined,
+        daybookShortName: params.daybookShortName
+          ? String(params.daybookShortName)
+          : undefined,
+        sourceType: params.sourceType
+          ? (String(params.sourceType) as any)
+          : undefined,
+        accountId: params.accountId
+          ? parseInt(String(params.accountId), 10)
+          : undefined,
+        voucherNo: params.voucherNo ? String(params.voucherNo) : undefined,
+        search: params.search ? String(params.search) : undefined,
+        status: params.status ? (String(params.status) as any) : undefined,
+        page: params.page ? parseInt(String(params.page), 10) : 1,
+        limit: params.limit ? parseInt(String(params.limit), 10) : 50,
+      });
+
+      res.json({ success: true, data });
+    } catch (error: any) {
+      console.error("Error fetching daybook references:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Internal server error",
+      });
+    }
+  }
 }
 
 export const daybookController = new DaybookController();

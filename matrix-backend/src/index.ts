@@ -13,6 +13,8 @@ import purchaseRoutes from "./routes/purchase.routes";
 import reportRoutes from "./routes/report.routes";
 import geoRoutes from "./routes/geo.routes";
 
+import { authUserMiddleware } from "./middleware/auth.middleware";
+
 dotenv.config();
 
 const app = express();
@@ -20,6 +22,7 @@ const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use(authUserMiddleware);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/menus", menusRoutes);

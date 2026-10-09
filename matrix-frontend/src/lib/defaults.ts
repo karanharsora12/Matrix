@@ -47,11 +47,13 @@ export const ADD_EDIT_COLUMNS: ColDef[] = [
     field: "addBy",
     headerName: "Add By",
     width: 150,
+    valueFormatter: (p) => (p.value ? p.value : "-"),
   },
   {
     field: "editBy",
     headerName: "Edit By",
     width: 150,
+    valueFormatter: (p) => (p.value ? p.value : "-"),
   },
   {
     field: "createdAt",
@@ -64,7 +66,11 @@ export const ADD_EDIT_COLUMNS: ColDef[] = [
     field: "updatedAt",
     headerName: "Edit Date",
     width: 150,
-    valueFormatter: (p) => (p.node?.rowPinned ? "" : formatDateTime(p.value)),
+    valueFormatter: (p) => {
+      if (p.node?.rowPinned) return "";
+      if (!p.data?.editBy) return "-";
+      return formatDateTime(p.value);
+    },
     comparator: dateComparator,
   },
 ];
