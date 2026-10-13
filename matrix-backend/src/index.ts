@@ -6,10 +6,7 @@ import menusRoutes from "./routes/menus";
 import inventoryRoutes from "./routes/inventory";
 import accountRoutes from "./routes/account.routes";
 import daybookRoutes from "./routes/daybook.routes";
-import salesRoutes from "./routes/sales.routes";
-import ordersRoutes from "./routes/orders.routes";
 import paymentRoutes from "./routes/payment.routes";
-import reportRoutes from "./routes/report.routes";
 import geoRoutes from "./routes/geo.routes";
 
 import { authUserMiddleware } from "./middleware/auth.middleware";
@@ -28,10 +25,7 @@ app.use("/api/menus", menusRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/accounts", accountRoutes);
 app.use("/api/daybooks", daybookRoutes);
-app.use("/api/sales", salesRoutes);
-app.use("/api/orders", ordersRoutes);
 app.use("/api/payments", paymentRoutes);
-app.use("/api/reports", reportRoutes);
 app.use("/api/geo", geoRoutes);
 
 app.get("/", (req, res) => {

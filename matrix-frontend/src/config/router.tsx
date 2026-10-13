@@ -1,7 +1,7 @@
-import RepairingReceipt from "@/pages/transaction/repairing/repairing-receipt/RepairingReceipt";
-import RepairingReceiptList from "@/pages/transaction/repairing/repairing-receipt/RepairingReceiptList";
-import RepairingBill from "@/pages/transaction/repairing/repairing-bill/RepairingBill";
-import RepairingBillList from "@/pages/transaction/repairing/repairing-bill/RepairingBillList";
+import BankPayment from "@/pages/transaction/payments/bank-payment/BankPayment";
+import BankPaymentList from "@/pages/transaction/payments/bank-payment/BankPaymentList";
+import BankReceipt from "@/pages/transaction/receipt/bank-receipt/BankReceipt";
+import BankReceiptList from "@/pages/transaction/receipt/bank-receipt/BankReceiptList";
 import CashPayment from "@/pages/transaction/payments/cash-payment/CashPayment";
 import CashPaymentList from "@/pages/transaction/payments/cash-payment/CashPaymentList";
 import CashReceipt from "@/pages/transaction/receipt/cash-receipt/CashReceipt";
@@ -125,20 +125,20 @@ export const router = createBrowserRouter([
             element: <CashReceipt />,
           },
           {
-            path: WEB_ROUTES.TRANSACTION.REPAIRING_RECEIPT_LIST,
-            element: <RepairingReceiptList />,
+            path: WEB_ROUTES.TRANSACTION.BANK_PAYMENT_LIST,
+            element: <BankPaymentList />,
           },
           {
-            path: WEB_ROUTES.TRANSACTION.REPAIRING_RECEIPT,
-            element: <RepairingReceipt />,
+            path: WEB_ROUTES.TRANSACTION.BANK_PAYMENT,
+            element: <BankPayment />,
           },
           {
-            path: WEB_ROUTES.TRANSACTION.REPAIRING_BILL_LIST,
-            element: <RepairingBillList />,
+            path: WEB_ROUTES.TRANSACTION.BANK_RECEIPT_LIST,
+            element: <BankReceiptList />,
           },
           {
-            path: WEB_ROUTES.TRANSACTION.REPAIRING_BILL,
-            element: <RepairingBill />,
+            path: WEB_ROUTES.TRANSACTION.BANK_RECEIPT,
+            element: <BankReceipt />,
           },
         ],
       },

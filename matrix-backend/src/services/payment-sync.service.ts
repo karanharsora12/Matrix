@@ -8,7 +8,7 @@ import {
 } from "../db/schema";
 
 export interface SyncPaymentParams {
-  referenceType: "SALES" | "PURCHASE" | string;
+  referenceType: string;
   referenceId: number;
   voucherNo: string;
   voucherDate: Date;

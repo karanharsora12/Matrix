@@ -33,14 +33,7 @@ export const API_ENDPOINTS = {
     GENERATE_VOUCHER_NO: "/daybooks/generate-voucher-no",
     REFERENCES: "/daybooks/references",
   },
-  SALES: {
-    BASE: "/sales",
-    BY_ID: (id: string | number) => `/sales/${id}`,
-  },
-  ORDERS: {
-    BASE: "/orders",
-    BY_ID: (id: string | number) => `/orders/${id}`,
-  },
+
   PAYMENTS: {
     BASE: "/payments",
     BY_ID: (id: string | number) => `/payments/${id}`,

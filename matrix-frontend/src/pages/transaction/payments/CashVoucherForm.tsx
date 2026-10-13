@@ -56,8 +56,10 @@ import {
 } from "@/components/common/NumericalCell";
 import {
   Banknote,
+  Building2,
   ClipboardList,
   FileText,
+  Landmark,
   MessageSquareText,
   Plus,
   Receipt,
@@ -65,7 +67,11 @@ import {
   User,
 } from "lucide-react";
 
-export type CashVoucherMode = "payment" | "receipt";
+export type CashVoucherMode =
+  | "payment"
+  | "receipt"
+  | "bank-payment"
+  | "bank-receipt";
 
 const MODE_META: Record<
   CashVoucherMode,
@@ -105,6 +111,30 @@ const MODE_META: Record<
     addText: "Add Cash Receipt",
     saveText: "Save Receipt",
     voucherPrefixFallback: "CR",
+  },
+  "bank-payment": {
+    transactionType: TransactionType.BPAY,
+    menu: TransactionMenu.PAYMENT,
+    title: "Bank Payment",
+    subtitle: "Record bank payment voucher",
+    icon: <Landmark className="h-5 w-5" />,
+    listRoute: "/transactions/payments/bank-payment",
+    formRoute: "/transactions/payments/bank-payment/:token",
+    addText: "Add Bank Payment",
+    saveText: "Save Payment",
+    voucherPrefixFallback: "BP",
+  },
+  "bank-receipt": {
+    transactionType: TransactionType.BREC,
+    menu: TransactionMenu.RECEIPT,
+    title: "Bank Receipt",
+    subtitle: "Record bank receipt voucher",
+    icon: <Building2 className="h-5 w-5" />,
+    listRoute: "/transactions/receipt/bank-receipt",
+    formRoute: "/transactions/receipt/bank-receipt/:token",
+    addText: "Add Bank Receipt",
+    saveText: "Save Receipt",
+    voucherPrefixFallback: "BR",
   },
 };
 
@@ -416,6 +446,8 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
       totalAmount,
       details: completeLines.map((l) => ({
         id: l.id,
+        accountId: l.accountId || formData.accountId,
+        accountName: l.accountName,
         amount: Number(l.amount) || 0,
         remarks: l.remarks,
       })),
@@ -527,7 +559,7 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
                   ))
                 ) : (
                   <SelectItem value="none" disabled>
-                    No cash daybook found
+                    No daybook found
                   </SelectItem>
                 )}
               </SelectContent>
@@ -577,15 +609,6 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
                         ? `${groupMap[selectedAccount.accountGroupId] || "General"} • ${typeMap[selectedAccount.accountTypeId] || "Account"}`
                         : "Press F2 or click above to search"}
                     </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <button
-                      type="button"
-                      onClick={() => accountSearchBtnRef.current?.click()}
-                      className="text-[11px] font-medium text-primary-action hover:underline mt-0.5"
-                    >
-                      Change
-                    </button>
                   </div>
                 </div>
               </div>
@@ -782,7 +805,9 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
 
               <div className="mt-3 flex items-center justify-between rounded-lg border border-primary-action/25 bg-primary-action/10 px-3 py-2.5">
                 <span className="text-sm font-bold text-slate-900 dark:text-zinc-100">
-                  {mode === "payment" ? "Total Paid" : "Total Received"}
+                  {mode === "payment" || mode === "bank-payment"
+                    ? "Total Paid"
+                    : "Total Received"}
                 </span>
                 <span className="text-base font-extrabold text-primary-action tracking-tight">
                   {formatINR(totalAmount)}
