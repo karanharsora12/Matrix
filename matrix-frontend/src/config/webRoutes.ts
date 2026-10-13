@@ -31,10 +31,6 @@ export const WEB_ROUTES = {
     },
   },
   TRANSACTION: {
-    SALES_LIST: "/transactions/customer-in-out/sales",
-    SALES: "/transactions/customer-in-out/sales/:token",
-    PURCHASE_LIST: "/transactions/supplier-in-out/purchase",
-    PURCHASE: "/transactions/supplier-in-out/purchase/:token",
     PAYMENTS_LIST: "/transactions/payments",
     PAYMENTS: "/transactions/payments/:token",
     CASH_PAYMENT_LIST: "/transactions/payments/cash-payment",

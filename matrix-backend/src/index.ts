@@ -9,7 +9,6 @@ import daybookRoutes from "./routes/daybook.routes";
 import salesRoutes from "./routes/sales.routes";
 import ordersRoutes from "./routes/orders.routes";
 import paymentRoutes from "./routes/payment.routes";
-import purchaseRoutes from "./routes/purchase.routes";
 import reportRoutes from "./routes/report.routes";
 import geoRoutes from "./routes/geo.routes";
 
@@ -32,7 +31,6 @@ app.use("/api/daybooks", daybookRoutes);
 app.use("/api/sales", salesRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/payments", paymentRoutes);
-app.use("/api/purchases", purchaseRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/geo", geoRoutes);
 

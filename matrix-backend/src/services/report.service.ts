@@ -2,7 +2,6 @@ import JsReport from "@jsreport/jsreport-core";
 import jsreportHandlebars from "@jsreport/jsreport-handlebars";
 import jsreportChromePdf from "@jsreport/jsreport-chrome-pdf";
 import { salesService } from "./sales.service.js";
-import { purchaseService } from "./purchase.service.js";
 
 let jsreportInstance: any = null;
 
@@ -379,92 +378,6 @@ export class ReportService {
       grandTotalFormatted: formatCurrency(grandTotal),
       
       remarks: sale.remarks || "",
-    };
-
-    const jsreport = await getJsReport();
-    const result = await jsreport.render({
-      template: {
-        content: invoiceTemplate,
-        engine: "handlebars",
-        recipe: "chrome-pdf",
-        chrome: {
-          format: "A4",
-          margin: {
-            top: "10mm",
-            bottom: "10mm",
-            left: "10mm",
-            right: "10mm",
-          },
-          displayHeaderFooter: false,
-          printBackground: true,
-        },
-      },
-      data: reportData,
-    });
-
-    return result.content;
-  }
-
-  async renderPurchaseInvoice(purchaseId: number): Promise<Buffer> {
-    const purchase = await purchaseService.getPurchaseById(purchaseId);
-    if (!purchase) {
-      throw new Error(`Purchase voucher with ID ${purchaseId} not found`);
-    }
-
-    const subtotal = Number(purchase.totalTaxableAmount || 0);
-    const grandTotal = Number(purchase.totalAmount || 0);
-    const tax = Math.max(0, grandTotal - subtotal);
-
-    let totalGrossWt = 0;
-    let totalNetWt = 0;
-
-    const items = (purchase.itemLines || []).map((item: any, i: number) => {
-      const gWt = Number(item.grossWt || 0);
-      const nWt = Number(item.netWt || 0);
-      totalGrossWt += gWt;
-      totalNetWt += nWt;
-
-      return {
-        idx: i + 1,
-        name: item.itemName || "Jewellery Item",
-        groupName: item.itemGroupName || "",
-        code: item.itemCode || "-",
-        qty: Number(item.qty || 1),
-        grossWt: gWt.toFixed(3),
-        netWt: nWt.toFixed(3),
-        rate: formatCurrency(item.rate),
-        labourAmount: "0.00",
-        amount: formatCurrency(item.amount || item.amountWithTax || 0),
-      };
-    });
-
-    const reportData = {
-      company: this.companyInfo,
-      invoiceTitle: "PURCHASE TAX INVOICE",
-      partyTitle: "Purchased From (Supplier):",
-      voucherNo: purchase.voucherNo,
-      voucherDate: formatDate(purchase.voucherDate),
-      partyName: purchase.accountName || "Registered Supplier",
-      partyPhone: purchase.supplierPhone || "",
-      partyAddress: "",
-      partyGst: "",
-      daybookName: purchase.daybookName || "Purchase Daybook",
-      billMode: "Credit / Ledger",
-      staffTitle: "Purchaser",
-      staffName: "",
-      reference: purchase.reference || "",
-      rateFixType: "Fix",
-      items,
-      totalGrossWt: totalGrossWt.toFixed(3),
-      totalNetWt: totalNetWt.toFixed(3),
-      subtotalFormatted: formatCurrency(subtotal),
-      discountFormatted: null,
-      taxRate: 3,
-      taxFormatted: formatCurrency(tax),
-      roundOffFormatted: null,
-      grandTotalFormatted: formatCurrency(grandTotal),
-      
-      remarks: purchase.remarks || "",
     };
 
     const jsreport = await getJsReport();

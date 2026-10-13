@@ -2,14 +2,10 @@ import RepairingReceipt from "@/pages/transaction/repairing/repairing-receipt/Re
 import RepairingReceiptList from "@/pages/transaction/repairing/repairing-receipt/RepairingReceiptList";
 import RepairingBill from "@/pages/transaction/repairing/repairing-bill/RepairingBill";
 import RepairingBillList from "@/pages/transaction/repairing/repairing-bill/RepairingBillList";
-import Sales from "@/pages/transaction/customer-in-out/sales/Sales";
-import SalesList from "@/pages/transaction/customer-in-out/sales/SalesList";
 import CashPayment from "@/pages/transaction/payments/cash-payment/CashPayment";
 import CashPaymentList from "@/pages/transaction/payments/cash-payment/CashPaymentList";
 import CashReceipt from "@/pages/transaction/receipt/cash-receipt/CashReceipt";
 import CashReceiptList from "@/pages/transaction/receipt/cash-receipt/CashReceiptList";
-import { Purchase } from "@/pages/transaction/supplier-in-out/purchase/Purchase";
-import PurchaseList from "@/pages/transaction/supplier-in-out/purchase/PurchaseList";
 import { createBrowserRouter } from "react-router-dom";
 import { ProtectedRoute } from "../components/common/ProtectedRoute";
 import { PublicRoute } from "../components/common/PublicRoute";
@@ -111,22 +107,6 @@ export const router = createBrowserRouter([
           {
             path: WEB_ROUTES.MASTER.CITY_AREA_SETUP.PINCODES,
             element: <PincodesList />,
-          },
-          {
-            path: WEB_ROUTES.TRANSACTION.SALES_LIST,
-            element: <SalesList />,
-          },
-          {
-            path: WEB_ROUTES.TRANSACTION.SALES,
-            element: <Sales />,
-          },
-          {
-            path: WEB_ROUTES.TRANSACTION.PURCHASE_LIST,
-            element: <PurchaseList />,
-          },
-          {
-            path: WEB_ROUTES.TRANSACTION.PURCHASE,
-            element: <Purchase />,
           },
           {
             path: WEB_ROUTES.TRANSACTION.CASH_PAYMENT_LIST,

@@ -134,9 +134,9 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
     try {
       setIsDownloadingPdf(true);
       await downloadInvoicePdf(
-        isPurchase ? "purchase" : "sales",
+        "sales",
         voucherId,
-        `${isPurchase ? "Purchase" : "Sales"}-Invoice-${voucherNo}.pdf`,
+        `Sales-Invoice-${voucherNo}.pdf`,
       );
       setStatusMessage({
         text: "Invoice PDF downloaded successfully.",
@@ -164,7 +164,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
     try {
       setIsOpeningPdf(true);
       await openInvoicePdfInNewTab(
-        isPurchase ? "purchase" : "sales",
+        "sales",
         voucherId,
       );
     } catch (err: any) {

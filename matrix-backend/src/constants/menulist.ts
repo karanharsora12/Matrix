@@ -18,7 +18,6 @@ export enum MenuList {
 
   // Transactions
   SALES = "Sales",
-  PURCHASE = "Purchase",
   CASH_PAYMENT = "CashPayment",
   CASH_RECEIPT = "CashReceipt",
   BANK_PAYMENT = "BankPayment",
@@ -186,39 +185,6 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ListingColumn[]> = {
       type: "numericColumn",
     },
     { field: "salesmanName", headerName: "Salesman", width: 150 },
-    { field: "remarks", headerName: "Remarks", width: 200 },
-  ],
-
-  [MenuList.PURCHASE]: [
-    { field: "voucherNo", headerName: "Voucher No.", width: 130 },
-    { field: "voucherDate", headerName: "Voucher Date", width: 120 },
-    { field: "daybookGroupName", headerName: "Daybook Group", width: 140 },
-    { field: "daybookName", headerName: "Daybook", width: 160 },
-    { field: "accountName", headerName: "Account Name", width: 250 },
-    {
-      field: "discountAmount",
-      headerName: "Disc. Amount",
-      width: 120,
-      type: "numericColumn",
-    },
-    {
-      field: "taxAmount",
-      headerName: "Tax Amount",
-      width: 120,
-      type: "numericColumn",
-    },
-    {
-      field: "roundOff",
-      headerName: "ROF Amount",
-      width: 100,
-      type: "numericColumn",
-    },
-    {
-      field: "grandTotal",
-      headerName: "Grand Total",
-      width: 140,
-      type: "numericColumn",
-    },
     { field: "remarks", headerName: "Remarks", width: 200 },
   ],
 

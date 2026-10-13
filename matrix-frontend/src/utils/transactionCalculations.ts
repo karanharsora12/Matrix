@@ -4,7 +4,7 @@ import type { ItemGroup, RateType } from "@/api/inventory";
 export const getItemGroupUpdates = (
   itemGroup: ItemGroup,
   rateTypes: RateType[],
-  transactionType: "sales" | "purchase",
+  transactionType?: string,
 ): Partial<SaleLineItem> => {
   const updates: Partial<SaleLineItem> = {
     itemGroupId: itemGroup.id,
@@ -15,13 +15,12 @@ export const getItemGroupUpdates = (
     updates.uom = itemGroup.measureUnitCode;
   }
 
-  const rateTypeId =
-    transactionType === "sales"
-      ? itemGroup.salesRateTypeId
-      : itemGroup.purchaseRateTypeId;
+  const isPurchase = transactionType === "purchase";
+  const rateTypeId = isPurchase
+    ? itemGroup.purchaseRateTypeId
+    : itemGroup.salesRateTypeId;
 
-  const rate =
-    transactionType === "sales" ? itemGroup.salesRate : itemGroup.purchaseRate;
+  const rate = isPurchase ? itemGroup.purchaseRate : itemGroup.salesRate;
 
   if (rateTypeId) {
     updates.rateTypeId = rateTypeId;

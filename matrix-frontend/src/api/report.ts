@@ -2,18 +2,14 @@ import apiClient from "./client";
 
 export const REPORT_ENDPOINTS = {
   SALES_INVOICE: (id: number | string) => `/reports/sales-invoice/${id}`,
-  PURCHASE_INVOICE: (id: number | string) => `/reports/purchase-invoice/${id}`,
 };
 
 export const downloadInvoicePdf = async (
-  type: "sales" | "purchase",
+  type: "sales" | string,
   id: number | string,
   fileName?: string,
 ) => {
-  const endpoint =
-    type === "purchase"
-      ? REPORT_ENDPOINTS.PURCHASE_INVOICE(id)
-      : REPORT_ENDPOINTS.SALES_INVOICE(id);
+  const endpoint = REPORT_ENDPOINTS.SALES_INVOICE(id);
 
   try {
     const response = await apiClient.get(endpoint, {
@@ -36,13 +32,10 @@ export const downloadInvoicePdf = async (
 };
 
 export const openInvoicePdfInNewTab = async (
-  type: "sales" | "purchase",
+  _type: "sales" | string,
   id: number | string,
 ) => {
-  const endpoint =
-    type === "purchase"
-      ? REPORT_ENDPOINTS.PURCHASE_INVOICE(id)
-      : REPORT_ENDPOINTS.SALES_INVOICE(id);
+  const endpoint = REPORT_ENDPOINTS.SALES_INVOICE(id);
 
   try {
     const response = await apiClient.get(endpoint, {

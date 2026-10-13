@@ -5,13 +5,11 @@ export const CommonListType = {
 
 export const TransactionMenu = {
   SALES: "SALES",
-  PURCHASE: "PURCHASE",
   PAYMENT: "PAYMENT",
   RECEIPT: "RECEIPT",
   JOURNAL: "JOURNAL",
   CONTRA: "CONTRA",
   CREDIT_NOTE: "CREDIT_NOTE",
-  DEBIT_NOTE: "DEBIT_NOTE",
   REPAIRING: "REPAIRING",
 } as const;
 
@@ -60,13 +58,11 @@ export const TRANSACTION_TYPE_CONFIG: Record<
 
 export const TRANSACTION_MENU_DAYBOOK_GROUP_MAP: Record<string, string[]> = {
   [TransactionMenu.SALES]: ["SAL"],
-  [TransactionMenu.PURCHASE]: ["PUR"],
   [TransactionMenu.PAYMENT]: ["CASH", "BANK", "PAY"],
   [TransactionMenu.RECEIPT]: ["CASH", "BANK", "RCT"],
   [TransactionMenu.JOURNAL]: ["JRN"],
   [TransactionMenu.CONTRA]: ["CTR"],
   [TransactionMenu.CREDIT_NOTE]: ["SAL"],
-  [TransactionMenu.DEBIT_NOTE]: ["PUR"],
   [TransactionMenu.REPAIRING]: ["REP"],
 };
 

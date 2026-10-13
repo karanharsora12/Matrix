@@ -182,7 +182,7 @@ export class DaybookService {
     daybookGroupShortName?: string | undefined;
     daybookId?: number | string | undefined;
     daybookShortName?: string | undefined;
-    sourceType?: "orders" | "sales" | "purchases" | "auto" | undefined;
+    sourceType?: "orders" | "sales" | "auto" | undefined;
     accountId?: number | undefined;
     voucherNo?: string | undefined;
     search?: string | undefined;
@@ -264,8 +264,6 @@ export class DaybookService {
         source = "orders";
       } else if (gShort === "SAL" || dShort === "REPBIL") {
         source = "sales";
-      } else if (gShort === "PUR") {
-        source = "purchases";
       } else {
         source = "orders";
       }
