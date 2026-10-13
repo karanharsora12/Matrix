@@ -1,21 +1,7 @@
-/**
- * Common Date Utilities for Matrix ERP (Frontend)
- * Standardizes date parsing, formatting, and conversion across all pages and grids.
- */
-
 export const DATE_FORMAT = "DD/MM/YYYY";
 export const DATE_TIME_FORMAT = "DD/MM/YYYY hh:mm A";
 export const ISO_DATE_FORMAT = "YYYY-MM-DD";
 
-/**
- * Parses any date representation into a valid Date object or null.
- * Handles:
- * - Date instances
- * - Timestamps (number)
- * - ISO strings: "2026-09-13", "2026-09-13T10:00:00.000Z"
- * - Slash strings: "13/09/2026", "13/09/2026 10:00 AM"
- * - Dash strings: "13-09-2026"
- */
 export function parseDate(val: any): Date | null {
   if (val == null || val === "") return null;
   if (val instanceof Date) {
