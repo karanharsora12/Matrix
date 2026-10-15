@@ -22,7 +22,7 @@ const RepairingReceiptList: React.FC = () => {
   const navigate = useNavigate();
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const { refetch, isLoading, isError, error } = useOrders({
+  const { refetch } = useOrders({
     fromDate: fromDate || undefined,
     toDate: toDate || undefined,
   });
@@ -42,45 +42,38 @@ const RepairingReceiptList: React.FC = () => {
       {
         field: "voucherNo",
         headerName: "Receipt No.",
-        minWidth: 130,
-        pinned: "left",
+        width: 100,
       },
       {
         field: "voucherDate",
         headerName: "Date",
-        width: 110,
+        width: 100,
         valueFormatter: (p) => formatDate(p.value),
       },
-      { field: "accountName", headerName: "Customer", minWidth: 190 },
+      { field: "accountName", headerName: "Customer", width: 190 },
       { field: "customerPhone", headerName: "Mobile", width: 130 },
-      {
-        field: "itemCount",
-        headerName: "Items",
-        width: 80,
-        type: "numericColumn",
-      },
       {
         field: "grandTotal",
         headerName: "Total",
-        width: 130,
+        width: 120,
         type: "numericColumn",
         valueFormatter: (p) => currency(p.value),
       },
       {
         field: "receivedAmount",
         headerName: "Received",
-        width: 130,
+        width: 120,
         type: "numericColumn",
         valueFormatter: (p) => currency(p.value),
       },
       {
         field: "balanceAmount",
         headerName: "Balance",
-        width: 130,
+        width: 120,
         type: "numericColumn",
         valueFormatter: (p) => currency(p.value),
       },
-      { field: "salesmanName", headerName: "Technician", minWidth: 140 },
+      { field: "salesmanName", headerName: "Salesman", width: 140 },
     ],
     [openReceipt],
   );
@@ -90,7 +83,6 @@ const RepairingReceiptList: React.FC = () => {
       <ListingCard>
         <ListingHeader
           title="Repairing Receipt"
-          subtitle="Repair orders with linked cash and bank collections"
           addText="Add Repairing Receipt"
           onAdd={() => openReceipt(0)}
           onRefresh={() => refetch()}
@@ -111,29 +103,19 @@ const RepairingReceiptList: React.FC = () => {
             </>
           }
         />
-        {isError ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-red-600">
-            Unable to load repairing receipts:{" "}
-            {error instanceof Error ? error.message : "Unknown error"}
-          </div>
-        ) : isLoading ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-zinc-500">
-            Loading repairing receipts…
-          </div>
-        ) : (
-          <DataGrid
-            apiName="/orders"
-            apiInput={{
-              fromDate: fromDate || undefined,
-              toDate: toDate || undefined,
-            }}
-            infiniteScroll
-            columnDefs={columnDefs}
-            gridOptions={{
-              onRowDoubleClicked: (event) => openReceipt(event.data.id),
-            }}
-          />
-        )}
+
+        <DataGrid
+          apiName="/orders"
+          apiInput={{
+            fromDate: fromDate || undefined,
+            toDate: toDate || undefined,
+          }}
+          infiniteScroll
+          columnDefs={columnDefs}
+          gridOptions={{
+            onRowDoubleClicked: (event) => openReceipt(event.data.id),
+          }}
+        />
       </ListingCard>
     </div>
   );
