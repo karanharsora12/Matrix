@@ -15,6 +15,10 @@ export interface SyncPaymentParams {
   accountId: number | null;
   cashAmount?: number | string | null;
   bankAmount?: number | string | null;
+  cashDaybookId?: number | string | null;
+  bankDaybookId?: number | string | null;
+  cashReference?: string | null;
+  bankReference?: string | null;
   userId?: number | null;
 }
 
@@ -22,7 +26,27 @@ export class PaymentSyncService {
   /**
    * Helper to resolve the appropriate daybook for cash or bank
    */
-  private async getDaybookForGroup(tx: any, groupShortName: "CASH" | "BANK") {
+  private async getDaybookForGroup(
+    tx: any,
+    groupShortName: "CASH" | "BANK",
+    preferredDaybookId?: number | string | null,
+  ) {
+    if (preferredDaybookId) {
+      const [preferred] = await tx
+        .select({ daybook: daybooks, group: daybookGroups })
+        .from(daybooks)
+        .innerJoin(daybookGroups, eq(daybooks.daybookGroupId, daybookGroups.id))
+        .where(
+          and(
+            eq(daybooks.id, Number(preferredDaybookId)),
+            eq(daybooks.isActive, true),
+            eq(daybookGroups.shortName, groupShortName),
+          ),
+        )
+        .limit(1);
+      if (preferred) return preferred.daybook;
+      throw new Error(`Selected ${groupShortName.toLowerCase()} daybook is unavailable`);
+    }
     const result = await tx
       .select({
         daybook: daybooks,
@@ -92,8 +116,13 @@ export class PaymentSyncService {
       accountId: effectiveAccountId,
       amount: cashAmountNum,
       groupShortName: "CASH",
-      transactionType: referenceType === "SALES" ? "CREC" : "CPAY",
+      transactionType:
+        referenceType === "SALES" || referenceType === "REPAIRING_RECEIPT"
+          ? "CREC"
+          : "CPAY",
       modeLabel: "Cash",
+      daybookId: params.cashDaybookId,
+      referenceNo: params.cashReference,
       userId,
     });
 
@@ -106,8 +135,13 @@ export class PaymentSyncService {
       accountId: effectiveAccountId,
       amount: bankAmountNum,
       groupShortName: "BANK",
-      transactionType: referenceType === "SALES" ? "BREC" : "BPAY",
+      transactionType:
+        referenceType === "SALES" || referenceType === "REPAIRING_RECEIPT"
+          ? "BREC"
+          : "BPAY",
       modeLabel: "Bank",
+      daybookId: params.bankDaybookId,
+      referenceNo: params.bankReference,
       userId,
     });
   }
@@ -124,6 +158,8 @@ export class PaymentSyncService {
       groupShortName: "CASH" | "BANK";
       transactionType: string;
       modeLabel: string;
+      daybookId?: number | string | null | undefined;
+      referenceNo?: string | null | undefined;
       userId?: number | null | undefined;
     },
   ) {
@@ -137,8 +173,14 @@ export class PaymentSyncService {
       groupShortName,
       transactionType,
       modeLabel,
+      daybookId,
+      referenceNo,
       userId,
     } = options;
+
+    const selectedDaybook = daybookId
+      ? await this.getDaybookForGroup(tx, groupShortName, daybookId)
+      : null;
 
     // Check if an existing payment entry exists for this transaction and transactionType
     const existingPayments = await tx
@@ -162,6 +204,8 @@ export class PaymentSyncService {
           .set({
             voucherDate,
             accountId,
+            ...(selectedDaybook ? { daybookId: selectedDaybook.id } : {}),
+            accountNo: referenceNo || null,
             totalAmount: String(amount),
             remarks: `${modeLabel} payment for ${referenceType} #${voucherNo}`,
             editBy: userId ? Number(userId) : null,
@@ -197,7 +241,7 @@ export class PaymentSyncService {
         }
       } else {
         // Create new payment entry
-        const daybook = await this.getDaybookForGroup(tx, groupShortName);
+        const daybook = selectedDaybook || await this.getDaybookForGroup(tx, groupShortName);
         if (!daybook) {
           console.warn(
             `No daybook found for group ${groupShortName}; skipping auto-payment entry.`,
@@ -232,6 +276,7 @@ export class PaymentSyncService {
             transactionType,
             daybookId: daybook.id,
             accountId,
+            accountNo: referenceNo || null,
             totalAmount: String(amount),
             remarks: `${modeLabel} entry for ${referenceType} #${voucherNo}`,
             referenceType,

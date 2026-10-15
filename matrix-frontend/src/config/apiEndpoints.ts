@@ -38,6 +38,10 @@ export const API_ENDPOINTS = {
     BASE: "/payments",
     BY_ID: (id: string | number) => `/payments/${id}`,
   },
+  ORDERS: {
+    BASE: "/orders",
+    BY_ID: (id: string | number) => `/orders/${id}`,
+  },
   GEO: {
     COUNTRIES: "/geo/countries",
     COUNTRY_BY_ID: (id: string | number) => `/geo/countries/${id}`,

@@ -125,38 +125,45 @@ export class DaybookService {
     let nextSrNo = 1;
     if (hasDaybookId && daybook.id) {
       const latestResult = await db.execute(
-        sql`SELECT sr_no FROM ${sql.raw(rawTableName)} WHERE daybook_id = ${daybook.id} ORDER BY id DESC LIMIT 1`,
+        sql`SELECT COALESCE(MAX(sr_no), 0) as max_sr_no, COUNT(*)::int as count FROM ${sql.raw(rawTableName)} WHERE daybook_id = ${daybook.id}`,
       );
-      const latestRow = latestResult.rows[0] as any;
-      if (
-        latestRow &&
-        latestRow.sr_no != null &&
-        !isNaN(Number(latestRow.sr_no))
-      ) {
-        nextSrNo = Number(latestRow.sr_no) + 1;
-      } else {
-        nextSrNo = 1;
-      }
+      const row = latestResult.rows[0] as any;
+      const maxSr = Number(row?.max_sr_no || 0);
+      const count = Number(row?.count || 0);
+      nextSrNo = Math.max(maxSr, count) + 1;
     } else if (hasSrNo) {
       const latestResult = await db.execute(
-        sql`SELECT sr_no FROM ${sql.raw(rawTableName)} ORDER BY id DESC LIMIT 1`,
+        sql`SELECT COALESCE(MAX(sr_no), 0) as max_sr_no, COUNT(*)::int as count FROM ${sql.raw(rawTableName)}`,
       );
-      const latestRow = latestResult.rows[0] as any;
-      if (
-        latestRow &&
-        latestRow.sr_no != null &&
-        !isNaN(Number(latestRow.sr_no))
-      ) {
-        nextSrNo = Number(latestRow.sr_no) + 1;
-      } else {
-        nextSrNo = 1;
-      }
+      const row = latestResult.rows[0] as any;
+      const maxSr = Number(row?.max_sr_no || 0);
+      const count = Number(row?.count || 0);
+      nextSrNo = Math.max(maxSr, count) + 1;
     }
 
-    const voucherNo =
-      prefix.endsWith("-") || prefix.endsWith("/")
-        ? `${prefix}${nextSrNo}`
-        : `${prefix}-${nextSrNo}`;
+    // Ensure voucherNo is strictly unique by checking for collisions
+    const colVoucherCheck = await db.execute(
+      sql`SELECT column_name FROM information_schema.columns WHERE table_name = ${rawTableName} AND column_name = 'voucher_no'`,
+    );
+    let voucherNo = "";
+    if (colVoucherCheck.rows.length > 0) {
+      while (true) {
+        voucherNo =
+          prefix.endsWith("-") || prefix.endsWith("/")
+            ? `${prefix}${nextSrNo}`
+            : `${prefix}-${nextSrNo}`;
+        const checkExisting = await db.execute(
+          sql`SELECT 1 FROM ${sql.raw(rawTableName)} WHERE voucher_no = ${voucherNo} LIMIT 1`,
+        );
+        if (checkExisting.rows.length === 0) break;
+        nextSrNo += 1;
+      }
+    } else {
+      voucherNo =
+        prefix.endsWith("-") || prefix.endsWith("/")
+          ? `${prefix}${nextSrNo}`
+          : `${prefix}-${nextSrNo}`;
+    }
 
     return {
       voucherNo,

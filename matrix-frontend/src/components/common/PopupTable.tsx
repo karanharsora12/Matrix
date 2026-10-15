@@ -390,7 +390,7 @@ export function PopupTable<T extends Record<string, any>>({
       <div className="w-full bg-background flex-1 flex flex-col min-h-0 relative">
         <DataGrid
           rowData={rowData}
-          columnDefs={columns}
+          columnDefs={columns || []}
           onGridReady={handleGridReady}
           gridOptions={{
             onRowDoubleClicked: handleRowDoubleClick,

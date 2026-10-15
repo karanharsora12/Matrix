@@ -60,6 +60,66 @@ export const TRANSACTION_MENU_DAYBOOK_GROUP_MAP: Record<string, string[]> = {
   [TransactionMenu.CONTRA]: ["CTR"],
 };
 
+export const MENU_DAYBOOK_CONFIG: Record<
+  string,
+  {
+    daybookGroupShortName: string;
+    daybookShortName?: string;
+  }
+> = {
+  REPAIRING_RECEIPT: {
+    daybookGroupShortName: "REP",
+    daybookShortName: "REPRCT",
+  },
+  REPAIRING_BILL: {
+    daybookGroupShortName: "REP",
+    daybookShortName: "REPBIL",
+  },
+  CASH_PAYMENT: {
+    daybookGroupShortName: "PAY",
+    daybookShortName: "CSHPAY",
+  },
+  CASH_RECEIPT: {
+    daybookGroupShortName: "RCT",
+    daybookShortName: "CSHRCT",
+  },
+  BANK_PAYMENT: {
+    daybookGroupShortName: "PAY",
+    daybookShortName: "BNKPAY",
+  },
+  BANK_RECEIPT: {
+    daybookGroupShortName: "RCT",
+    daybookShortName: "BNKRCT",
+  },
+  JOURNAL: {
+    daybookGroupShortName: "JRN",
+    daybookShortName: "GENJRN",
+  },
+  CONTRA: {
+    daybookGroupShortName: "CTR",
+  },
+};
+
+export function getDaybooksForMenu<
+  T extends { id: number; daybookGroupId: number; shortName?: string },
+  G extends { id: number; shortName: string },
+>(menuKey: string, daybooks: T[], daybookGroups: G[]): T[] {
+  const config = MENU_DAYBOOK_CONFIG[menuKey];
+  if (!config) return daybooks;
+
+  const targetGroup = daybookGroups.find(
+    (g) => g.shortName === config.daybookGroupShortName,
+  );
+  if (!targetGroup) return [];
+
+  const groupDaybooks = daybooks.filter((d) => d.daybookGroupId === targetGroup.id);
+  if (config.daybookShortName) {
+    const matched = groupDaybooks.filter((d) => d.shortName === config.daybookShortName);
+    if (matched.length > 0) return matched;
+  }
+  return groupDaybooks;
+}
+
 export function getDaybooksByMenu<
   T extends { daybookGroupId: number },
   G extends { id: number; shortName: string },

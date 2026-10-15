@@ -39,5 +39,7 @@ export const WEB_ROUTES = {
     BANK_PAYMENT: "/transactions/payments/bank-payment/:token",
     BANK_RECEIPT_LIST: "/transactions/receipt/bank-receipt",
     BANK_RECEIPT: "/transactions/receipt/bank-receipt/:token",
+    REPAIRING_RECEIPT_LIST: "/transactions/repairing/repairing-receipt",
+    REPAIRING_RECEIPT: "/transactions/repairing/repairing-receipt/:token",
   },
 };

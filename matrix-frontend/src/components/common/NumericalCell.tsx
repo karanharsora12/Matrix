@@ -258,7 +258,6 @@ export const NumericalCellEditor = forwardRef<any, NumericalCellEditorParams>(
         e.key === "Home" ||
         e.key === "End"
       ) {
-        // Prevent AG Grid from switching active cell when navigating cursor
         e.stopPropagation();
       }
     };

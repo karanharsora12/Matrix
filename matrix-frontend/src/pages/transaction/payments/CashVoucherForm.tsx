@@ -604,11 +604,6 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
                     <p className="text-xs font-semibold text-slate-800 dark:text-zinc-100 truncate">
                       {formData.accountName || "No account selected"}
                     </p>
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                      {selectedAccount
-                        ? `${groupMap[selectedAccount.accountGroupId] || "General"} • ${typeMap[selectedAccount.accountTypeId] || "Account"}`
-                        : "Press F2 or click above to search"}
-                    </p>
                   </div>
                 </div>
               </div>
