@@ -35,7 +35,6 @@ export const DaybookSelect: React.FC<DaybookSelectProps> = ({
   menuKey,
   transactionMenu,
   daybookGroupShortName,
-  daybooks: customDaybooks,
   label = "Daybook",
   placeholder = "Select daybook",
   required = false,
@@ -56,16 +55,10 @@ export const DaybookSelect: React.FC<DaybookSelectProps> = ({
   );
 
   const availableDaybooks = useMemo(() => {
-    if (customDaybooks) return customDaybooks;
-
     const allActive = (daybooksResponse?.data || []).filter((d) => d.isActive);
 
     if (menuKey) {
       return getDaybooksForMenu(menuKey, allActive, daybookGroups);
-    }
-
-    if (transactionMenu) {
-      return getDaybooksByMenu(transactionMenu, allActive, daybookGroups);
     }
 
     if (daybookGroupShortName) {
@@ -78,7 +71,6 @@ export const DaybookSelect: React.FC<DaybookSelectProps> = ({
 
     return allActive;
   }, [
-    customDaybooks,
     daybooksResponse?.data,
     menuKey,
     transactionMenu,

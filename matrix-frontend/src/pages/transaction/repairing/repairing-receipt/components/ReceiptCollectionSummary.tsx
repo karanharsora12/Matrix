@@ -26,14 +26,7 @@ interface ReceiptCollectionSummaryProps {
 
 export const ReceiptCollectionSummary: React.FC<
   ReceiptCollectionSummaryProps
-> = ({
-  readOnly,
-  form,
-  onChangeForm,
-  totals,
-  cashDaybookName = "Cash Receipt Daybook",
-  bankDaybookName = "Bank Receipt Daybook",
-}) => {
+> = ({ readOnly, form, onChangeForm, totals }) => {
   const percentAdvance =
     totals.grandTotal > 0
       ? Math.min(100, Math.round((totals.received / totals.grandTotal) * 100))
@@ -107,12 +100,6 @@ export const ReceiptCollectionSummary: React.FC<
                   <Banknote className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                   Cash (₹)
                 </Label>
-                <span
-                  className="text-[10px] text-slate-400 font-medium truncate max-w-[100px]"
-                  title={cashDaybookName}
-                >
-                  {cashDaybookName}
-                </span>
               </div>
               <Input
                 disabled={readOnly}
@@ -127,7 +114,6 @@ export const ReceiptCollectionSummary: React.FC<
                     cashAmount: n(event.target.value),
                   }))
                 }
-                className="h-9 font-semibold text-emerald-700 bg-white dark:bg-zinc-900 dark:text-emerald-400"
               />
             </div>
 
@@ -138,12 +124,6 @@ export const ReceiptCollectionSummary: React.FC<
                   <Landmark className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                   Bank / UPI (₹)
                 </Label>
-                <span
-                  className="text-[10px] text-slate-400 font-medium truncate max-w-[100px]"
-                  title={bankDaybookName}
-                >
-                  {bankDaybookName}
-                </span>
               </div>
               <Input
                 disabled={readOnly}
@@ -158,7 +138,6 @@ export const ReceiptCollectionSummary: React.FC<
                     bankAmount: n(event.target.value),
                   }))
                 }
-                className="h-9 font-semibold text-blue-700 bg-white dark:bg-zinc-900 dark:text-blue-400"
               />
             </div>
           </div>
