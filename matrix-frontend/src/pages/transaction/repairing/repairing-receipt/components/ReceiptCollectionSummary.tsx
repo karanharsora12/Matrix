@@ -84,12 +84,9 @@ export const ReceiptCollectionSummary: React.FC<
                 <WalletCards className="h-4 w-4" />
               </span>
               <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
-                Advance Payment Intake
+                Receipt
               </h2>
             </div>
-            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
-              Optional Advance
-            </span>
           </div>
 
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
