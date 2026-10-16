@@ -327,3 +327,14 @@
 .ag-grid-custom input[type="radio"] {
   accent-color: var(--primary-action, #3b82a0);
 }
+
+.ag-grid-custom.no-radius,
+.no-radius .ag-grid-custom,
+.no-radius .ag-root-wrapper,
+.no-radius .ag-root,
+.no-radius .ag-root-wrapper-body,
+.ag-grid-custom.no-radius .ag-root-wrapper {
+  --ag-border-radius: 0px;
+  --ag-wrapper-border-radius: 0px;
+  border-radius: 0;
+}

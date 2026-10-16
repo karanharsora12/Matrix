@@ -311,6 +311,96 @@ export const paymentDetails = pgTable("payment_details", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const sales = pgTable("sales", {
+  id: serial("id").primaryKey(),
+  voucherNo: varchar("voucher_no", { length: 256 }).notNull().unique(),
+  srNo: integer("sr_no"),
+  voucherDate: timestamp("voucher_date").notNull(),
+  daybookId: integer("daybook_id")
+    .references((): AnyPgColumn => daybooks.id)
+    .notNull(),
+  accountId: integer("account_id")
+    .references((): AnyPgColumn => accounts.id)
+    .notNull(),
+  receiptId: integer("receipt_id").references((): AnyPgColumn => orders.id),
+  salesmanName: varchar("salesman_name", { length: 256 }),
+  customerReference: varchar("customer_reference", { length: 256 }),
+  remarks: varchar("remarks", { length: 1024 }),
+  billMode: varchar("bill_mode", { length: 256 }).default("REPAIRING_BILL"),
+
+  subtotal: numeric("subtotal").default("0").notNull(),
+  discountRate: numeric("discount_rate").default("0").notNull(),
+  discountAmount: numeric("discount_amount").default("0").notNull(),
+  taxRate: numeric("tax_rate").default("0").notNull(),
+  taxAmount: numeric("tax_amount").default("0").notNull(),
+  roundOff: numeric("round_off").default("0").notNull(),
+  grandTotal: numeric("grand_total").default("0").notNull(),
+
+  advanceAmount: numeric("advance_amount").default("0").notNull(),
+  cashAmount: numeric("cash_amount").default("0").notNull(),
+  bankAmount: numeric("bank_amount").default("0").notNull(),
+  cashDaybookId: integer("cash_daybook_id").references(
+    (): AnyPgColumn => daybooks.id,
+  ),
+  bankDaybookId: integer("bank_daybook_id").references(
+    (): AnyPgColumn => daybooks.id,
+  ),
+  cashReference: varchar("cash_reference", { length: 256 }),
+  bankReference: varchar("bank_reference", { length: 256 }),
+
+  dueDate: timestamp("due_date"),
+  deliveryPending: boolean("delivery_pending").default(false).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const salesItems = pgTable("sales_items", {
+  id: serial("id").primaryKey(),
+  saleId: integer("sale_id")
+    .references((): AnyPgColumn => sales.id, { onDelete: "cascade" })
+    .notNull(),
+  receiptItemId: integer("receipt_item_id").references(
+    (): AnyPgColumn => orderItems.id,
+  ),
+  itemId: integer("item_id")
+    .references((): AnyPgColumn => items.id)
+    .notNull(),
+  itemGroupId: integer("item_group_id").references(
+    (): AnyPgColumn => itemGroups.id,
+  ),
+
+  tagNo: varchar("tag_no", { length: 256 }),
+  itemDescription: varchar("item_description", { length: 1024 }),
+  itemRemarks: varchar("item_remarks", { length: 1024 }),
+  pcs: numeric("pcs").default("1").notNull(),
+  uom: varchar("uom", { length: 256 }),
+  weight: numeric("weight").default("0"),
+  grossWt: numeric("gross_wt").default("0"),
+  netWt: numeric("net_wt").default("0"),
+  adjustedWt: numeric("adjusted_wt").default("0"),
+
+  rate: numeric("rate").default("0").notNull(),
+  labourRate: numeric("labour_rate").default("0"),
+  rateTypeId: integer("rate_type_id").references(
+    (): AnyPgColumn => rateTypes.id,
+  ),
+  rateType: varchar("rate_type", { length: 256 }),
+  tax: varchar("tax", { length: 256 }),
+
+  labourAmount: numeric("labour_amount").default("0"),
+  otherAmount: numeric("other_amount").default("0"),
+  discountAmount: numeric("discount_amount").default("0"),
+  amount: numeric("amount").default("0").notNull(),
+  deliveryDate: timestamp("delivery_date"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // ─── Geographic Hierarchy ─────────────────────────────────────────────────────
 
 export const countries = pgTable("countries", {

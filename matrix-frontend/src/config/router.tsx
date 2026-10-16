@@ -8,6 +8,8 @@ import CashReceipt from "@/pages/transaction/receipt/cash-receipt/CashReceipt";
 import CashReceiptList from "@/pages/transaction/receipt/cash-receipt/CashReceiptList";
 import RepairingReceipt from "@/pages/transaction/repairing/repairing-receipt/RepairingReceipt";
 import RepairingReceiptList from "@/pages/transaction/repairing/repairing-receipt/RepairingReceiptList";
+import RepairingBill from "@/pages/transaction/repairing/repairing-bill/RepairingBill";
+import RepairingBillList from "@/pages/transaction/repairing/repairing-bill/RepairingBillList";
 import { createBrowserRouter } from "react-router-dom";
 import { ProtectedRoute } from "../components/common/ProtectedRoute";
 import { PublicRoute } from "../components/common/PublicRoute";
@@ -149,6 +151,14 @@ export const router = createBrowserRouter([
           {
             path: WEB_ROUTES.TRANSACTION.REPAIRING_RECEIPT,
             element: <RepairingReceipt />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.REPAIRING_BILL_LIST,
+            element: <RepairingBillList />,
+          },
+          {
+            path: WEB_ROUTES.TRANSACTION.REPAIRING_BILL,
+            element: <RepairingBill />,
           },
         ],
       },

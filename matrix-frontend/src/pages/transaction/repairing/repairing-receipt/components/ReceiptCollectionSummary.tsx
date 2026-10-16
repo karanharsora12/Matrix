@@ -1,15 +1,5 @@
 import React from "react";
-import {
-  Banknote,
-  CheckCircle2,
-  Coins,
-  FileCheck,
-  Landmark,
-  WalletCards,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { money, n } from "../types";
+import { n } from "../types";
 import type {
   RepairingReceiptFormData,
   RepairingReceiptTotals,
@@ -27,178 +17,203 @@ interface ReceiptCollectionSummaryProps {
 export const ReceiptCollectionSummary: React.FC<
   ReceiptCollectionSummaryProps
 > = ({ readOnly, form, onChangeForm, totals }) => {
-  const percentAdvance =
-    totals.grandTotal > 0
-      ? Math.min(100, Math.round((totals.received / totals.grandTotal) * 100))
-      : 0;
-
   return (
-    <section className="mt-4 grid gap-4 lg:grid-cols-12">
-      {/* ── CARD 1: Executive Total Valuation Card (4 cols) ── */}
-      <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-850 to-slate-950 p-4 text-white dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-950 lg:col-span-4 flex flex-col justify-between">
-        <div className="absolute -right-6 -bottom-6 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
-
+    <section className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-12 text-xs">
+      <div className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4">
         <div>
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              Total Repair Order Value
-            </span>
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-              <Coins className="h-3.5 w-3.5" />
-            </span>
+          <div className="border-b border-slate-100 pb-1.5 mb-2 font-semibold text-slate-800 dark:text-zinc-200 dark:border-zinc-800">
+            Order Valuation
           </div>
 
-          <div className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-            {money(totals.grandTotal)}
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center justify-between py-0.5">
+              <span className="text-slate-600 dark:text-zinc-400">
+                Material / Item Value
+              </span>
+              <span className="font-medium text-slate-800 dark:text-zinc-200">
+                ₹{totals.taxableTotal.toFixed(2)}
+              </span>
+            </div>
+
+            {/* Labour Charges */}
+            <div className="flex items-center justify-between py-0.5">
+              <span className="text-slate-600 dark:text-zinc-400">
+                Estimated Labour
+              </span>
+              <span className="font-medium text-slate-800 dark:text-zinc-200">
+                ₹{totals.labourTotal.toFixed(2)}
+              </span>
+            </div>
+
+            {/* Items / Quantity */}
+            <div className="flex items-center justify-between py-0.5 text-slate-600 dark:text-zinc-400">
+              <span>Items / Pcs</span>
+              <span className="font-medium text-slate-800 dark:text-zinc-200">
+                {totals.itemCount} items ({totals.totalPcs} pcs)
+              </span>
+            </div>
+
+            {/* Net Wt */}
+            <div className="flex items-center justify-between py-0.5 text-slate-600 dark:text-zinc-400">
+              <span>Net Weight</span>
+              <span className="font-medium text-slate-800 dark:text-zinc-200">
+                {totals.totalNetWt.toFixed(3)}g
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="mt-4 space-y-2 border-t border-slate-800/80 pt-3 text-xs">
-          <div className="flex items-center justify-between text-slate-300">
-            <span className="text-slate-400">Taxable Item Charges:</span>
-            <span className="font-medium text-slate-200">
-              {money(totals.taxableTotal)}
+        {/* Total Order Value */}
+        <div className="mt-2 border-t border-slate-200 pt-1.5 dark:border-zinc-700">
+          <div className="flex items-center justify-between font-bold">
+            <span className="text-slate-800 dark:text-zinc-200">
+              Total Value
             </span>
-          </div>
-          <div className="flex items-center justify-between text-slate-300">
-            <span className="text-slate-400">Labour / Making Charges:</span>
-            <span className="font-semibold text-emerald-400">
-              {money(totals.labourTotal)}
+            <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+              ₹{totals.grandTotal.toFixed(2)}
             </span>
-          </div>
-          <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400">
-            <span>
-              Items: {totals.itemCount} ({totals.totalPcs} pcs)
-            </span>
-            <span>Net Wt: {totals.totalNetWt.toFixed(3)}g</span>
           </div>
         </div>
       </div>
 
-      {/* ── CARD 2: Advance Collection Tile (5 cols) ── */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-5 flex flex-col justify-between">
+      {/* ── CARD 2: Advance Collection (5 cols) ── */}
+      <div className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-5">
         <div>
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-                <WalletCards className="h-4 w-4" />
-              </span>
-              <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
-                Receipt
-              </h2>
-            </div>
+          <div className="border-b border-slate-100 pb-1.5 mb-2 font-semibold text-slate-800 dark:text-zinc-200 dark:border-zinc-800">
+            Advance Collection
           </div>
 
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5 text-xs">
             {/* Cash Advance */}
-            <div className="rounded-lg border border-slate-200/80 bg-slate-50/50 p-2.5 dark:border-zinc-800 dark:bg-zinc-850/50">
-              <div className="flex items-center justify-between mb-1.5">
-                <Label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
-                  <Banknote className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  Cash (₹)
-                </Label>
-              </div>
-              <Input
-                disabled={readOnly}
-                type="number"
-                min="0"
-                step="any"
-                placeholder="0.00"
-                value={form.cashAmount || ""}
-                onChange={(event) =>
-                  onChangeForm((current) => ({
-                    ...current,
-                    cashAmount: n(event.target.value),
-                  }))
-                }
-              />
-            </div>
-
-            {/* Bank / UPI Advance */}
-            <div className="rounded-lg border border-slate-200/80 bg-slate-50/50 p-2.5 dark:border-zinc-800 dark:bg-zinc-850/50">
-              <div className="flex items-center justify-between mb-1.5">
-                <Label className="text-xs font-semibold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
-                  <Landmark className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  Bank / UPI (₹)
-                </Label>
-              </div>
-              <Input
-                disabled={readOnly}
-                type="number"
-                min="0"
-                step="any"
-                placeholder="0.00"
-                value={form.bankAmount || ""}
-                onChange={(event) =>
-                  onChangeForm((current) => ({
-                    ...current,
-                    bankAmount: n(event.target.value),
-                  }))
-                }
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── CARD 3: Settlement Status & Balance Due (3 cols) ── */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3 flex flex-col justify-between">
-        <div>
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
-                <FileCheck className="h-4 w-4" />
+            <div className="flex items-center justify-between gap-2 py-0.5">
+              <span className="text-slate-600 dark:text-zinc-400 font-medium">
+                Cash Advance
               </span>
-              <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
-                Settlement Status
-              </h2>
-            </div>
-            {totals.balance === 0 && totals.grandTotal > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
-                <CheckCircle2 className="h-3 w-3" />
-                Settled
-              </span>
-            ) : totals.balance < 0 ? (
-              <span className="inline-flex items-center rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
-                Excess
-              </span>
-            ) : (
-              <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
-                Pending Due
-              </span>
-            )}
-          </div>
-
-          <div className="mt-3 space-y-2.5">
-            <div>
-              <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">
-                Balance Outstanding at Delivery
-              </span>
-              <div
-                className={`mt-0.5 text-xl font-bold tracking-tight ${
-                  totals.balance < 0
-                    ? "text-rose-600 dark:text-rose-400"
-                    : totals.balance === 0
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-slate-900 dark:text-zinc-100"
-                }`}
-              >
-                {money(totals.balance)}
-              </div>
-            </div>
-
-            {/* Advance Progress Bar */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-[10px] text-slate-500 dark:text-zinc-400">
-                <span>Advance Paid</span>
-                <span className="font-semibold">{percentAdvance}%</span>
-              </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300"
-                  style={{ width: `${percentAdvance}%` }}
+              <div className="relative">
+                <span className="absolute left-2.5 top-1.5 text-slate-400 text-xs">
+                  ₹
+                </span>
+                <input
+                  disabled={readOnly}
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="0.00"
+                  value={form.cashAmount || ""}
+                  onChange={(e) =>
+                    onChangeForm((cur) => ({
+                      ...cur,
+                      cashAmount: n(e.target.value),
+                    }))
+                  }
+                  className="h-7 w-28 rounded border border-slate-200 bg-slate-50/50 pl-5 pr-2 text-right text-xs font-semibold outline-none focus:border-primary-action dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                 />
               </div>
+            </div>
+
+            {/* Bank Advance */}
+            <div className="flex items-center justify-between gap-2 py-0.5">
+              <span className="text-slate-600 dark:text-zinc-400 font-medium">
+                Bank / UPI Advance
+              </span>
+              <div className="relative">
+                <span className="absolute left-2.5 top-1.5 text-slate-400 text-xs">
+                  ₹
+                </span>
+                <input
+                  disabled={readOnly}
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="0.00"
+                  value={form.bankAmount || ""}
+                  onChange={(e) =>
+                    onChangeForm((cur) => ({
+                      ...cur,
+                      bankAmount: n(e.target.value),
+                    }))
+                  }
+                  className="h-7 w-28 rounded border border-slate-200 bg-slate-50/50 pl-5 pr-2 text-right text-xs font-semibold outline-none focus:border-primary-action dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                />
+              </div>
+            </div>
+
+            {/* Remarks */}
+            <div className="flex items-center justify-between gap-2 pt-0.5">
+              <span className="text-slate-600 dark:text-zinc-400 whitespace-nowrap">
+                Remarks
+              </span>
+              <input
+                disabled={readOnly}
+                placeholder="Special instructions or notes..."
+                value={form.remarks || ""}
+                onChange={(e) =>
+                  onChangeForm((cur) => ({ ...cur, remarks: e.target.value }))
+                }
+                className="h-7 flex-1 rounded border border-slate-200 bg-slate-50/50 px-2 text-xs outline-none focus:border-primary-action dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Balance Due */}
+        <div className="mt-2 border-t border-slate-200 pt-1.5 dark:border-zinc-700">
+          <div className="flex items-center justify-between font-bold">
+            <span className="text-slate-800 dark:text-zinc-200">
+              Balance at Delivery
+            </span>
+            <span
+              className={`text-sm font-extrabold ${
+                totals.balance === 0
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : totals.balance < 0
+                    ? "text-rose-600 dark:text-rose-400"
+                    : "text-slate-900 dark:text-zinc-100"
+              }`}
+            >
+              ₹{totals.balance.toFixed(2)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── CARD 3: Other Summary (3 cols) ── */}
+      <div className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
+        <div>
+          {/* Tab Header */}
+          <div className="border-b border-slate-100 pb-1 mb-2 dark:border-zinc-800 flex items-center">
+            <span className="border-b-2 border-primary-action text-primary-action font-semibold text-xs pb-1">
+              Other Summary
+            </span>
+          </div>
+
+          <div className="space-y-2 text-xs">
+            {/* Bill OS */}
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-600 dark:text-zinc-400 font-medium">
+                Bill OS
+              </span>
+              <div className="h-7 w-24 rounded border border-slate-200 bg-slate-50/60 px-2 flex items-center justify-end font-semibold text-slate-800 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-200">
+                {totals.balance.toFixed(2)}
+              </div>
+            </div>
+
+            {/* Ledger OS */}
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-600 dark:text-zinc-400 font-medium">
+                Ledger OS
+              </span>
+              <div className="h-7 w-24 rounded border border-slate-200 bg-slate-50/60 px-2 flex items-center justify-end font-semibold text-slate-800 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-200">
+                0.00
+              </div>
+            </div>
+
+            {/* Advance Recd */}
+            <div className="flex items-center justify-between py-0.5 text-slate-600 dark:text-zinc-400">
+              <span>Advance Recd</span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                ₹{totals.received.toFixed(2)}
+              </span>
             </div>
           </div>
         </div>

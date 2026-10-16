@@ -14,11 +14,13 @@ import type {
   IGetRowsParams,
 } from "ag-grid-community";
 import apiClient from "@/api/client";
+import { cn } from "@/lib/utils";
 import "@/styles/ag-grid.css";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 export interface DataGridProps<TData = any> {
+  className?: string;
   rowData?: TData[];
   columnDefs: ColDef[];
   gridOptions?: GridOptions;
@@ -122,6 +124,7 @@ const darkTheme = themeQuartz.withPart(colorSchemeDark).withParams({
 export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
   (
     {
+      className,
       rowData,
       columnDefs,
       gridOptions,
@@ -240,7 +243,7 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
       rowData ?? (usesInfiniteScroll ? undefined : apiRowData);
 
     return (
-      <div className="flex-1 min-h-0 h-full w-full ag-grid-custom">
+      <div className={cn("flex-1 min-h-0 h-full w-full ag-grid-custom", className)}>
         <AgGridReact
           ref={ref}
           theme={theme}

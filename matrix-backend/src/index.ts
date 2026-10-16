@@ -9,6 +9,7 @@ import daybookRoutes from "./routes/daybook.routes";
 import paymentRoutes from "./routes/payment.routes";
 import geoRoutes from "./routes/geo.routes";
 import ordersRoutes from "./routes/orders.routes";
+import salesRoutes from "./routes/sales.routes";
 
 import { authUserMiddleware } from "./middleware/auth.middleware";
 
@@ -29,6 +30,7 @@ app.use("/api/daybooks", daybookRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/geo", geoRoutes);
 app.use("/api/orders", ordersRoutes);
+app.use("/api/sales", salesRoutes);
 
 app.get("/", (req, res) => {
   res.send("Matrix ERP System API");

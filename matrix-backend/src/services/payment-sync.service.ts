@@ -117,7 +117,9 @@ export class PaymentSyncService {
       amount: cashAmountNum,
       groupShortName: "CASH",
       transactionType:
-        referenceType === "SALES" || referenceType === "REPAIRING_RECEIPT"
+        referenceType === "SALES" ||
+        referenceType === "REPAIRING_RECEIPT" ||
+        referenceType === "REPAIRING_BILL"
           ? "CREC"
           : "CPAY",
       modeLabel: "Cash",
@@ -136,7 +138,9 @@ export class PaymentSyncService {
       amount: bankAmountNum,
       groupShortName: "BANK",
       transactionType:
-        referenceType === "SALES" || referenceType === "REPAIRING_RECEIPT"
+        referenceType === "SALES" ||
+        referenceType === "REPAIRING_RECEIPT" ||
+        referenceType === "REPAIRING_BILL"
           ? "BREC"
           : "BPAY",
       modeLabel: "Bank",

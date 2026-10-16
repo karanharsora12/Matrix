@@ -42,6 +42,11 @@ export const API_ENDPOINTS = {
     BASE: "/orders",
     BY_ID: (id: string | number) => `/orders/${id}`,
   },
+  SALES: {
+    BASE: "/sales",
+    ELIGIBLE_RECEIPTS: "/sales/eligible-receipts",
+    BY_ID: (id: string | number) => `/sales/${id}`,
+  },
   GEO: {
     COUNTRIES: "/geo/countries",
     COUNTRY_BY_ID: (id: string | number) => `/geo/countries/${id}`,

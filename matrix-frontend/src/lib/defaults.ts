@@ -26,6 +26,7 @@ export const MenuList = {
   BANK_PAYMENT: "BankPayment",
   BANK_RECEIPT: "BankReceipt",
   REPAIRING_RECEIPT: "repairing_receipt",
+  REPAIRING_BILL: "repairing_bill",
   JOURNAL: "Journal",
   CONTRA: "Contra",
 
@@ -226,6 +227,36 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ColDef[]> = {
     {
       field: "receivedAmount",
       headerName: "Received",
+      width: 120,
+      type: "numericColumn",
+    },
+    {
+      field: "balanceAmount",
+      headerName: "Balance",
+      width: 120,
+      type: "numericColumn",
+    },
+    { field: "salesmanName", headerName: "Technician / Master", width: 140 },
+    { field: "remarks", headerName: "Remarks", width: 180 },
+  ],
+
+  [MenuList.REPAIRING_BILL]: [
+    { field: "voucherNo", headerName: "Bill No.", width: 130 },
+    { field: "voucherDate", headerName: "Date", width: 110 },
+    { field: "daybookName", headerName: "Daybook", width: 140 },
+    { field: "accountName", headerName: "Customer Name", width: 220 },
+    { field: "customerPhone", headerName: "Mobile No.", width: 130 },
+    { field: "receiptVoucherNo", headerName: "Receipt Ref", width: 130 },
+    { field: "itemCount", headerName: "Items", width: 80, type: "numericColumn" },
+    {
+      field: "grandTotal",
+      headerName: "Grand Total",
+      width: 130,
+      type: "numericColumn",
+    },
+    {
+      field: "advanceAdjusted",
+      headerName: "Advance Adj.",
       width: 120,
       type: "numericColumn",
     },
