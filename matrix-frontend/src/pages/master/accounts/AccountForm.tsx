@@ -107,11 +107,11 @@ const AccountForm: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full flex flex-col bg-gray-50">
+    <div className="min-h-full flex flex-col bg-gray-50 dark:bg-zinc-950">
       <div className="flex-1 overflow-y-auto">
         <div className="w-full pb-24">
-          <div className="border-b border-gray-200 bg-white px-6 py-3">
-            <h1 className="text-xl font-semibold text-gray-900">Account</h1>
+          <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-3">
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-100">Account</h1>
           </div>
 
           <div className="px-6 py-6">

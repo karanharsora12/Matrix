@@ -294,3 +294,24 @@
     transform: scale(1);
   }
 }
+
+/* ─── Global Print Styles: Protect printouts/invoices ─── */
+@media print {
+  *,
+  html,
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  header,
+  aside,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+}
+

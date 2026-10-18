@@ -5,6 +5,50 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Matrix ERP</title>
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem("matrix_theme_preferences");
+          var prefs = raw ? JSON.parse(raw) : null;
+          var mode = prefs && prefs.mode ? prefs.mode : "system";
+          var isDark = false;
+          if (mode === "dark") {
+            isDark = true;
+          } else if (mode === "system") {
+            isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          }
+          if (isDark) {
+            document.documentElement.classList.add("dark");
+            document.documentElement.style.colorScheme = "dark";
+          } else {
+            document.documentElement.classList.remove("dark");
+            document.documentElement.style.colorScheme = "light";
+          }
+          var presets = {
+            "matrix-blue": { light: "#3B82A0", dark: "#4a9bbd" },
+            "royal-purple": { light: "#7C3AED", dark: "#9061F9" },
+            "emerald": { light: "#059669", dark: "#10B981" },
+            "teal": { light: "#0D9488", dark: "#14B8A6" },
+            "amber": { light: "#D97706", dark: "#F59E0B" },
+            "rose": { light: "#E11D48", dark: "#F43F5E" },
+            "slate": { light: "#475569", dark: "#64748B" },
+          };
+          var accentId = prefs && prefs.accent ? prefs.accent : "matrix-blue";
+          var hex = null;
+          if (accentId === "custom" && prefs.customColor) {
+            hex = prefs.customColor;
+          } else if (presets[accentId]) {
+            hex = isDark ? presets[accentId].dark : presets[accentId].light;
+          }
+          if (hex) {
+            document.documentElement.style.setProperty("--primary-action", hex);
+            document.documentElement.style.setProperty("--active", hex);
+          }
+          document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+          document.documentElement.setAttribute("data-accent", accentId);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

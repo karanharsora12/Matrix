@@ -15,6 +15,7 @@ import type {
 } from "ag-grid-community";
 import apiClient from "@/api/client";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/context/ThemeContext";
 import "@/styles/ag-grid.css";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -55,71 +56,67 @@ const getGridResponse = <TData,>(payload: unknown): GridApiResponse<TData> => {
   return { data: [] };
 };
 
-// Light theme — tuned to match the app's zinc-based palette
-const lightTheme = themeQuartz.withParams({
-  backgroundColor: "hsl(0 0% 100%)",
-  foregroundColor: "hsl(240 10% 3.9%)",
-  headerBackgroundColor: "color-mix(in srgb, var(--primary-action) 14%, white)",
-  headerTextColor: "hsl(240 10% 3.9%)",
-  headerFontWeight: 600,
-  headerFontSize: 13,
-  fontSize: 13,
-  borderColor: "hsl(240 5.9% 90%)",
-  accentColor: "var(--primary-action)",
-  rowBorder: true,
-  columnBorder: true,
-  rowHoverColor: "color-mix(in srgb, var(--primary-action) 5%, white)",
-  selectedRowBackgroundColor:
-    "color-mix(in srgb, var(--primary-action) 12%, white)",
-  rangeSelectionBackgroundColor:
-    "color-mix(in srgb, var(--primary-action) 15%, white)",
-  rangeSelectionBorderColor: "var(--primary-action)",
-  oddRowBackgroundColor: "hsl(0 0% 100%)",
-  borderRadius: 6,
-  wrapperBorderRadius: 6,
-  cellHorizontalPadding: 12,
-  headerCellHoverBackgroundColor:
-    "color-mix(in srgb, var(--primary-action) 22%, white)",
-  filterToolPanelGroupIndent: 12,
-  iconSize: 16,
-  spacing: 4,
-  wrapperBorder: true,
-  headerColumnBorder: true,
-  headerColumnBorderHeight: "100%",
-});
+const createGridTheme = (isDark: boolean, accentHex: string) => {
+  if (isDark) {
+    return themeQuartz.withPart(colorSchemeDark).withParams({
+      backgroundColor: "hsl(240 10% 5.5%)",
+      foregroundColor: "hsl(0 0% 98%)",
+      headerBackgroundColor: `color-mix(in srgb, ${accentHex} 32%, black)`,
+      headerTextColor: `color-mix(in srgb, ${accentHex} 45%, white)`,
+      headerFontWeight: 600,
+      headerFontSize: 13,
+      fontSize: 13,
+      borderColor: "hsl(240 3.7% 17%)",
+      accentColor: accentHex,
+      rowBorder: true,
+      columnBorder: true,
+      rowHoverColor: `color-mix(in srgb, ${accentHex} 12%, black)`,
+      selectedRowBackgroundColor: `color-mix(in srgb, ${accentHex} 28%, black)`,
+      rangeSelectionBackgroundColor: `color-mix(in srgb, ${accentHex} 22%, black)`,
+      rangeSelectionBorderColor: accentHex,
+      oddRowBackgroundColor: "hsl(240 10% 5.5%)",
+      borderRadius: 6,
+      wrapperBorderRadius: 8,
+      cellHorizontalPadding: 12,
+      headerCellHoverBackgroundColor: `color-mix(in srgb, ${accentHex} 40%, black)`,
+      filterToolPanelGroupIndent: 12,
+      iconSize: 16,
+      spacing: 4,
+      wrapperBorder: true,
+      headerColumnBorder: true,
+      headerColumnBorderHeight: "100%",
+    });
+  }
 
-// Dark theme — matches the app's dark zinc palette
-const darkTheme = themeQuartz.withPart(colorSchemeDark).withParams({
-  backgroundColor: "hsl(240 10% 5.5%)",
-  foregroundColor: "hsl(0 0% 98%)",
-  headerBackgroundColor: "color-mix(in srgb, var(--primary-action) 32%, black)",
-  headerTextColor: "color-mix(in srgb, var(--primary-action) 45%, white)",
-  headerFontWeight: 600,
-  headerFontSize: 13,
-  fontSize: 13,
-  borderColor: "hsl(240 3.7% 17%)",
-  accentColor: "var(--primary-action)",
-  rowBorder: true,
-  columnBorder: true,
-  rowHoverColor: "color-mix(in srgb, var(--primary-action) 12%, black)",
-  selectedRowBackgroundColor:
-    "color-mix(in srgb, var(--primary-action) 28%, black)",
-  rangeSelectionBackgroundColor:
-    "color-mix(in srgb, var(--primary-action) 22%, black)",
-  rangeSelectionBorderColor: "var(--primary-action)",
-  oddRowBackgroundColor: "hsl(240 10% 5.5%)",
-  borderRadius: 6,
-  wrapperBorderRadius: 8,
-  cellHorizontalPadding: 12,
-  headerCellHoverBackgroundColor:
-    "color-mix(in srgb, var(--primary-action) 40%, black)",
-  filterToolPanelGroupIndent: 12,
-  iconSize: 16,
-  spacing: 4,
-  wrapperBorder: true,
-  headerColumnBorder: true,
-  headerColumnBorderHeight: "100%",
-});
+  return themeQuartz.withParams({
+    backgroundColor: "hsl(0 0% 100%)",
+    foregroundColor: "hsl(240 10% 3.9%)",
+    headerBackgroundColor: `color-mix(in srgb, ${accentHex} 14%, white)`,
+    headerTextColor: "hsl(240 10% 3.9%)",
+    headerFontWeight: 600,
+    headerFontSize: 13,
+    fontSize: 13,
+    borderColor: "hsl(240 5.9% 90%)",
+    accentColor: accentHex,
+    rowBorder: true,
+    columnBorder: true,
+    rowHoverColor: `color-mix(in srgb, ${accentHex} 5%, white)`,
+    selectedRowBackgroundColor: `color-mix(in srgb, ${accentHex} 12%, white)`,
+    rangeSelectionBackgroundColor: `color-mix(in srgb, ${accentHex} 15%, white)`,
+    rangeSelectionBorderColor: accentHex,
+    oddRowBackgroundColor: "hsl(0 0% 100%)",
+    borderRadius: 6,
+    wrapperBorderRadius: 6,
+    cellHorizontalPadding: 12,
+    headerCellHoverBackgroundColor: `color-mix(in srgb, ${accentHex} 22%, white)`,
+    filterToolPanelGroupIndent: 12,
+    iconSize: 16,
+    spacing: 4,
+    wrapperBorder: true,
+    headerColumnBorder: true,
+    headerColumnBorderHeight: "100%",
+  });
+};
 
 export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
   (
@@ -158,10 +155,10 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
       };
     }, []);
 
-    const isDark = document.documentElement.classList.contains("dark");
+    const { resolvedMode, activeHex } = useTheme();
     const theme = useMemo(() => {
-      return isDark ? darkTheme : lightTheme;
-    }, [isDark]);
+      return createGridTheme(resolvedMode === "dark", activeHex || "#3B82A0");
+    }, [resolvedMode, activeHex]);
 
     const datasource = useMemo<IDatasource | undefined>(() => {
       if (!apiName || !usesInfiniteScroll) return undefined;

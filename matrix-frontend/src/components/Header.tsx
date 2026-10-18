@@ -14,15 +14,19 @@ import { logout } from "@/store/authSlice";
 import apiClient from "@/api/client";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { MobileSidebarTrigger } from "@/components/Sidebar";
-import { Bell, HelpCircle, LogOut, Search, Settings, User } from "lucide-react";
+import { Bell, HelpCircle, LogOut, Palette, Search, Settings, User } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@/context/ThemeContext";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { ThemeSettingsModal } from "@/components/theme/ThemeSettingsModal";
 
 export function Header() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
+  const { isSettingsOpen, setIsSettingsOpen, openSettings } = useTheme();
 
   const [menus, setMenus] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -140,6 +144,8 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-1">
+        <ThemeToggle />
+
         <Button
           variant="ghost"
           size="icon"
@@ -196,6 +202,13 @@ export function Header() {
               <User className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={openSettings}
+              className="rounded-lg focus:bg-primary-action/10 focus:text-primary-action cursor-pointer"
+            >
+              <Palette className="mr-2 h-4 w-4" />
+              Theme Settings
+            </DropdownMenuItem>
             <DropdownMenuItem className="rounded-lg focus:bg-primary-action/10 focus:text-primary-action cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
               Settings
@@ -214,6 +227,11 @@ export function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <ThemeSettingsModal
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+      />
     </header>
   );
 }
