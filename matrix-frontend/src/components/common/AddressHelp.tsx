@@ -133,6 +133,7 @@ function PopupField({
           searchPlaceholder={searchPlaceholder}
           width={popupWidth}
           height={popupHeight}
+          value={value}
         />
       </div>
     </div>

@@ -1,5 +1,5 @@
 import type { ICellEditorParams } from "ag-grid-community";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState, useMemo } from "react";
 import { PopupTable } from "./PopupTable";
 
 export interface PopupCellEditorParams extends ICellEditorParams {
@@ -11,6 +11,8 @@ export interface PopupCellEditorParams extends ICellEditorParams {
   searchPlaceholder?: string;
   width?: number;
   height?: number;
+  displayKey?: string;
+  valueKey?: string;
 }
 
 export const PopupCellEditor = forwardRef<any, PopupCellEditorParams>(
@@ -25,6 +27,50 @@ export const PopupCellEditor = forwardRef<any, PopupCellEditorParams>(
         return false;
       },
     }));
+
+    const selectedValue = useMemo(() => {
+      if (
+        props.value !== undefined &&
+        props.value !== null &&
+        props.value !== ""
+      ) {
+        return typeof props.value === "string"
+          ? props.value
+          : String(props.value);
+      }
+      const field = props.colDef?.field;
+      if (
+        field &&
+        props.data?.[field] !== undefined &&
+        props.data?.[field] !== null
+      ) {
+        return String(props.data[field]);
+      }
+      if (
+        props.displayKey &&
+        props.data?.[props.displayKey] !== undefined &&
+        props.data?.[props.displayKey] !== null
+      ) {
+        return String(props.data[props.displayKey]);
+      }
+      return "";
+    }, [props.value, props.data, props.colDef, props.displayKey]);
+
+    const formattedDisplay = useMemo(() => {
+      if (
+        props.colDef?.valueFormatter &&
+        typeof props.colDef.valueFormatter === "function"
+      ) {
+        try {
+          const res = (props.colDef.valueFormatter as any)({
+            ...props,
+            value: selectedValue,
+          });
+          if (res !== undefined && res !== null) return String(res);
+        } catch {}
+      }
+      return selectedValue;
+    }, [props, selectedValue]);
 
     const handleSelect = (item: any) => {
       if (props.onItemSelect) {
@@ -52,6 +98,8 @@ export const PopupCellEditor = forwardRef<any, PopupCellEditorParams>(
         searchPlaceholder={props.searchPlaceholder}
         width={props.width}
         height={props.height}
+        value={selectedValue}
+        displayValue={formattedDisplay}
       />
     );
   },

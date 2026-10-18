@@ -321,6 +321,7 @@ export const AccountHelp: React.FC<AccountHelpProps> = ({
           searchPlaceholder={searchPlaceholder}
           width={width}
           height={height}
+          value={accountName || (typeof value === "string" ? value : undefined)}
           trigger={
             <div ref={triggerBtnRef as any} className="contents">
               {trigger}
@@ -350,6 +351,7 @@ export const AccountHelp: React.FC<AccountHelpProps> = ({
           searchPlaceholder={searchPlaceholder}
           width={width}
           height={height}
+          value={accountName || (typeof value === "string" ? value : undefined)}
           trigger={defaultTrigger}
         />
       </div>
@@ -412,6 +414,11 @@ export const AccountCellEditor = forwardRef<any, AccountCellEditorParams>(
       }
     };
 
+    const initialValue =
+      typeof props.value === "string"
+        ? props.value
+        : props.data?.accountName || "";
+
     return (
       <PopupTable
         open={open}
@@ -422,6 +429,7 @@ export const AccountCellEditor = forwardRef<any, AccountCellEditorParams>(
         searchPlaceholder={props.searchPlaceholder || "Search account..."}
         width={props.width || 720}
         height={props.height || 360}
+        value={initialValue}
       />
     );
   },

@@ -35,6 +35,9 @@ export interface PopupTableProps<T = any> {
   placement?: "bottom-start" | "bottom-end" | "top-start" | "top-end";
   width?: number;
   height?: number;
+  value?: string | number;
+  selectedValue?: string | number;
+  displayValue?: React.ReactNode;
 }
 
 export function PopupTable<T extends Record<string, any>>({
@@ -50,13 +53,24 @@ export function PopupTable<T extends Record<string, any>>({
   placement = "bottom-start",
   width,
   height,
+  value,
+  selectedValue,
+  displayValue,
 }: PopupTableProps<T>) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
   const isOpen = isControlled ? open : internalOpen;
   const setIsOpen = isControlled ? onOpenChange || (() => {}) : setInternalOpen;
 
-  const [searchText, setSearchText] = useState("");
+  const initialValue = useMemo(() => {
+    const val = selectedValue ?? value;
+    if (val !== undefined && val !== null && val !== "") {
+      return String(val).trim();
+    }
+    return "";
+  }, [selectedValue, value]);
+
+  const [searchText, setSearchText] = useState(initialValue);
   const gridApiRef = useRef<GridApi | null>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -149,8 +163,9 @@ export function PopupTable<T extends Record<string, any>>({
       return;
     }
 
+    setSearchText(initialValue);
     updatePosition();
-  }, [isOpen, updatePosition]);
+  }, [isOpen, initialValue, updatePosition]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -209,41 +224,88 @@ export function PopupTable<T extends Record<string, any>>({
     };
   }, [isOpen, setIsOpen]);
 
+  const selectMatchingOrFirstRow = useCallback(
+    (api: GridApi, targetText?: string) => {
+      if (!api || api.getDisplayedRowCount() === 0) return;
+
+      const query = (targetText ?? searchText ?? initialValue ?? "")
+        .toString()
+        .trim()
+        .toLowerCase();
+
+      let matchedNode: any = null;
+
+      if (query) {
+        // 1. Exact match on any field
+        api.forEachNodeAfterFilterAndSort((node) => {
+          if (matchedNode) return;
+          const data = node.data;
+          if (!data) return;
+          for (const key of Object.keys(data)) {
+            const cellVal = String(data[key] ?? "").trim().toLowerCase();
+            if (cellVal === query) {
+              matchedNode = node;
+              return;
+            }
+          }
+        });
+
+        // 2. StartsWith or contains match
+        if (!matchedNode) {
+          api.forEachNodeAfterFilterAndSort((node) => {
+            if (matchedNode) return;
+            const data = node.data;
+            if (!data) return;
+            for (const key of Object.keys(data)) {
+              const cellVal = String(data[key] ?? "").trim().toLowerCase();
+              if (cellVal.includes(query)) {
+                matchedNode = node;
+                return;
+              }
+            }
+          });
+        }
+      }
+
+      const nodeToSelect = matchedNode || api.getDisplayedRowAtIndex(0);
+      if (nodeToSelect) {
+        nodeToSelect.setSelected(true, true);
+        api.ensureNodeVisible(nodeToSelect, "middle");
+      }
+    },
+    [initialValue, searchText],
+  );
+
   const handleGridReady = (params: GridReadyEvent) => {
     gridApiRef.current = params.api;
-    if (searchText) {
-      params.api.setGridOption("quickFilterText", searchText);
+    const activeSearch = (searchText || initialValue || "").toString().trim();
+    if (activeSearch) {
+      params.api.setGridOption("quickFilterText", activeSearch);
     }
     setTimeout(() => {
       params.api.sizeColumnsToFit();
-      if (params.api.getDisplayedRowCount() > 0) {
-        params.api.getDisplayedRowAtIndex(0)?.setSelected(true);
-      }
+      selectMatchingOrFirstRow(params.api, activeSearch);
     }, 50);
   };
 
-  // Re-fit columns and select first row when rowData changes
+  // Re-fit columns and select matching or first row when rowData changes
   useEffect(() => {
     if (gridApiRef.current && rowData.length > 0) {
+      const activeSearch = (searchText || initialValue || "").toString().trim();
       setTimeout(() => {
         gridApiRef.current?.sizeColumnsToFit();
-        if (gridApiRef.current?.getSelectedNodes().length === 0) {
-          gridApiRef.current?.getDisplayedRowAtIndex(0)?.setSelected(true);
-        }
+        selectMatchingOrFirstRow(gridApiRef.current!, activeSearch);
       }, 50);
     }
-  }, [rowData]);
+  }, [rowData, selectMatchingOrFirstRow, searchText, initialValue]);
 
   const handleSearchChange = (val: string) => {
     setSearchText(val);
     if (gridApiRef.current) {
       gridApiRef.current.setGridOption("quickFilterText", val);
       setTimeout(() => {
-        if (
-          gridApiRef.current &&
-          gridApiRef.current.getDisplayedRowCount() > 0
-        ) {
-          gridApiRef.current.getDisplayedRowAtIndex(0)?.setSelected(true);
+        if (gridApiRef.current) {
+          selectMatchingOrFirstRow(gridApiRef.current, val);
         }
       }, 30);
     }
@@ -411,12 +473,20 @@ export function PopupTable<T extends Record<string, any>>({
         <div
           ref={anchorRef}
           onClick={() => setIsOpen(!isOpen)}
-          className="cursor-pointer inline-flex items-center"
+          className="cursor-pointer inline-flex items-center w-full h-full"
         >
           {trigger}
         </div>
       ) : (
-        <div ref={anchorRef} className="w-full h-full pointer-events-none" />
+        <div
+          ref={anchorRef}
+          className="w-full h-full flex items-center px-3 text-xs text-foreground font-normal truncate select-none pointer-events-none"
+        >
+          {displayValue ??
+            (typeof value === "string" || typeof value === "number"
+              ? value
+              : selectedValue ?? null)}
+        </div>
       )}
 
       {/* Floating Dropdown Table Panel Portaled to Document Body with Fixed Positioning */}
