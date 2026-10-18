@@ -343,7 +343,7 @@ export function PopupTable<T extends Record<string, any>>({
       onKeyDown={handleKeyDown}
     >
       {/* Header Bar */}
-      <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/50 px-3 py-2 shrink-0">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2 shrink-0">
         <div className="flex items-center gap-2 flex-1 max-w-sm">
           <div className="relative w-full">
             {isLoading ? (
@@ -357,7 +357,7 @@ export function PopupTable<T extends Record<string, any>>({
               value={searchText}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-7 pl-8 pr-7 text-xs bg-background shadow-none border-border"
+              className="h-7 pl-8 pr-7 text-xs shadow-none border-border"
             />
             {searchText && (
               <button
@@ -387,11 +387,12 @@ export function PopupTable<T extends Record<string, any>>({
       </div>
 
       {/* DataGrid Container */}
-      <div className="w-full bg-background flex-1 flex flex-col min-h-0 relative">
+      <div className="w-full no-radius bg-background flex-1 flex flex-col min-h-0 relative">
         <DataGrid
           rowData={rowData}
           columnDefs={columns || []}
           onGridReady={handleGridReady}
+          className="no-radius"
           gridOptions={{
             onRowDoubleClicked: handleRowDoubleClick,
             rowSelection: "single",

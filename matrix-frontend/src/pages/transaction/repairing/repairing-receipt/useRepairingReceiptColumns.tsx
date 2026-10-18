@@ -87,7 +87,7 @@ export const useRepairingReceiptColumns = ({
       },
       {
         field: "tagNo",
-        headerName: "Item Code / Tag",
+        headerName: "Item Code",
         width: 140,
         editable: (p) => !readOnly && !p.node?.rowPinned,
         cellEditor: PopupCellEditor,
@@ -128,8 +128,6 @@ export const useRepairingReceiptColumns = ({
         headerName: "PCS",
         width: 80,
         type: "numericColumn",
-        cellClass: "ag-right-aligned-cell font-medium",
-        headerClass: "ag-right-aligned-header",
         editable: (p) => !readOnly && !p.node?.rowPinned,
         cellEditor: NumericalCellEditor,
         cellEditorParams: { type: "integer", decimals: 0, min: 1 },
@@ -149,8 +147,6 @@ export const useRepairingReceiptColumns = ({
         headerName: "Gross Wt (g)",
         width: 110,
         type: "numericColumn",
-        cellClass: "ag-right-aligned-cell font-medium",
-        headerClass: "ag-right-aligned-header",
         editable: (p) => !readOnly && !p.node?.rowPinned,
         cellEditor: NumericalCellEditor,
         cellEditorParams: { type: "weight", decimals: 3, min: 0 },
@@ -170,8 +166,6 @@ export const useRepairingReceiptColumns = ({
         headerName: "Net Wt (g)",
         width: 110,
         type: "numericColumn",
-        cellClass: "ag-right-aligned-cell font-medium",
-        headerClass: "ag-right-aligned-header",
         editable: (p) => !readOnly && !p.node?.rowPinned,
         cellEditor: NumericalCellEditor,
         cellEditorParams: { type: "weight", decimals: 3, min: 0 },
@@ -191,8 +185,6 @@ export const useRepairingReceiptColumns = ({
         headerName: "Taxable Amt",
         width: 130,
         type: "numericColumn",
-        cellClass: "ag-right-aligned-cell font-semibold",
-        headerClass: "ag-right-aligned-header",
         editable: (p) => !readOnly && !p.node?.rowPinned,
         cellEditor: NumericalCellEditor,
         cellEditorParams: { type: "amount", decimals: 2, min: 0 },
@@ -221,8 +213,6 @@ export const useRepairingReceiptColumns = ({
         headerName: "Labour Rate",
         width: 110,
         type: "numericColumn",
-        cellClass: "ag-right-aligned-cell font-medium",
-        headerClass: "ag-right-aligned-header",
         editable: (p) => !readOnly && !p.node?.rowPinned,
         cellEditor: NumericalCellEditor,
         cellEditorParams: { type: "amount", decimals: 2, min: 0 },
@@ -242,8 +232,6 @@ export const useRepairingReceiptColumns = ({
         headerName: "Labour Amt",
         width: 125,
         type: "numericColumn",
-        cellClass: "ag-right-aligned-cell font-semibold text-primary-action",
-        headerClass: "ag-right-aligned-header",
         editable: false,
         valueFormatter: (p) =>
           formatNumericalValue(
@@ -276,9 +264,7 @@ export const useRepairingReceiptColumns = ({
                 size="icon"
                 className="h-7 w-7 text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40"
                 title="Remove item"
-                onClick={() =>
-                  onDeleteLine(params.node?.rowIndex ?? undefined)
-                }
+                onClick={() => onDeleteLine(params.node?.rowIndex ?? undefined)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>

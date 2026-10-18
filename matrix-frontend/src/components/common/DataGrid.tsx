@@ -243,7 +243,9 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
       rowData ?? (usesInfiniteScroll ? undefined : apiRowData);
 
     return (
-      <div className={cn("flex-1 min-h-0 h-full w-full ag-grid-custom", className)}>
+      <div
+        className={cn("flex-1 min-h-0 h-full w-full ag-grid-custom", className)}
+      >
         <AgGridReact
           ref={ref}
           theme={theme}

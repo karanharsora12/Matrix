@@ -1,15 +1,7 @@
 import React from "react";
-import {
-  Calendar,
-  FileSpreadsheet,
-  MessageSquareText,
-  User,
-  UserCheck,
-} from "lucide-react";
-import { AccountHelp } from "@/components/common/AccountHelp";
-import { DaybookSelect } from "@/components/common/DaybookSelect";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
+import { MessageSquareText } from "lucide-react";
+import { CustomerInfoCard } from "@/components/common/CustomerInfoCard";
+import { VoucherDetailsCard } from "@/components/common/VoucherDetailsCard";
 import { Label } from "@/components/ui/label";
 import type { RepairingReceiptFormData } from "../types";
 
@@ -26,159 +18,54 @@ export const CustomerOrderDetailsCard: React.FC<
 > = ({ readOnly, form, onChangeForm, onOpenQuickAccount, onSelectDaybook }) => {
   return (
     <div className="grid gap-4 lg:grid-cols-12">
-      {/* ── CARD 1: Customer Identification (5 cols) ── */}
-      <section className="rounded-xl border border-slate-200/90 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-5 flex flex-col justify-between">
-        <div>
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
-                <User className="h-4 w-4" />
-              </span>
-              <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
-                Customer Information
-              </h2>
-            </div>
-          </div>
+      <CustomerInfoCard
+        className="lg:col-span-5"
+        readOnly={readOnly}
+        accountName={form.accountName}
+        onSelectAccount={(account) =>
+          onChangeForm((current) => ({
+            ...current,
+            accountId: account.id,
+            accountName: account.accountName,
+          }))
+        }
+        onClearAccount={() =>
+          onChangeForm((current) => ({
+            ...current,
+            accountId: 0,
+            accountName: "",
+          }))
+        }
+        onOpenQuickAccount={onOpenQuickAccount}
+        salesmanName={form.salesmanName}
+        onChangeSalesman={(val) =>
+          onChangeForm((cur) => ({ ...cur, salesmanName: val }))
+        }
+        reference={form.reference}
+        onChangeReference={(val) =>
+          onChangeForm((cur) => ({ ...cur, reference: val }))
+        }
+      />
 
-          <div className="p-4 space-y-3.5">
-            <div>
-              <Label className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                Customer Account <span className="text-rose-500">*</span>
-              </Label>
-              <div className="mt-1">
-                {readOnly ? (
-                  <Input
-                    disabled
-                    value={form.accountName || "No customer selected"}
-                    className="h-9 bg-slate-50 dark:bg-zinc-800"
-                  />
-                ) : (
-                  <AccountHelp
-                    accountName={form.accountName}
-                    placeholder="Search or select customer (F2)"
-                    onSelect={(account) =>
-                      onChangeForm((current) => ({
-                        ...current,
-                        accountId: account.id,
-                        accountName: account.accountName,
-                      }))
-                    }
-                    onAddAccount={onOpenQuickAccount}
-                    showAddButton
-                    allowClear
-                    onClear={() =>
-                      onChangeForm((current) => ({
-                        ...current,
-                        accountId: 0,
-                        accountName: "",
-                      }))
-                    }
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400 flex items-center gap-1">
-                  <UserCheck className="h-3.5 w-3.5 text-slate-400" />
-                  Salesman / Attendant
-                </Label>
-                <Input
-                  disabled={readOnly}
-                  value={form.salesmanName}
-                  placeholder="Attendant name"
-                  onChange={(e) =>
-                    onChangeForm((cur) => ({
-                      ...cur,
-                      salesmanName: e.target.value,
-                    }))
-                  }
-                  className="mt-1 h-9 text-xs"
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400 flex items-center gap-1">
-                  <FileSpreadsheet className="h-3.5 w-3.5 text-slate-400" />
-                  Customer Reference / Tel
-                </Label>
-                <Input
-                  disabled={readOnly}
-                  value={form.reference}
-                  placeholder="Job / Ref / Phone"
-                  onChange={(e) =>
-                    onChangeForm((cur) => ({
-                      ...cur,
-                      reference: e.target.value,
-                    }))
-                  }
-                  className="mt-1 h-9 text-xs"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CARD 2: Order Metadata & Date (3 cols) ── */}
-      <section className="rounded-xl border border-slate-200/90 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3 flex flex-col justify-between">
-        <div>
-          <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-              <Calendar className="h-4 w-4" />
-            </span>
-            <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
-              Voucher Details
-            </h2>
-          </div>
-
-          <div className="p-4 space-y-3.5">
-            <div>
-              <DaybookSelect
-                disabled={readOnly}
-                value={form.daybookId}
-                menuKey="REPAIRING_RECEIPT"
-                required
-                autoSelectFirst={!form.daybookId}
-                onChange={(daybookId) => {
-                  if (onSelectDaybook) {
-                    onSelectDaybook(daybookId);
-                  } else {
-                    onChangeForm((cur) => ({ ...cur, daybookId }));
-                  }
-                }}
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                Voucher Date <span className="text-rose-500">*</span>
-              </Label>
-              <div className="mt-1">
-                <DatePicker
-                  disabled={readOnly}
-                  value={form.voucherDate}
-                  onChange={(voucherDate) =>
-                    onChangeForm((current) => ({ ...current, voucherDate }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                Voucher No.
-              </Label>
-              <Input
-                disabled
-                value={form.voucherNo || ""}
-                className="mt-1 h-9 bg-slate-50 font-mono text-xs text-slate-600 dark:bg-zinc-800 dark:text-zinc-400"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+      <VoucherDetailsCard
+        className="lg:col-span-3"
+        readOnly={readOnly}
+        daybookId={form.daybookId}
+        menuKey="REPAIRING_RECEIPT"
+        daybookRequired
+        onSelectDaybook={(daybookId) => {
+          if (onSelectDaybook) {
+            onSelectDaybook(daybookId);
+          } else {
+            onChangeForm((cur) => ({ ...cur, daybookId }));
+          }
+        }}
+        voucherDate={form.voucherDate}
+        onChangeDate={(voucherDate) =>
+          onChangeForm((current) => ({ ...current, voucherDate }))
+        }
+        voucherNo={form.voucherNo || ""}
+      />
 
       <section className="rounded-xl border border-slate-200/90 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 flex flex-col">
         <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 dark:border-zinc-800">

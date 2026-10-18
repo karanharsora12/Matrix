@@ -1,22 +1,6 @@
-import React, { useState } from "react";
-import {
-  Calendar,
-  FileSpreadsheet,
-  FileText,
-  Link2,
-  Link2Off,
-  MessageSquareText,
-  Search,
-  User,
-  UserCheck,
-  Receipt,
-  X,
-} from "lucide-react";
-import { AccountHelp } from "@/components/common/AccountHelp";
-import { DaybookSelect } from "@/components/common/DaybookSelect";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useEligibleReceipts, type EligibleReceipt } from "@/api/sales";
+import { CustomerInfoCard } from "@/components/common/CustomerInfoCard";
+import { VoucherDetailsCard } from "@/components/common/VoucherDetailsCard";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,10 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useEligibleReceipts, type EligibleReceipt } from "@/api/sales";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { formatDate } from "@/utils/date";
-import { money } from "../types";
+import { MessageSquareText, Receipt, Search } from "lucide-react";
+import React, { useState } from "react";
 import type { RepairingBillFormData } from "../types";
+import { money } from "../types";
 
 interface RepairingBillHeaderCardProps {
   readOnly: boolean;
@@ -40,7 +27,9 @@ interface RepairingBillHeaderCardProps {
   currentSaleId?: number;
 }
 
-export const RepairingBillHeaderCard: React.FC<RepairingBillHeaderCardProps> = ({
+export const RepairingBillHeaderCard: React.FC<
+  RepairingBillHeaderCardProps
+> = ({
   readOnly,
   form,
   onChangeForm,
@@ -68,214 +57,74 @@ export const RepairingBillHeaderCard: React.FC<RepairingBillHeaderCardProps> = (
   return (
     <div className="grid gap-4 lg:grid-cols-12">
       {/* ── CARD 1: Customer Identification (5 cols) ── */}
-      <section className="rounded-xl border border-slate-200/90 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-5 flex flex-col justify-between">
-        <div>
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
-                <User className="h-4 w-4" />
-              </span>
-              <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
-                Customer Information
-              </h2>
-            </div>
-            {form.receiptId && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
-                <Receipt className="h-3 w-3" />
-                Ref: #{form.receiptVoucherNo}
-              </span>
-            )}
-          </div>
+      <CustomerInfoCard
+        className="lg:col-span-5"
+        readOnly={readOnly}
+        accountName={form.accountName}
+        onSelectAccount={(account) =>
+          onChangeForm((current) => ({
+            ...current,
+            accountId: account.id,
+            accountName: account.accountName,
+          }))
+        }
+        onClearAccount={() =>
+          onChangeForm((current) => ({
+            ...current,
+            accountId: 0,
+            accountName: "",
+          }))
+        }
+        onOpenQuickAccount={onOpenQuickAccount}
+        salesmanName={form.salesmanName}
+        onChangeSalesman={(val) =>
+          onChangeForm((cur) => ({ ...cur, salesmanName: val }))
+        }
+        reference={form.customerReference}
+        onChangeReference={(val) =>
+          onChangeForm((cur) => ({ ...cur, customerReference: val }))
+        }
+        headerRight={
+          form.receiptId ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+              <Receipt className="h-3 w-3" />
+              Ref: #{form.receiptVoucherNo}
+            </span>
+          ) : undefined
+        }
+      />
 
-          <div className="p-4 space-y-3.5">
-            <div>
-              <Label className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                Customer Account <span className="text-rose-500">*</span>
-              </Label>
-              <div className="mt-1">
-                {readOnly ? (
-                  <Input
-                    disabled
-                    value={form.accountName || "No customer selected"}
-                    className="h-9 bg-slate-50 dark:bg-zinc-800"
-                  />
-                ) : (
-                  <AccountHelp
-                    accountName={form.accountName}
-                    placeholder="Search or select customer (F2)"
-                    onSelect={(account) =>
-                      onChangeForm((current) => ({
-                        ...current,
-                        accountId: account.id,
-                        accountName: account.accountName,
-                      }))
-                    }
-                    onAddAccount={onOpenQuickAccount}
-                    showAddButton
-                    allowClear
-                    onClear={() =>
-                      onChangeForm((current) => ({
-                        ...current,
-                        accountId: 0,
-                        accountName: "",
-                      }))
-                    }
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400 flex items-center gap-1">
-                  <UserCheck className="h-3.5 w-3.5 text-slate-400" />
-                  Salesman / Attendant
-                </Label>
-                <Input
-                  disabled={readOnly}
-                  value={form.salesmanName}
-                  placeholder="Attendant name"
-                  onChange={(e) =>
-                    onChangeForm((cur) => ({
-                      ...cur,
-                      salesmanName: e.target.value,
-                    }))
-                  }
-                  className="mt-1 h-9 text-xs"
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400 flex items-center gap-1">
-                  <FileSpreadsheet className="h-3.5 w-3.5 text-slate-400" />
-                  Customer Reference / Tel
-                </Label>
-                <Input
-                  disabled={readOnly}
-                  value={form.customerReference}
-                  placeholder="Job / Ref / Phone"
-                  onChange={(e) =>
-                    onChangeForm((cur) => ({
-                      ...cur,
-                      customerReference: e.target.value,
-                    }))
-                  }
-                  className="mt-1 h-9 text-xs"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CARD 2: Voucher Details & Receipt Picker (3 cols) ── */}
-      <section className="rounded-xl border border-slate-200/90 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3 flex flex-col justify-between">
-        <div>
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-                <Calendar className="h-4 w-4" />
-              </span>
-              <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
-                Voucher Details
-              </h2>
-            </div>
-          </div>
-
-          <div className="p-4 space-y-3">
-            <div>
-              <DaybookSelect
-                disabled={readOnly}
-                value={form.daybookId}
-                menuKey="REPAIRING_BILL"
-                required
-                autoSelectFirst={!form.daybookId}
-                onChange={(daybookId) => {
-                  if (onSelectDaybook) {
-                    onSelectDaybook(daybookId);
-                  } else {
-                    onChangeForm((cur) => ({ ...cur, daybookId }));
-                  }
-                }}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs font-medium text-slate-700 dark:text-zinc-300">
-                  Bill Date <span className="text-rose-500">*</span>
-                </Label>
-                <div className="mt-1">
-                  <DatePicker
-                    disabled={readOnly}
-                    value={form.voucherDate}
-                    onChange={(voucherDate) =>
-                      onChangeForm((current) => ({ ...current, voucherDate }))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-xs font-medium text-slate-600 dark:text-zinc-400">
-                  Bill No.
-                </Label>
-                <Input
-                  disabled
-                  value={form.voucherNo || ""}
-                  className="mt-1 h-9 bg-slate-50 font-mono text-xs text-slate-600 dark:bg-zinc-800 dark:text-zinc-400"
-                />
-              </div>
-            </div>
-
-            {/* Repairing Receipt Link Selector */}
-            <div className="pt-1 border-t border-slate-100 dark:border-zinc-800">
-              <Label className="text-xs font-medium text-slate-700 dark:text-zinc-300 flex items-center justify-between">
-                <span className="flex items-center gap-1">
-                  <Link2 className="h-3.5 w-3.5 text-primary-action" />
-                  Receipt Reference
-                </span>
-                {form.receiptId && !readOnly && (
-                  <button
-                    type="button"
-                    onClick={onClearReceipt}
-                    className="text-[10px] text-rose-500 hover:text-rose-700 flex items-center gap-0.5"
-                    title="Unlink receipt and convert to manual bill"
-                  >
-                    <Link2Off className="h-3 w-3" />
-                    Unlink
-                  </button>
-                )}
-              </Label>
-
-              <div className="mt-1.5">
-                {form.receiptId ? (
-                  <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50/70 p-2 text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <span className="font-semibold">
-                      Receipt #{form.receiptVoucherNo}
-                    </span>
-                    <span className="text-[11px] text-emerald-700 dark:text-emerald-400">
-                      Advance: {money(form.advanceAdjusted)}
-                    </span>
-                  </div>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={readOnly}
-                    onClick={() => setReceiptModalOpen(true)}
-                    className="w-full h-8 text-xs font-medium text-slate-700 border-dashed border-slate-300 hover:border-primary-action hover:text-primary-action dark:border-zinc-700 dark:text-zinc-300"
-                  >
-                    <Receipt className="h-3.5 w-3.5 mr-1.5 text-primary-action" />
-                    Select Repairing Receipt
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <VoucherDetailsCard
+        className="lg:col-span-3"
+        readOnly={readOnly}
+        daybookId={form.daybookId}
+        menuKey="REPAIRING_BILL"
+        daybookRequired
+        onSelectDaybook={(daybookId) => {
+          if (onSelectDaybook) {
+            onSelectDaybook(daybookId);
+          } else {
+            onChangeForm((cur) => ({ ...cur, daybookId }));
+          }
+        }}
+        voucherDate={form.voucherDate}
+        onChangeDate={(voucherDate) =>
+          onChangeForm((current) => ({ ...current, voucherDate }))
+        }
+        dateLabel="Bill Date"
+        voucherNo={form.voucherNo || ""}
+        voucherNoLabel="Bill No."
+        reference={{
+          label: "Receipt Reference",
+          isLinked: Boolean(form.receiptId),
+          linkedTitle: `Receipt #${form.receiptVoucherNo}`,
+          linkedSubtitle: `Advance: ${money(form.advanceAdjusted)}`,
+          buttonText: "Select Repairing Receipt",
+          onSelect: () => setReceiptModalOpen(true),
+          onUnlink: onClearReceipt,
+          unlinkTooltip: "Unlink receipt and convert to manual bill",
+        }}
+      />
 
       {/* ── CARD 3: Repair Instructions & Remarks (4 cols) ── */}
       <section className="rounded-xl border border-slate-200/90 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 flex flex-col">

@@ -87,7 +87,7 @@ export const useRepairingBillColumns = ({
       },
       {
         field: "tagNo",
-        headerName: "Item Code / Tag",
+        headerName: "Item Code",
         width: 140,
         editable: (p) => !readOnly && !p.node?.rowPinned,
         cellEditor: PopupCellEditor,
@@ -280,9 +280,7 @@ export const useRepairingBillColumns = ({
                 size="icon"
                 className="h-7 w-7 text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40"
                 title="Remove item"
-                onClick={() =>
-                  onDeleteLine(params.node?.rowIndex ?? undefined)
-                }
+                onClick={() => onDeleteLine(params.node?.rowIndex ?? undefined)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>

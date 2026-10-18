@@ -45,14 +45,6 @@ export const ReceiptCollectionSummary: React.FC<
               </span>
             </div>
 
-            {/* Items / Quantity */}
-            <div className="flex items-center justify-between py-0.5 text-slate-600 dark:text-zinc-400">
-              <span>Items / Pcs</span>
-              <span className="font-medium text-slate-800 dark:text-zinc-200">
-                {totals.itemCount} items ({totals.totalPcs} pcs)
-              </span>
-            </div>
-
             {/* Net Wt */}
             <div className="flex items-center justify-between py-0.5 text-slate-600 dark:text-zinc-400">
               <span>Net Weight</span>
