@@ -1,20 +1,30 @@
 /* ─── AG Grid Custom Overrides ─── */
 
-/* Floating filter row: primary tint */
-.ag-grid-custom .ag-floating-filter {
-  background-color: color-mix(
-    in srgb,
-    var(--primary-action, #3b82a0) 6%,
-    white
-  );
+/* ─── Floating Filter Row: Light / High Contrast for Great UX ─── */
+.ag-grid-custom .ag-header-row-floating-filter,
+.ag-grid-custom .ag-floating-filter,
+.ag-grid-custom .ag-header-cell.ag-floating-filter {
+  background-color: hsl(210 20% 98%) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-right: 1px solid hsl(240 5.9% 90%) !important;
   padding: 0 !important;
 }
-.dark .ag-grid-custom .ag-floating-filter {
-  background-color: color-mix(
-    in srgb,
-    var(--primary-action, #4a9bbd) 16%,
-    black
-  );
+
+.ag-grid-custom .ag-header-cell.ag-floating-filter:last-child {
+  border-right: none !important;
+}
+
+.dark .ag-grid-custom .ag-header-row-floating-filter,
+.dark .ag-grid-custom .ag-floating-filter,
+.dark .ag-grid-custom .ag-header-cell.ag-floating-filter {
+  background-color: hsl(240 6% 11%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-right: 1px solid hsl(240 3.7% 20%) !important;
+  padding: 0 !important;
+}
+
+.dark .ag-grid-custom .ag-header-cell.ag-floating-filter:last-child {
+  border-right: none !important;
 }
 
 .ag-grid-custom .ag-floating-filter-body {
@@ -41,7 +51,22 @@
   box-shadow: none !important;
   background: transparent !important;
   font-size: 12px;
-  color: inherit;
+  color: hsl(240 10% 3.9%) !important;
+}
+
+.ag-grid-custom .ag-floating-filter-input input::placeholder,
+.ag-grid-custom .ag-floating-filter-input .ag-input-field-input::placeholder {
+  color: hsl(240 3.8% 50%) !important;
+}
+
+.dark .ag-grid-custom .ag-floating-filter-input input,
+.dark .ag-grid-custom .ag-floating-filter-input .ag-input-field-input {
+  color: hsl(0 0% 98%) !important;
+}
+
+.dark .ag-grid-custom .ag-floating-filter-input input::placeholder,
+.dark .ag-grid-custom .ag-floating-filter-input .ag-input-field-input::placeholder {
+  color: hsl(240 5% 55%) !important;
 }
 
 .ag-grid-custom .ag-floating-filter-input input:focus,
@@ -49,6 +74,12 @@
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
+  background: color-mix(in srgb, var(--primary-action, #3b82a0) 5%, white) !important;
+}
+
+.dark .ag-grid-custom .ag-floating-filter-input input:focus,
+.dark .ag-grid-custom .ag-floating-filter-input .ag-input-field-input:focus {
+  background: color-mix(in srgb, var(--primary-action, #4a9bbd) 10%, black) !important;
 }
 
 .ag-grid-custom .ag-floating-filter .ag-text-field-input-wrapper,
@@ -60,47 +91,127 @@
 }
 
 .ag-grid-custom .ag-floating-filter-button {
-  opacity: 0;
+  opacity: 0.55;
   transition: opacity 0.15s ease;
   margin: 0 4px;
 }
 .ag-grid-custom .ag-floating-filter:hover .ag-floating-filter-button {
   opacity: 1;
 }
-.ag-grid-custom .ag-floating-filter-button.ag-filter-active,
-.ag-grid-custom .ag-header-cell.ag-filter-active .ag-floating-filter-button {
+.ag-grid-custom .ag-floating-filter-button .ag-icon {
+  color: hsl(240 3.8% 45%) !important;
+}
+.dark .ag-grid-custom .ag-floating-filter-button .ag-icon {
+  color: hsl(240 5% 65%) !important;
+}
+.ag-grid-custom .ag-floating-filter-button.ag-filter-active .ag-icon,
+.ag-grid-custom .ag-header-cell.ag-filter-active .ag-floating-filter-button .ag-icon {
+  color: var(--primary-action, #3b82a0) !important;
   opacity: 1;
 }
 
-.ag-grid-custom .ag-header-cell-filtered .ag-floating-filter-button {
-  opacity: 1;
+/* ─── Column Header Row: Same as Theme ─── */
+.ag-grid-custom .ag-header-row-column,
+.ag-grid-custom .ag-header-row:not(.ag-header-row-floating-filter) {
+  background-color: var(--primary-action, #3b82a0) !important;
 }
 
-.ag-grid-custom .ag-header-cell-label {
+.ag-grid-custom .ag-header-cell:not(.ag-floating-filter) {
+  background-color: var(--primary-action, #3b82a0) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+.ag-grid-custom .ag-header-cell:not(.ag-floating-filter):last-child {
+  border-right: none !important;
+}
+.dark .ag-grid-custom .ag-header-cell:not(.ag-floating-filter) {
+  background-color: var(--primary-action, #3b82a0) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+.dark .ag-grid-custom .ag-header-cell:not(.ag-floating-filter):last-child {
+  border-right: none !important;
+}
+
+.ag-grid-custom .ag-header-cell:not(.ag-floating-filter):hover,
+.ag-grid-custom .ag-header-cell-hover:not(.ag-floating-filter) {
+  background-color: color-mix(
+    in srgb,
+    var(--primary-action, #3b82a0) 86%,
+    black
+  ) !important;
+}
+
+.ag-grid-custom .ag-header-cell:not(.ag-floating-filter) .ag-header-cell-label {
   font-weight: 600;
   font-size: 13px;
   letter-spacing: -0.01em;
-  color: hsl(240 10% 3.9%);
+  color: #ffffff !important;
 }
-.dark .ag-grid-custom .ag-header-cell-label {
-  color: color-mix(in srgb, var(--primary-action, #4a9bbd) 45%, white);
+.dark .ag-grid-custom .ag-header-cell:not(.ag-floating-filter) .ag-header-cell-label {
+  color: #ffffff !important;
 }
 
-.ag-grid-custom .ag-header-cell {
-  border-right: 1px solid hsl(240 5.9% 88%) !important;
+.ag-grid-custom .ag-header-cell:not(.ag-floating-filter) .ag-header-icon {
+  color: rgba(255, 255, 255, 0.9) !important;
 }
-.ag-grid-custom .ag-header-cell:last-child {
-  border-right: none !important;
-}
-.dark .ag-grid-custom .ag-header-cell {
-  border-right: 1px solid hsl(240 3.7% 22%) !important;
-}
-.dark .ag-grid-custom .ag-header-cell:last-child {
-  border-right: none !important;
+
+.ag-grid-custom .ag-sort-ascending .ag-header-icon,
+.ag-grid-custom .ag-sort-descending .ag-header-icon,
+.ag-grid-custom .ag-header-cell-filtered .ag-header-icon {
+  color: #ffffff !important;
 }
 
 .ag-grid-custom .ag-row {
   transition: background-color 0.12s ease;
+}
+
+.ag-grid-custom .ag-row-even:not(.ag-row-pinned):not(.ag-row-selected) {
+  background-color: hsl(0 0% 100%) !important;
+}
+
+.ag-grid-custom .ag-row-odd:not(.ag-row-pinned):not(.ag-row-selected) {
+  background-color: hsl(240 5% 97.2%) !important;
+}
+
+.ag-grid-custom .ag-row:not(.ag-row-pinned):not(.ag-row-selected):hover,
+.ag-grid-custom .ag-row-hover:not(.ag-row-pinned):not(.ag-row-selected) {
+  background-color: color-mix(
+    in srgb,
+    var(--primary-action, #3b82a0) 7%,
+    white
+  ) !important;
+}
+
+.ag-grid-custom .ag-row-selected:not(.ag-row-pinned) {
+  background-color: color-mix(
+    in srgb,
+    var(--primary-action, #3b82a0) 14%,
+    white
+  ) !important;
+}
+
+.dark .ag-grid-custom .ag-row-even:not(.ag-row-pinned):not(.ag-row-selected) {
+  background-color: hsl(240 10% 5.5%) !important;
+}
+
+.dark .ag-grid-custom .ag-row-odd:not(.ag-row-pinned):not(.ag-row-selected) {
+  background-color: hsl(240 7% 9%) !important;
+}
+
+.dark .ag-grid-custom .ag-row:not(.ag-row-pinned):not(.ag-row-selected):hover,
+.dark .ag-grid-custom .ag-row-hover:not(.ag-row-pinned):not(.ag-row-selected) {
+  background-color: color-mix(
+    in srgb,
+    var(--primary-action, #4a9bbd) 14%,
+    black
+  ) !important;
+}
+
+.dark .ag-grid-custom .ag-row-selected:not(.ag-row-pinned) {
+  background-color: color-mix(
+    in srgb,
+    var(--primary-action, #4a9bbd) 26%,
+    black
+  ) !important;
 }
 
 .ag-grid-custom .ag-paging-panel {
@@ -250,8 +361,10 @@
     var(--primary-action, #3b82a0) 10%,
     white
   ) !important;
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  border-top: 2px solid
+    color-mix(in srgb, var(--primary-action, #3b82a0) 35%, #cbd5e1) !important;
 }
 .dark .ag-grid-custom .ag-row-pinned {
   background-color: color-mix(
@@ -264,9 +377,11 @@
 }
 .ag-grid-custom .ag-row-pinned .ag-cell {
   color: hsl(240 10% 3.9%);
+  font-weight: 700 !important;
 }
 .dark .ag-grid-custom .ag-row-pinned .ag-cell {
   color: color-mix(in srgb, var(--primary-action, #4a9bbd) 50%, white);
+  font-weight: 700 !important;
 }
 
 .ag-grid-custom ::-webkit-scrollbar {

@@ -1,5 +1,5 @@
 import type { ICellEditorParams } from "ag-grid-community";
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { PopupTable } from "./PopupTable";
 
 export interface PopupCellEditorParams extends ICellEditorParams {

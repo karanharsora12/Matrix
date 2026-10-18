@@ -70,24 +70,30 @@ const Accounts: React.FC = () => {
       { field: "lastName", headerName: "Last Name", width: 120 },
       {
         headerName: "Type",
+        field: "typeName",
         valueGetter: (params) => {
           if (params.node?.rowPinned) return "";
           return (
+            params.data?.typeName ||
             masterData?.accountTypes?.find(
               (t) => t.id === params.data?.accountTypeId,
-            )?.name || ""
+            )?.name ||
+            ""
           );
         },
         width: 100,
       },
       {
         headerName: "Group",
+        field: "groupName",
         valueGetter: (params) => {
           if (params.node?.rowPinned) return "";
           return (
+            params.data?.groupName ||
             masterData?.accountGroups?.find(
               (g) => g.id === params.data?.accountGroupId,
-            )?.name || ""
+            )?.name ||
+            ""
           );
         },
         width: 120,

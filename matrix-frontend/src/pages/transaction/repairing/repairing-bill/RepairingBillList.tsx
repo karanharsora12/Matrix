@@ -1,4 +1,3 @@
-import { useSales } from "@/api/sales";
 import { DataGrid } from "@/components/common/DataGrid";
 import { ListingCard } from "@/components/common/ListingCard";
 import { ListingHeader } from "@/components/common/ListingHeader";
@@ -7,7 +6,7 @@ import { WEB_ROUTES } from "@/config/webRoutes";
 import { buildRoute, encodeURL } from "@/lib/utils";
 import { formatDate } from "@/utils/date";
 import type { ColDef } from "ag-grid-community";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const currency = (value: unknown) =>
@@ -19,12 +18,10 @@ const currency = (value: unknown) =>
 
 const RepairingBillList: React.FC = () => {
   const navigate = useNavigate();
+  const gridRef = useRef<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const { refetch } = useSales({
-    fromDate: fromDate || undefined,
-    toDate: toDate || undefined,
-  });
 
   const openBill = useCallback(
     (id?: number) =>
@@ -55,7 +52,8 @@ const RepairingBillList: React.FC = () => {
         field: "receiptVoucherNo",
         headerName: "Receipt Ref",
         width: 120,
-        valueFormatter: (p) => (p.value ? `#${p.value}` : "Manual"),
+        valueFormatter: (p) =>
+          p.node?.rowPinned ? "" : p.value ? `#${p.value}` : "Manual",
         cellClass: (p) =>
           p.value ? "font-semibold text-primary-action" : "text-slate-400 italic",
       },
@@ -96,6 +94,15 @@ const RepairingBillList: React.FC = () => {
     [],
   );
 
+  const apiInput = useMemo(
+    () => ({
+      fromDate: fromDate || undefined,
+      toDate: toDate || undefined,
+      search: searchTerm.trim() || undefined,
+    }),
+    [fromDate, toDate, searchTerm],
+  );
+
   return (
     <div className="flex h-full flex-col p-3">
       <ListingCard>
@@ -103,7 +110,12 @@ const RepairingBillList: React.FC = () => {
           title="Repairing Bill"
           addText="Add Repairing Bill"
           onAdd={() => openBill(0)}
-          onRefresh={() => refetch()}
+          searchProps={{
+            value: searchTerm,
+            onChange: (e) => setSearchTerm(e.target.value),
+            placeholder: "Search repairing bills...",
+          }}
+          onRefresh={() => gridRef.current?.api?.refreshInfiniteCache()}
           extraButtons={
             <>
               <DatePicker
@@ -123,12 +135,9 @@ const RepairingBillList: React.FC = () => {
         />
 
         <DataGrid
+          ref={gridRef}
           apiName="/sales"
-          apiInput={{
-            fromDate: fromDate || undefined,
-            toDate: toDate || undefined,
-          }}
-          infiniteScroll
+          apiInput={apiInput}
           columnDefs={columnDefs}
           gridOptions={{
             onRowDoubleClicked: (event) => openBill(event.data.id),

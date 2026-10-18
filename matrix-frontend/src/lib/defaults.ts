@@ -47,13 +47,13 @@ export const ADD_EDIT_COLUMNS: ColDef[] = [
     field: "addBy",
     headerName: "Add By",
     width: 150,
-    valueFormatter: (p) => (p.value ? p.value : "-"),
+    valueFormatter: (p) => (p.node?.rowPinned ? "" : p.value ? p.value : "-"),
   },
   {
     field: "editBy",
     headerName: "Edit By",
     width: 150,
-    valueFormatter: (p) => (p.value ? p.value : "-"),
+    valueFormatter: (p) => (p.node?.rowPinned ? "" : p.value ? p.value : "-"),
   },
   {
     field: "createdAt",

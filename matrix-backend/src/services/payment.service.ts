@@ -1,4 +1,4 @@
-import { eq, desc, and, notInArray, count, or, ilike } from "drizzle-orm";
+import { eq, desc, and, notInArray, count, or, ilike, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "../db";
 import {
@@ -9,6 +9,10 @@ import {
   accounts,
   users,
 } from "../db/schema";
+import {
+  buildAgGridFilterConditions,
+  buildAgGridSort,
+} from "../utils/pagination";
 const addByUser = alias(users, "payments_add_by_user");
 const editByUser = alias(users, "payments_edit_by_user");
 
@@ -31,9 +35,14 @@ export class PaymentService {
   async getPayments(options?: {
     page?: number | undefined;
     limit?: number | undefined;
+    offset?: number | undefined;
     fetchAll?: boolean | undefined;
     transactionType?: string | undefined;
     search?: string | undefined;
+    sortField?: string | undefined;
+    sortDirection?: "asc" | "desc" | undefined;
+    sortModel?: any[] | undefined;
+    filterModel?: Record<string, any> | undefined;
   }) {
     const page = Math.max(1, options?.page || 1);
     const limit = options?.fetchAll
@@ -57,6 +66,31 @@ export class PaymentService {
       );
     }
 
+    const filterableColumns: Record<string, any> = {
+      id: payments.id,
+      voucherNo: payments.voucherNo,
+      voucherDate: payments.voucherDate,
+      transactionType: payments.transactionType,
+      daybookId: payments.daybookId,
+      daybookName: daybooks.daybookName,
+      accountId: payments.accountId,
+      accountName: accounts.accountName,
+      totalAmount: payments.totalAmount,
+      remarks: payments.remarks,
+      referenceType: payments.referenceType,
+      referenceId: payments.referenceId,
+    };
+
+    if (options?.filterModel) {
+      const gridFilters = buildAgGridFilterConditions(
+        options.filterModel,
+        filterableColumns,
+      );
+      if (gridFilters.length > 0) {
+        conditions.push(...gridFilters);
+      }
+    }
+
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     let query = db
@@ -75,22 +109,39 @@ export class PaymentService {
       .leftJoin(addByUser, eq(payments.addBy, addByUser.id))
       .leftJoin(editByUser, eq(payments.editBy, editByUser.id))
       .where(whereClause)
-      .orderBy(desc(payments.createdAt));
+      .orderBy(
+        buildAgGridSort(
+          options?.sortModel,
+          options?.sortField,
+          options?.sortDirection,
+          filterableColumns,
+          desc(payments.id),
+        ),
+      );
 
     if (!options?.fetchAll && limit !== -1) {
-      query = query.limit(limit).offset((page - 1) * limit) as any;
+      const offset =
+        options?.offset !== undefined && Number.isFinite(options.offset)
+          ? Math.max(0, options.offset)
+          : (page - 1) * limit;
+      query = query.limit(limit).offset(offset) as any;
     }
 
     const [rows, totalResult] = await Promise.all([
       query,
       db
-        .select({ total: count() })
+        .select({
+          total: count(),
+          totalAmount: sql<string>`coalesce(sum(${payments.totalAmount}), 0)`,
+        })
         .from(payments)
         .leftJoin(accounts, eq(payments.accountId, accounts.id))
+        .leftJoin(daybooks, eq(payments.daybookId, daybooks.id))
         .where(whereClause),
     ]);
 
     const total = Number(totalResult[0]?.total || 0);
+    const totalAmount = Number(totalResult[0]?.totalAmount || 0);
 
     const data = rows.map(
       ({
@@ -121,6 +172,12 @@ export class PaymentService {
         hasNextPage:
           options?.fetchAll || limit === -1 ? false : page * limit < total,
       },
+      summary: [
+        {
+          voucherNo: `Total: ${total}`,
+          totalAmount,
+        },
+      ],
     };
   }
 

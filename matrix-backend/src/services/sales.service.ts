@@ -17,6 +17,10 @@ import {
 } from "../db/schema";
 import { paymentSyncService } from "./payment-sync.service";
 import { daybookService } from "./daybook.service";
+import {
+  buildAgGridFilterConditions,
+  buildAgGridSort,
+} from "../utils/pagination";
 
 const addByUser = alias(users, "sales_add_by_user");
 const editByUser = alias(users, "sales_edit_by_user");
@@ -35,6 +39,7 @@ export class SalesService {
   async getSales(options?: {
     page?: number | undefined;
     limit?: number | undefined;
+    offset?: number | undefined;
     search?: string | undefined;
     daybookId?: number | undefined;
     daybookGroupId?: number | undefined;
@@ -42,6 +47,10 @@ export class SalesService {
     fromDate?: string | undefined;
     toDate?: string | undefined;
     fetchAll?: boolean | undefined;
+    sortField?: string | undefined;
+    sortDirection?: "asc" | "desc" | undefined;
+    sortModel?: any[] | undefined;
+    filterModel?: Record<string, any> | undefined;
   }) {
     const page = Math.max(1, options?.page || 1);
     const limit = options?.fetchAll
@@ -90,6 +99,42 @@ export class SalesService {
         ilike(sales.customerReference, q),
       );
       if (searchCondition) conditions.push(searchCondition);
+    }
+
+    const filterableColumns: Record<string, any> = {
+      id: sales.id,
+      voucherNo: sales.voucherNo,
+      voucherDate: sales.voucherDate,
+      daybookId: sales.daybookId,
+      daybookName: daybooks.daybookName,
+      accountId: sales.accountId,
+      accountName: accounts.accountName,
+      customerName: accounts.accountName,
+      customerPhone: accounts.userName,
+      customerEmail: accounts.email,
+      customerReference: sales.customerReference,
+      receiptVoucherNo: orders.voucherNo,
+      salesmanName: sales.salesmanName,
+      remarks: sales.remarks,
+      billMode: sales.billMode,
+      grandTotal: sales.grandTotal,
+      advanceAmount: sales.advanceAmount,
+      totalAmount: sales.grandTotal,
+      subtotal: sales.subtotal,
+      discountAmount: sales.discountAmount,
+      taxAmount: sales.taxAmount,
+      settledAmount: sql`coalesce("payment_summary"."settled_amount", 0)`,
+      balanceAmount: sql`(${sales.grandTotal} - ${sales.advanceAmount} - coalesce("payment_summary"."settled_amount", 0))`,
+    };
+
+    if (options?.filterModel) {
+      const gridFilters = buildAgGridFilterConditions(
+        options.filterModel,
+        filterableColumns,
+      );
+      if (gridFilters.length > 0) {
+        conditions.push(...gridFilters);
+      }
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -182,20 +227,47 @@ export class SalesService {
       .leftJoin(addByUser, eq(sales.addBy, addByUser.id))
       .leftJoin(editByUser, eq(sales.editBy, editByUser.id))
       .where(whereClause)
-      .orderBy(desc(sales.id));
+      .orderBy(
+        buildAgGridSort(
+          options?.sortModel,
+          options?.sortField,
+          options?.sortDirection,
+          filterableColumns,
+          desc(sales.id),
+        ),
+      );
 
     if (!options?.fetchAll && limit !== -1) {
-      query = query.limit(limit).offset((page - 1) * limit) as any;
+      const offset =
+        options?.offset !== undefined && Number.isFinite(options.offset)
+          ? Math.max(0, options.offset)
+          : (page - 1) * limit;
+      query = query.limit(limit).offset(offset) as any;
     }
 
     const countQuery = db
-      .select({ total: count() })
+      .select({
+        total: count(),
+        grandTotal: sql<string>`coalesce(sum(${sales.grandTotal}), 0)`,
+        advanceAmount: sql<string>`coalesce(sum(${sales.advanceAmount}), 0)`,
+        settledAmount: sql<string>`coalesce(sum(${paymentSummarySubquery.settledAmount}), 0)`,
+        balanceAmount: sql<string>`coalesce(sum(${sales.grandTotal} - ${sales.advanceAmount} - coalesce(${paymentSummarySubquery.settledAmount}, 0)), 0)`,
+      })
       .from(sales)
       .leftJoin(accounts, eq(sales.accountId, accounts.id))
+      .leftJoin(orders, eq(sales.receiptId, orders.id))
+      .leftJoin(
+        paymentSummarySubquery,
+        eq(sales.id, paymentSummarySubquery.referenceId),
+      )
       .where(whereClause);
 
     const [rows, totalResult] = await Promise.all([query, countQuery]);
     const total = Number(totalResult[0]?.total || 0);
+    const grandTotal = Number(totalResult[0]?.grandTotal || 0);
+    const advanceAmount = Number(totalResult[0]?.advanceAmount || 0);
+    const settledAmount = Number(totalResult[0]?.settledAmount || 0);
+    const balanceAmount = Number(totalResult[0]?.balanceAmount || 0);
 
     return {
       data: rows,
@@ -207,6 +279,16 @@ export class SalesService {
         hasNextPage: limit === -1 ? false : page * limit < total,
         hasPrevPage: page > 1,
       },
+      summary: [
+        {
+          voucherNo: `Total: ${total}`,
+          grandTotal,
+          advanceAmount,
+          advanceAdjusted: advanceAmount,
+          settledAmount,
+          balanceAmount,
+        },
+      ],
     };
   }
 

@@ -14,7 +14,15 @@ import { logout } from "@/store/authSlice";
 import apiClient from "@/api/client";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { MobileSidebarTrigger } from "@/components/Sidebar";
-import { Bell, HelpCircle, LogOut, Palette, Search, Settings, User } from "lucide-react";
+import {
+  Bell,
+  HelpCircle,
+  LogOut,
+  Palette,
+  Search,
+  Settings,
+  User,
+} from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -93,7 +101,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-primary-action/15 bg-white px-4 dark:border-primary-action/25 dark:bg-[color-mix(in_srgb,var(--primary-action)_22%,black)] sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-zinc-200/80 bg-white/95 px-4 backdrop-blur-sm dark:border-zinc-800/80 dark:bg-zinc-900/95 sm:px-6">
       <div className="flex items-center gap-2">
         <MobileSidebarTrigger />
         <div className="hidden sm:block">

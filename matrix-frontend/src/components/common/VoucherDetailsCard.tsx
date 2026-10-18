@@ -23,7 +23,6 @@ export interface VoucherDetailsCardProps {
   className?: string;
   readOnly?: boolean;
   title?: string;
-  headerRight?: React.ReactNode;
 
   // Daybook
   daybookId?: number;
@@ -54,7 +53,6 @@ export const VoucherDetailsCard: React.FC<VoucherDetailsCardProps> = ({
   className,
   readOnly = false,
   title = "Voucher Details",
-  headerRight,
   daybookId = 0,
   menuKey,
   daybookRequired = true,
@@ -87,7 +85,6 @@ export const VoucherDetailsCard: React.FC<VoucherDetailsCardProps> = ({
               {title}
             </h2>
           </div>
-          {headerRight}
         </div>
 
         {/* ── Card Body ── */}

@@ -1,6 +1,6 @@
 import * as React from "react";
-import { format, isValid } from "date-fns";
-import { Calendar as CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export interface DatePickerProps {
   align?: "start" | "center" | "end";
 }
 
-import { parseDate, toISODate, formatDate } from "@/utils/date";
+import { parseDate, toISODate } from "@/utils/date";
 
 export function DatePicker({
   value,

@@ -1,17 +1,23 @@
-import { eq, asc, desc, ilike, and, count, type SQL } from "drizzle-orm";
+import { eq, asc, desc, ilike, and, or, count, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import { countries, states, cities, areas, pincodes } from "../db/schema";
-import { calculatePagination } from "../utils/pagination";
+import {
+  calculatePagination,
+  buildAgGridFilterConditions,
+  buildAgGridSort,
+} from "../utils/pagination";
 import type { PaginationOptions } from "../utils/pagination";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface GeoListOptions extends Partial<PaginationOptions> {
-  countryId?: number;
-  stateId?: number;
-  cityId?: number;
-  areaId?: number;
-  isActive?: boolean;
+  countryId?: number | undefined;
+  stateId?: number | undefined;
+  cityId?: number | undefined;
+  areaId?: number | undefined;
+  isActive?: boolean | undefined;
+  filterModel?: Record<string, any> | undefined;
+  sortModel?: any[] | undefined;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -31,9 +37,12 @@ function buildSort<T extends Record<string, any>>(
 
 function applyPagination<T>(query: T, options: GeoListOptions): T {
   if (options.fetchAll || !options.limit || options.limit === -1) return query;
-  const page = Math.max(1, options.page ?? 1);
   const limit = Math.min(500, Math.max(1, options.limit));
-  return (query as any).limit(limit).offset((page - 1) * limit) as T;
+  const offset =
+    options.offset !== undefined && Number.isFinite(options.offset)
+      ? Math.max(0, options.offset)
+      : (Math.max(1, options.page ?? 1) - 1) * limit;
+  return (query as any).limit(limit).offset(offset) as T;
 }
 
 async function countQuery(table: any, where: SQL | undefined): Promise<number> {
@@ -48,18 +57,42 @@ export class GeoService {
   async getCountries(options: GeoListOptions = {}) {
     const { search, sortField, sortDirection, isActive } = options;
 
+    const filterableColumns: Record<string, any> = {
+      id: countries.id,
+      name: countries.name,
+      code: countries.code,
+      phoneCode: countries.phoneCode,
+      isActive: countries.isActive,
+    };
+
     const conditions: (SQL | undefined)[] = [];
-    if (search?.trim())
-      conditions.push(ilike(countries.name, `%${search.trim()}%`));
-    if (isActive !== undefined)
+    if (search?.trim()) {
+      conditions.push(
+        or(
+          ilike(countries.name, `%${search.trim()}%`),
+          ilike(countries.code, `%${search.trim()}%`),
+          ilike(countries.phoneCode, `%${search.trim()}%`),
+        ),
+      );
+    }
+    if (isActive !== undefined) {
       conditions.push(eq(countries.isActive, isActive));
+    }
+    if (options?.filterModel) {
+      const gridFilters = buildAgGridFilterConditions(
+        options.filterModel,
+        filterableColumns,
+      );
+      if (gridFilters.length > 0) conditions.push(...gridFilters);
+    }
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const orderBy = buildSort(
-      countries,
+    const orderBy = buildAgGridSort(
+      options?.sortModel,
       sortField,
       sortDirection,
-      countries.name,
+      filterableColumns,
+      asc(countries.name),
     );
 
     const query = db.select().from(countries).where(where).orderBy(orderBy);
@@ -145,14 +178,43 @@ export class GeoService {
   async getStates(options: GeoListOptions = {}) {
     const { search, sortField, sortDirection, isActive, countryId } = options;
 
+    const filterableColumns: Record<string, any> = {
+      id: states.id,
+      name: states.name,
+      code: states.code,
+      countryId: states.countryId,
+      countryName: countries.name,
+      isActive: states.isActive,
+    };
+
     const conditions: (SQL | undefined)[] = [];
     if (countryId) conditions.push(eq(states.countryId, countryId));
-    if (search?.trim())
-      conditions.push(ilike(states.name, `%${search.trim()}%`));
+    if (search?.trim()) {
+      conditions.push(
+        or(
+          ilike(states.name, `%${search.trim()}%`),
+          ilike(states.code, `%${search.trim()}%`),
+          ilike(countries.name, `%${search.trim()}%`),
+        ),
+      );
+    }
     if (isActive !== undefined) conditions.push(eq(states.isActive, isActive));
+    if (options?.filterModel) {
+      const gridFilters = buildAgGridFilterConditions(
+        options.filterModel,
+        filterableColumns,
+      );
+      if (gridFilters.length > 0) conditions.push(...gridFilters);
+    }
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const orderBy = buildSort(states, sortField, sortDirection, states.name);
+    const orderBy = buildAgGridSort(
+      options?.sortModel,
+      sortField,
+      sortDirection,
+      filterableColumns,
+      asc(states.name),
+    );
 
     const baseQuery = db
       .select({
@@ -172,7 +234,12 @@ export class GeoService {
 
     const [data, totalResult] = await Promise.all([
       applyPagination(baseQuery, options),
-      countQuery(states, where),
+      db
+        .select({ total: count() })
+        .from(states)
+        .leftJoin(countries, eq(states.countryId, countries.id))
+        .where(where)
+        .then((res) => Number(res[0]?.total ?? 0)),
     ]);
     return {
       data,
@@ -260,14 +327,44 @@ export class GeoService {
   async getCities(options: GeoListOptions = {}) {
     const { search, sortField, sortDirection, isActive, stateId } = options;
 
+    const filterableColumns: Record<string, any> = {
+      id: cities.id,
+      name: cities.name,
+      stateId: cities.stateId,
+      stateName: states.name,
+      countryId: states.countryId,
+      countryName: countries.name,
+      isActive: cities.isActive,
+    };
+
     const conditions: (SQL | undefined)[] = [];
     if (stateId) conditions.push(eq(cities.stateId, stateId));
-    if (search?.trim())
-      conditions.push(ilike(cities.name, `%${search.trim()}%`));
+    if (search?.trim()) {
+      conditions.push(
+        or(
+          ilike(cities.name, `%${search.trim()}%`),
+          ilike(states.name, `%${search.trim()}%`),
+          ilike(countries.name, `%${search.trim()}%`),
+        ),
+      );
+    }
     if (isActive !== undefined) conditions.push(eq(cities.isActive, isActive));
+    if (options?.filterModel) {
+      const gridFilters = buildAgGridFilterConditions(
+        options.filterModel,
+        filterableColumns,
+      );
+      if (gridFilters.length > 0) conditions.push(...gridFilters);
+    }
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const orderBy = buildSort(cities, sortField, sortDirection, cities.name);
+    const orderBy = buildAgGridSort(
+      options?.sortModel,
+      sortField,
+      sortDirection,
+      filterableColumns,
+      asc(cities.name),
+    );
 
     const baseQuery = db
       .select({
@@ -289,7 +386,13 @@ export class GeoService {
 
     const [data, totalResult] = await Promise.all([
       applyPagination(baseQuery, options),
-      countQuery(cities, where),
+      db
+        .select({ total: count() })
+        .from(cities)
+        .leftJoin(states, eq(cities.stateId, states.id))
+        .leftJoin(countries, eq(states.countryId, countries.id))
+        .where(where)
+        .then((res) => Number(res[0]?.total ?? 0)),
     ]);
     return {
       data,
@@ -371,14 +474,45 @@ export class GeoService {
   async getAreas(options: GeoListOptions = {}) {
     const { search, sortField, sortDirection, isActive, cityId } = options;
 
+    const filterableColumns: Record<string, any> = {
+      id: areas.id,
+      name: areas.name,
+      areaName: areas.name,
+      cityId: areas.cityId,
+      cityName: cities.name,
+      stateId: cities.stateId,
+      stateName: states.name,
+      isActive: areas.isActive,
+    };
+
     const conditions: (SQL | undefined)[] = [];
     if (cityId) conditions.push(eq(areas.cityId, cityId));
-    if (search?.trim())
-      conditions.push(ilike(areas.name, `%${search.trim()}%`));
+    if (search?.trim()) {
+      conditions.push(
+        or(
+          ilike(areas.name, `%${search.trim()}%`),
+          ilike(cities.name, `%${search.trim()}%`),
+          ilike(states.name, `%${search.trim()}%`),
+        ),
+      );
+    }
     if (isActive !== undefined) conditions.push(eq(areas.isActive, isActive));
+    if (options?.filterModel) {
+      const gridFilters = buildAgGridFilterConditions(
+        options.filterModel,
+        filterableColumns,
+      );
+      if (gridFilters.length > 0) conditions.push(...gridFilters);
+    }
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const orderBy = buildSort(areas, sortField, sortDirection, areas.name);
+    const orderBy = buildAgGridSort(
+      options?.sortModel,
+      sortField,
+      sortDirection,
+      filterableColumns,
+      asc(areas.name),
+    );
 
     const baseQuery = db
       .select({
@@ -400,7 +534,13 @@ export class GeoService {
 
     const [data, totalResult] = await Promise.all([
       applyPagination(baseQuery, options),
-      countQuery(areas, where),
+      db
+        .select({ total: count() })
+        .from(areas)
+        .leftJoin(cities, eq(areas.cityId, cities.id))
+        .leftJoin(states, eq(cities.stateId, states.id))
+        .where(where)
+        .then((res) => Number(res[0]?.total ?? 0)),
     ]);
     return {
       data,
@@ -483,32 +623,50 @@ export class GeoService {
     const { search, sortField, sortDirection, isActive, cityId, areaId } =
       options;
 
+    const filterableColumns: Record<string, any> = {
+      id: pincodes.id,
+      pincode: pincodes.pincode,
+      officeName: pincodes.officeName,
+      cityId: pincodes.cityId,
+      cityName: cities.name,
+      areaId: pincodes.areaId,
+      areaName: areas.name,
+      stateId: cities.stateId,
+      stateName: states.name,
+      isActive: pincodes.isActive,
+    };
+
     const conditions: (SQL | undefined)[] = [];
     if (cityId) conditions.push(eq(pincodes.cityId, cityId));
     if (areaId) conditions.push(eq(pincodes.areaId, areaId));
     if (search?.trim()) {
       conditions.push(
-        and(
+        or(
           ilike(pincodes.pincode, `%${search.trim()}%`),
           ilike(pincodes.officeName ?? pincodes.pincode, `%${search.trim()}%`),
-        ) ?? ilike(pincodes.pincode, `%${search.trim()}%`),
+          ilike(cities.name, `%${search.trim()}%`),
+          ilike(areas.name, `%${search.trim()}%`),
+        ),
       );
-      // simpler: match pincode OR officeName
-      conditions.length > 0 && conditions.pop(); // remove last
-      conditions.push(ilike(pincodes.pincode, `%${search.trim()}%`));
     }
     if (isActive !== undefined)
       conditions.push(eq(pincodes.isActive, isActive));
+    if (options?.filterModel) {
+      const gridFilters = buildAgGridFilterConditions(
+        options.filterModel,
+        filterableColumns,
+      );
+      if (gridFilters.length > 0) conditions.push(...gridFilters);
+    }
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const sortCols: Record<string, any> = {
-      pincode: pincodes.pincode,
-      officeName: pincodes.officeName,
-      cityId: pincodes.cityId,
-    };
-    const sortCol =
-      sortField && sortCols[sortField] ? sortCols[sortField] : pincodes.pincode;
-    const orderBy = sortDirection === "desc" ? desc(sortCol) : asc(sortCol);
+    const orderBy = buildAgGridSort(
+      options?.sortModel,
+      sortField,
+      sortDirection,
+      filterableColumns,
+      asc(pincodes.pincode),
+    );
 
     const baseQuery = db
       .select({
@@ -534,7 +692,14 @@ export class GeoService {
 
     const [data, totalResult] = await Promise.all([
       applyPagination(baseQuery, options),
-      countQuery(pincodes, where),
+      db
+        .select({ total: count() })
+        .from(pincodes)
+        .leftJoin(cities, eq(pincodes.cityId, cities.id))
+        .leftJoin(areas, eq(pincodes.areaId, areas.id))
+        .leftJoin(states, eq(cities.stateId, states.id))
+        .where(where)
+        .then((res) => Number(res[0]?.total ?? 0)),
     ]);
     return {
       data,
@@ -572,10 +737,10 @@ export class GeoService {
   async createPincode(input: {
     pincode: string;
     cityId: number;
-    areaId?: number;
-    officeName?: string;
-    isActive?: boolean;
-    addBy?: number;
+    areaId?: number | undefined;
+    officeName?: string | undefined;
+    isActive?: boolean | undefined;
+    addBy?: number | undefined;
   }) {
     const [row] = await db
       .insert(pincodes)
@@ -595,12 +760,12 @@ export class GeoService {
   async updatePincode(
     id: number,
     input: {
-      pincode?: string;
-      cityId?: number;
-      areaId?: number;
-      officeName?: string;
-      isActive?: boolean;
-      editBy?: number;
+      pincode?: string | undefined;
+      cityId?: number | undefined;
+      areaId?: number | undefined;
+      officeName?: string | undefined;
+      isActive?: boolean | undefined;
+      editBy?: number | undefined;
     },
   ) {
     const [row] = await db
@@ -629,6 +794,20 @@ export class GeoService {
       .where(eq(pincodes.id, id))
       .returning();
     return row ?? null;
+  }
+
+  // Master data for dropdowns
+  async getMasterData() {
+    const [allCountries, allStates, allCities] = await Promise.all([
+      db.select().from(countries).where(eq(countries.isActive, true)).orderBy(countries.name),
+      db.select().from(states).where(eq(states.isActive, true)).orderBy(states.name),
+      db.select().from(cities).where(eq(cities.isActive, true)).orderBy(cities.name),
+    ]);
+    return {
+      countries: allCountries,
+      states: allStates,
+      cities: allCities,
+    };
   }
 }
 

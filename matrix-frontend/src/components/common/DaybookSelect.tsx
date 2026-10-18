@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { useDaybooks, useDaybookGroups, type Daybook } from "@/api/daybooks";
-import { getDaybooksForMenu, getDaybooksByMenu } from "@/constants/enums";
+import { getDaybooksForMenu } from "@/constants/enums";
 import {
   Select,
   SelectContent,

@@ -1,10 +1,9 @@
-import React, { useMemo } from "react";
-import { Plus, Wrench, Layers } from "lucide-react";
+import React from "react";
+import { Plus, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataGrid } from "@/components/common/DataGrid";
 import type { CellValueChangedEvent, ColDef } from "ag-grid-community";
 import type { RepairLine } from "../types";
-import { n } from "../types";
 
 interface RepairItemsTableProps {
   readOnly: boolean;

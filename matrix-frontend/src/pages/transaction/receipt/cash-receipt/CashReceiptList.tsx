@@ -1,43 +1,34 @@
 import { MenuList, getListingColumns } from "@/lib/defaults";
-import { usePayments } from "@/api/payments";
 import { DataGrid } from "@/components/common/DataGrid";
 import { ListingHeader } from "@/components/common/ListingHeader";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import { TransactionType } from "@/constants/enums";
 import { useGridActions } from "@/hooks/useGridActions";
 import { buildRoute, encodeURL } from "@/lib/utils";
-import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import { formatDate } from "@/utils/date";
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ListingCard } from "@/components/common/ListingCard";
+import { API_ENDPOINTS } from "@/config/apiEndpoints";
 
 const CashReceiptList: React.FC = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { gridRef, onExportExcel, onExportPdf, onPrint } = useGridActions();
   const [searchTerm, setSearchTerm] = useState("");
-
-  const { data: paymentsResponse } = usePayments({
-    transactionType: TransactionType.CREC,
-  });
-  const receipts = paymentsResponse?.data || [];
 
   const handleNavigate = (id?: number) => {
     const token = encodeURL({ id });
     navigate(buildRoute(WEB_ROUTES.TRANSACTION.CASH_RECEIPT, { token }));
   };
 
-  const filteredData = receipts.filter((receipt) => {
-    const q = searchTerm.toLowerCase();
-    return (
-      receipt.voucherNo?.toLowerCase().includes(q) ||
-      receipt.daybookName?.toLowerCase().includes(q) ||
-      receipt.accountName?.toLowerCase().includes(q) ||
-      receipt.remarks?.toLowerCase().includes(q)
-    );
-  });
+  const apiInput = useMemo(
+    () => ({
+      transactionType: TransactionType.CREC,
+      search: searchTerm.trim() || undefined,
+    }),
+    [searchTerm],
+  );
 
   const columnDefs = useMemo<ColDef[]>(
     () =>
@@ -62,20 +53,6 @@ const CashReceiptList: React.FC = () => {
     [],
   );
 
-  const summary = useMemo(() => {
-    const total = receipts.reduce((s, x) => s + (x.totalAmount || 0), 0);
-    return [
-      {
-        daybookName: "TOTAL",
-        totalAmount: total.toLocaleString("en-IN", {
-          style: "currency",
-          currency: "INR",
-          minimumFractionDigits: 2,
-        }),
-      },
-    ];
-  }, [receipts]);
-
   return (
     <div className="p-3 h-full flex flex-col">
       <ListingCard>
@@ -88,9 +65,7 @@ const CashReceiptList: React.FC = () => {
             onChange: (e) => setSearchTerm(e.target.value),
             placeholder: "Search cash receipt vouchers...",
           }}
-          onRefresh={() =>
-            queryClient.invalidateQueries({ queryKey: ["payments"] })
-          }
+          onRefresh={() => gridRef.current?.api.refreshInfiniteCache()}
           onExportExcel={() => onExportExcel("CashReceipt")}
           onExportPdf={() => onExportPdf("Cash Receipt", "CashReceipt")}
           onPrint={() => onPrint("Cash Receipt")}
@@ -98,15 +73,14 @@ const CashReceiptList: React.FC = () => {
 
         <DataGrid
           ref={gridRef}
-          rowData={filteredData}
+          apiName={API_ENDPOINTS.PAYMENTS.BASE}
+          apiInput={apiInput}
           columnDefs={columnDefs}
-          pinnedBottomRowData={summary}
           gridOptions={{
             onRowDoubleClicked: (e) => {
               if (e.node.rowPinned) return;
               handleNavigate(e.data.id);
             },
-            pagination: false,
           }}
         />
       </ListingCard>

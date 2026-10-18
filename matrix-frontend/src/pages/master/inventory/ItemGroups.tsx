@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  useItemGroups,
   useCreateItemGroup,
   useUpdateItemGroup,
   useDeleteItemGroup,

@@ -49,9 +49,9 @@ export const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl">
+      <DialogContent className="max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl">
         {/* Header */}
-        <DialogHeader className="p-6 pb-4 border-b border-zinc-100 dark:border-zinc-800">
+        <DialogHeader className="p-6 pb-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0 sticky top-0 z-10 bg-white dark:bg-zinc-900 rounded-t-2xl">
           <div className="flex items-center gap-3">
             <div
               className="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-sm transition-colors duration-200"
@@ -70,23 +70,21 @@ export const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({
                 </Badge>
               </DialogTitle>
               <DialogDescription className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                Customize Matrix ERP interface mode, accent colors, and live appearance.
+                Customize Matrix ERP interface mode, accent colors, and live
+                appearance.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         {/* Content Body */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 flex-1 overflow-y-auto min-h-0">
           {/* Section 1: Appearance Mode */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 Interface Mode
               </Label>
-              <span className="text-[11px] text-zinc-400">
-                Current: <b className="capitalize text-zinc-700 dark:text-zinc-200">{mode}</b>
-              </span>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
@@ -192,7 +190,8 @@ export const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({
                 Accent Color Themes
               </Label>
               <span className="text-[11px] text-zinc-400">
-                Active: <b className="text-primary-action font-mono">{activeHex}</b>
+                Active:{" "}
+                <b className="text-primary-action font-mono">{activeHex}</b>
               </span>
             </div>
 
@@ -217,7 +216,9 @@ export const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({
                       className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full shadow-inner transition-transform"
                       style={{ backgroundColor: swatchColor }}
                     >
-                      {isSelected && <Check className="h-3.5 w-3.5 text-white stroke-[3]" />}
+                      {isSelected && (
+                        <Check className="h-3.5 w-3.5 text-white stroke-[3]" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
@@ -277,7 +278,9 @@ export const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-medium text-zinc-500 dark:text-zinc-400">HEX:</span>
+                  <span className="text-xs font-mono font-medium text-zinc-500 dark:text-zinc-400">
+                    HEX:
+                  </span>
                   <Input
                     value={customColor}
                     onChange={(e) => setCustomColor(e.target.value)}
@@ -379,7 +382,10 @@ export const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({
                           RB-2026-0042
                         </span>
                       </div>
-                      <span className="font-bold font-mono" style={{ color: activeHex }}>
+                      <span
+                        className="font-bold font-mono"
+                        style={{ color: activeHex }}
+                      >
                         ₹14,500.00
                       </span>
                     </div>
@@ -391,7 +397,7 @@ export const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <DialogFooter className="p-4 px-6 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 flex items-center justify-between">
+        <DialogFooter className="p-4 px-6 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/90 dark:bg-zinc-900/95 backdrop-blur-sm shrink-0 sticky bottom-0 z-10 flex items-center justify-between rounded-b-2xl">
           <Button
             type="button"
             variant="ghost"

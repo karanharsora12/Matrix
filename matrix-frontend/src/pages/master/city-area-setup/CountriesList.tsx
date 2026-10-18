@@ -4,12 +4,10 @@ import { ListingHeader } from "@/components/common/ListingHeader";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { useGridActions } from "@/hooks/useGridActions";
 import { MenuList, getListingColumns } from "@/lib/defaults";
-import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import { ListingCard } from "@/components/common/ListingCard";
 
 const CountriesList: React.FC = () => {
-  const queryClient = useQueryClient();
   const { gridRef, onExportExcel, onExportPdf, onPrint } = useGridActions();
 
   const columnDefs = useMemo<ColDef[]>(
@@ -22,9 +20,7 @@ const CountriesList: React.FC = () => {
       <ListingCard>
         <ListingHeader
           title="Countries"
-          onRefresh={() =>
-            queryClient.invalidateQueries({ queryKey: ["geo-countries"] })
-          }
+          onRefresh={() => gridRef.current?.api.refreshInfiniteCache()}
           onExportExcel={() => onExportExcel("Countries")}
           onExportPdf={() => onExportPdf("Countries List", "Countries")}
           onPrint={() => onPrint("Countries List")}
@@ -34,7 +30,6 @@ const CountriesList: React.FC = () => {
           ref={gridRef}
           columnDefs={columnDefs}
           apiName={API_ENDPOINTS.GEO.COUNTRIES}
-          gridOptions={{ pagination: false }}
         />
       </ListingCard>
     </div>

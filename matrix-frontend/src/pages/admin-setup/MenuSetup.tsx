@@ -122,7 +122,7 @@ export default function MenuSetup() {
   const [menus, setMenus] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("");
+  const [filter] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<MenuForm>(emptyForm);
   const [isEditing, setIsEditing] = useState(false);
@@ -269,10 +269,6 @@ export default function MenuSetup() {
     () => flatMenus.filter((m) => m.id !== form.id),
     [flatMenus, form.id],
   );
-
-  const totalMenus = flatMenus.length;
-  const topLevel = menus.length;
-  const totalChildren = totalMenus - topLevel;
 
   const CaptionRenderer = (params: ICellRendererParams) => {
     const { data } = params;

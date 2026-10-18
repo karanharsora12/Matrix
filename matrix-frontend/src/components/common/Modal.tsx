@@ -39,23 +39,23 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`${widthClasses[width]} p-0 gap-0 overflow-hidden`}
+        className={`${widthClasses[width]} max-h-[85vh] sm:max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden`}
       >
-        <DialogHeader className="px-6 py-4">
+        <DialogHeader className="px-6 py-4 shrink-0 sticky top-0 z-10 bg-background">
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
-        <Separator />
+        <Separator className="shrink-0" />
 
-        <div className="px-6 py-5 max-h-[75vh] overflow-y-auto space-y-4">
+        <div className="px-6 py-5 flex-1 overflow-y-auto min-h-0 space-y-4">
           {children}
         </div>
 
         {footer && (
           <>
-            <Separator />
-            <DialogFooter className="px-6 py-4 bg-zinc-50 dark:bg-zinc-800/30 flex justify-end gap-2">
+            <Separator className="shrink-0" />
+            <DialogFooter className="px-6 py-4 bg-zinc-50 dark:bg-zinc-800/30 shrink-0 sticky bottom-0 z-10 flex justify-end gap-2">
               {footer}
             </DialogFooter>
           </>

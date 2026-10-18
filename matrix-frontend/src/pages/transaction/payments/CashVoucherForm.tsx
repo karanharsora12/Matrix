@@ -1,4 +1,3 @@
-import { useAccounts } from "@/api/accounts";
 import {
   generateVoucherNo,
   useDaybookGroups,
@@ -12,10 +11,7 @@ import {
   useUpdatePayment,
   type PaymentDetail,
 } from "@/api/payments";
-import {
-  AccountHelp,
-  useAccountColumns,
-} from "@/components/common/AccountHelp";
+import { AccountHelp } from "@/components/common/AccountHelp";
 import { todayISO, toISODate } from "@/utils/date";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
@@ -181,7 +177,6 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
 
   const { data: daybooksResp } = useDaybooks();
   const { data: daybookGroupsResp } = useDaybookGroups();
-  const { data: accountsResp } = useAccounts();
   const { data: vouchersResp } = usePayments({
     transactionType: meta.transactionType,
   });
@@ -195,10 +190,8 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   const daybookGroups = daybookGroupsResp?.data || [];
-  const accounts = accountsResp?.data || [];
   const allVouchers = vouchersResp?.data || [];
 
-  // Cash daybooks for this voucher type (CASH group)
   const cashDaybooks = useMemo(() => {
     const groupIds = daybookGroups
       .filter((g) => g.shortName === typeConfig.daybookGroupShortName)
@@ -207,8 +200,6 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
       groupIds.includes(d.daybookGroupId),
     );
   }, [daybooksResp, daybookGroups, typeConfig.daybookGroupShortName]);
-
-  const { groupMap, typeMap } = useAccountColumns();
 
   const initialFormData = useMemo(
     () => ({
@@ -227,11 +218,6 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
 
   const [formData, setFormData] = useState(initialFormData);
   const [lines, setLines] = useState<VoucherLine[]>([emptyLine()]);
-
-  const selectedAccount = useMemo(
-    () => accounts.find((a) => a.id === formData.accountId),
-    [accounts, formData.accountId],
-  );
 
   // --- Voucher number generation ---
   const handleSelectDaybook = useCallback(

@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AgGridReact } from "ag-grid-react";
 import {
   ModuleRegistry,
@@ -30,6 +36,7 @@ export interface DataGridProps<TData = any> {
   apiName?: string;
   apiInput?: Record<string, unknown>;
   infiniteScroll?: boolean;
+  pagination?: boolean;
   pageSize?: number;
 }
 
@@ -61,8 +68,8 @@ const createGridTheme = (isDark: boolean, accentHex: string) => {
     return themeQuartz.withPart(colorSchemeDark).withParams({
       backgroundColor: "hsl(240 10% 5.5%)",
       foregroundColor: "hsl(0 0% 98%)",
-      headerBackgroundColor: `color-mix(in srgb, ${accentHex} 32%, black)`,
-      headerTextColor: `color-mix(in srgb, ${accentHex} 45%, white)`,
+      headerBackgroundColor: accentHex,
+      headerTextColor: "#ffffff",
       headerFontWeight: 600,
       headerFontSize: 13,
       fontSize: 13,
@@ -74,11 +81,11 @@ const createGridTheme = (isDark: boolean, accentHex: string) => {
       selectedRowBackgroundColor: `color-mix(in srgb, ${accentHex} 28%, black)`,
       rangeSelectionBackgroundColor: `color-mix(in srgb, ${accentHex} 22%, black)`,
       rangeSelectionBorderColor: accentHex,
-      oddRowBackgroundColor: "hsl(240 10% 5.5%)",
+      oddRowBackgroundColor: "hsl(240 7% 9%)",
       borderRadius: 6,
       wrapperBorderRadius: 8,
       cellHorizontalPadding: 12,
-      headerCellHoverBackgroundColor: `color-mix(in srgb, ${accentHex} 40%, black)`,
+      headerCellHoverBackgroundColor: `color-mix(in srgb, ${accentHex} 85%, black)`,
       filterToolPanelGroupIndent: 12,
       iconSize: 16,
       spacing: 4,
@@ -91,8 +98,8 @@ const createGridTheme = (isDark: boolean, accentHex: string) => {
   return themeQuartz.withParams({
     backgroundColor: "hsl(0 0% 100%)",
     foregroundColor: "hsl(240 10% 3.9%)",
-    headerBackgroundColor: `color-mix(in srgb, ${accentHex} 14%, white)`,
-    headerTextColor: "hsl(240 10% 3.9%)",
+    headerBackgroundColor: accentHex,
+    headerTextColor: "#ffffff",
     headerFontWeight: 600,
     headerFontSize: 13,
     fontSize: 13,
@@ -104,11 +111,11 @@ const createGridTheme = (isDark: boolean, accentHex: string) => {
     selectedRowBackgroundColor: `color-mix(in srgb, ${accentHex} 12%, white)`,
     rangeSelectionBackgroundColor: `color-mix(in srgb, ${accentHex} 15%, white)`,
     rangeSelectionBorderColor: accentHex,
-    oddRowBackgroundColor: "hsl(0 0% 100%)",
+    oddRowBackgroundColor: "hsl(240 5% 97.2%)",
     borderRadius: 6,
     wrapperBorderRadius: 6,
     cellHorizontalPadding: 12,
-    headerCellHoverBackgroundColor: `color-mix(in srgb, ${accentHex} 22%, white)`,
+    headerCellHoverBackgroundColor: `color-mix(in srgb, ${accentHex} 88%, black)`,
     filterToolPanelGroupIndent: 12,
     iconSize: 16,
     spacing: 4,
@@ -129,18 +136,27 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
       pinnedBottomRowData,
       apiName,
       apiInput,
-      infiniteScroll,
+      infiniteScroll = true,
+      pagination = false,
       pageSize = 50,
     },
     ref,
   ) => {
     const gridApiRef = useRef<GridApi | null>(null);
+    const apiInputRef = useRef(apiInput);
+    apiInputRef.current = apiInput;
+
     const [apiRowData, setApiRowData] = useState<any[]>([]);
     const [apiSummary, setApiSummary] = useState<any[] | undefined>();
     const usesApi = rowData === undefined && Boolean(apiName);
-    const usesInfiniteScroll = usesApi && (infiniteScroll ?? true);
-    const { onGridReady: gridOptionsOnGridReady, ...restGridOptions } =
-      gridOptions || {};
+    const usesInfiniteScroll = usesApi && infiniteScroll;
+    const isPaginationEnabled = !usesInfiniteScroll && pagination === true;
+
+    const {
+      onGridReady: gridOptionsOnGridReady,
+      pagination: _gridOptPagination,
+      ...restGridOptions
+    } = gridOptions || {};
 
     const defaultColDef = useMemo<ColDef>(() => {
       return {
@@ -151,6 +167,9 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
         suppressFloatingFilterButton: false,
         wrapHeaderText: true,
         autoHeaderHeight: true,
+        filterParams: {
+          debounceMs: 400,
+        },
         tooltipValueGetter: (p) => p.value,
       };
     }, []);
@@ -160,6 +179,47 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
       return createGridTheme(resolvedMode === "dark", activeHex || "#3B82A0");
     }, [resolvedMode, activeHex]);
 
+    const serializedApiInput = useMemo(
+      () => JSON.stringify(apiInput ?? {}),
+      [apiInput],
+    );
+
+    const isInitialMount = useRef(true);
+
+    const buildSummaryRow = useCallback(
+      (
+        totalRecords: number | undefined,
+        backendSummary: any[] | undefined,
+      ) => {
+        if (!backendSummary && totalRecords === undefined) return undefined;
+
+        const firstVisibleCol = columnDefs.find(
+          (col) =>
+            col.field &&
+            !col.hide &&
+            col.field !== "action" &&
+            col.field !== "actions",
+        );
+        const firstColField =
+          firstVisibleCol?.field || columnDefs[0]?.field || "id";
+
+        const summaryObj: Record<string, any> = {};
+
+        // Merge only the fields provided in summary
+        if (Array.isArray(backendSummary) && backendSummary[0]) {
+          Object.assign(summaryObj, backendSummary[0]);
+        }
+
+        // At end of first column, display total records if not already set
+        if (totalRecords !== undefined && !summaryObj[firstColField]) {
+          summaryObj[firstColField] = `Total: ${Number(totalRecords).toLocaleString()}`;
+        }
+
+        return Object.keys(summaryObj).length > 0 ? [summaryObj] : undefined;
+      },
+      [columnDefs],
+    );
+
     const datasource = useMemo<IDatasource | undefined>(() => {
       if (!apiName || !usesInfiniteScroll) return undefined;
 
@@ -168,22 +228,48 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
       return {
         getRows: async (params: IGetRowsParams) => {
           const requestedPageSize = params.endRow - params.startRow;
-          const sort = params.sortModel[0];
+          const sort = params.sortModel?.[0];
 
           try {
             const response = await apiClient.post(apiName, {
-              ...apiInput,
+              ...(apiInputRef.current || {}),
               page: Math.floor(params.startRow / requestedPageSize) + 1,
               limit: requestedPageSize,
+              offset: params.startRow,
               sortField: sort?.colId,
               sortDirection: sort?.sort,
+              filterModel: params.filterModel,
+              sortModel: params.sortModel,
             });
             if (isDestroyed) return;
 
             const result = getGridResponse<any>(response.data);
-            if (result.summary) setApiSummary(result.summary);
-            const lastRow = result.pagination?.total;
-            params.successCallback(result.data || [], lastRow);
+            const rawTotal = result.pagination?.total;
+            const total =
+              rawTotal !== undefined &&
+              rawTotal !== null &&
+              Number.isFinite(Number(rawTotal))
+                ? Number(rawTotal)
+                : undefined;
+
+            const fetchedRows = result.data || [];
+            const summaryRows = buildSummaryRow(total, result.summary);
+            setApiSummary(summaryRows);
+            if (gridApiRef.current) {
+              gridApiRef.current.setGridOption(
+                "pinnedBottomRowData",
+                summaryRows || [],
+              );
+            }
+
+            const lastRow =
+              total !== undefined
+                ? total
+                : fetchedRows.length < requestedPageSize
+                  ? params.startRow + fetchedRows.length
+                  : -1;
+
+            params.successCallback(fetchedRows, lastRow);
           } catch (error) {
             if (!isDestroyed) {
               console.error(`Unable to load grid data from ${apiName}`, error);
@@ -195,8 +281,9 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
           isDestroyed = true;
         },
       };
-    }, [apiInput, apiName, usesInfiniteScroll]);
+    }, [apiName, usesInfiniteScroll, buildSummaryRow]);
 
+    // On client-side data fetch (when infinite scroll is disabled)
     useEffect(() => {
       if (!usesApi || usesInfiniteScroll || !apiName) return;
 
@@ -206,8 +293,19 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
         .then((response) => {
           if (!isCurrent) return;
           const result = getGridResponse<any>(response.data);
-          setApiRowData(result.data || []);
-          setApiSummary(result.summary);
+          const fetchedRows = result.data || [];
+          setApiRowData(fetchedRows);
+          const summaryRows = buildSummaryRow(
+            result.pagination?.total ?? (result.summary ? undefined : fetchedRows.length),
+            result.summary,
+          );
+          setApiSummary(summaryRows);
+          if (gridApiRef.current) {
+            gridApiRef.current.setGridOption(
+              "pinnedBottomRowData",
+              summaryRows || [],
+            );
+          }
         })
         .catch((error) => {
           if (isCurrent) {
@@ -219,18 +317,41 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
       return () => {
         isCurrent = false;
       };
-    }, [apiInput, apiName, usesApi, usesInfiniteScroll]);
+    }, [
+      serializedApiInput,
+      apiName,
+      usesApi,
+      usesInfiniteScroll,
+      buildSummaryRow,
+    ]);
 
+    // Purge cache when external filter inputs change (e.g. search box)
     useEffect(() => {
-      if (usesInfiniteScroll && datasource && gridApiRef.current) {
-        gridApiRef.current.setGridOption("datasource", datasource);
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
       }
-    }, [datasource, usesInfiniteScroll]);
+      if (gridApiRef.current && usesInfiniteScroll) {
+        gridApiRef.current.purgeInfiniteCache();
+      }
+    }, [serializedApiInput, usesInfiniteScroll]);
+
+    const resolvedPinnedBottomRowData = useMemo(() => {
+      if (pinnedBottomRowData) return pinnedBottomRowData;
+      if (apiSummary) return apiSummary;
+      if (rowData && Array.isArray(rowData)) {
+        return buildSummaryRow(rowData.length, undefined);
+      }
+      return undefined;
+    }, [pinnedBottomRowData, apiSummary, rowData, buildSummaryRow]);
 
     const handleGridReady = (params: any) => {
       gridApiRef.current = params.api;
-      if (usesInfiniteScroll && datasource) {
-        params.api.setGridOption("datasource", datasource);
+      if (resolvedPinnedBottomRowData) {
+        params.api.setGridOption(
+          "pinnedBottomRowData",
+          resolvedPinnedBottomRowData,
+        );
       }
       gridOptionsOnGridReady?.(params);
       onGridReady?.(params);
@@ -250,15 +371,24 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
           rowModelType={usesInfiniteScroll ? "infinite" : "clientSide"}
-          pagination={usesInfiniteScroll ? false : true}
-          paginationPageSize={usesInfiniteScroll ? pageSize : 20}
-          cacheBlockSize={usesInfiniteScroll ? pageSize : undefined}
+          datasource={usesInfiniteScroll ? datasource : undefined}
+          pagination={isPaginationEnabled}
+          suppressPaginationPanel={usesInfiniteScroll || !isPaginationEnabled}
+          paginationPageSize={isPaginationEnabled ? pageSize : undefined}
+          paginationPageSizeSelector={
+            isPaginationEnabled ? [20, 50, 100, 200] : undefined
+          }
+          cacheBlockSize={pageSize}
+          infiniteInitialRowCount={pageSize}
+          cacheOverflowSize={2}
+          maxConcurrentDatasourceRequests={1}
+          maxBlocksInCache={50}
           onGridReady={handleGridReady}
           rowSelection="single"
           animateRows={true}
           rowHeight={38}
           headerHeight={44}
-          pinnedBottomRowData={pinnedBottomRowData ?? apiSummary}
+          pinnedBottomRowData={resolvedPinnedBottomRowData}
           {...restGridOptions}
         />
       </div>

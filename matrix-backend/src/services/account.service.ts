@@ -1,6 +1,10 @@
-import { asc, count, desc, eq, ilike, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, or, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import { accounts, accountTypes, accountGroups } from "../db/schema";
+import {
+  buildAgGridFilterConditions,
+  buildAgGridSort,
+} from "../utils/pagination";
 
 export class AccountService {
   async getMasterData() {
@@ -21,25 +25,20 @@ export class AccountService {
   async getAccountsPage(options: {
     page: number;
     limit: number;
+    offset?: number | undefined;
     search?: string | undefined;
     sortField?: string | undefined;
     sortDirection?: "asc" | "desc" | undefined;
     fetchAll?: boolean | undefined;
+    filterModel?: Record<string, any> | undefined;
+    sortModel?: any[] | undefined;
   }) {
     const page = Math.max(1, options.page || 1);
     const limit = options.fetchAll
       ? -1
-      : Math.min(100, Math.max(1, options.limit || 50));
-    const search = options.search?.trim();
-    const whereClause = search
-      ? or(
-          ilike(accounts.accountName, `%${search}%`),
-          ilike(accounts.userName, `%${search}%`),
-          ilike(accounts.email, `%${search}%`),
-        )
-      : undefined;
+      : Math.min(500, Math.max(1, options.limit || 50));
 
-    const sortableColumns = {
+    const filterableColumns: Record<string, any> = {
       id: accounts.id,
       accountName: accounts.accountName,
       userName: accounts.userName,
@@ -48,24 +47,86 @@ export class AccountService {
       middleName: accounts.middleName,
       lastName: accounts.lastName,
       accountTypeId: accounts.accountTypeId,
+      typeName: accountTypes.name,
       accountGroupId: accounts.accountGroupId,
+      groupName: accountGroups.name,
       isActive: accounts.isActive,
     };
-    const sortColumn =
-      sortableColumns[options.sortField as keyof typeof sortableColumns] ||
-      accounts.id;
-    const orderBy =
-      options.sortDirection === "desc" ? desc(sortColumn) : asc(sortColumn);
 
-    let query = db.select().from(accounts).where(whereClause).orderBy(orderBy);
+    const conditions: (SQL | undefined)[] = [];
 
-    if (!options.fetchAll) {
-      query = query.limit(limit).offset((page - 1) * limit) as any;
+    const search = options.search?.trim();
+    if (search) {
+      conditions.push(
+        or(
+          ilike(accounts.accountName, `%${search}%`),
+          ilike(accounts.userName, `%${search}%`),
+          ilike(accounts.email, `%${search}%`),
+          ilike(accounts.firstName, `%${search}%`),
+          ilike(accounts.lastName, `%${search}%`),
+        ),
+      );
+    }
+
+    if (options?.filterModel) {
+      const gridFilters = buildAgGridFilterConditions(
+        options.filterModel,
+        filterableColumns,
+      );
+      if (gridFilters.length > 0) {
+        conditions.push(...gridFilters);
+      }
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const orderBy = buildAgGridSort(
+      options?.sortModel,
+      options?.sortField,
+      options?.sortDirection,
+      filterableColumns,
+      asc(accounts.accountName),
+    );
+
+    let query = db
+      .select({
+        id: accounts.id,
+        accountName: accounts.accountName,
+        userName: accounts.userName,
+        email: accounts.email,
+        firstName: accounts.firstName,
+        middleName: accounts.middleName,
+        lastName: accounts.lastName,
+        accountTypeId: accounts.accountTypeId,
+        typeName: accountTypes.name,
+        accountGroupId: accounts.accountGroupId,
+        groupName: accountGroups.name,
+        isActive: accounts.isActive,
+        createdAt: accounts.createdAt,
+        updatedAt: accounts.updatedAt,
+      })
+      .from(accounts)
+      .leftJoin(accountTypes, eq(accounts.accountTypeId, accountTypes.id))
+      .leftJoin(accountGroups, eq(accounts.accountGroupId, accountGroups.id))
+      .where(whereClause)
+      .orderBy(orderBy);
+
+    if (!options.fetchAll && limit !== -1) {
+      const offset =
+        options.offset !== undefined && Number.isFinite(options.offset)
+          ? Math.max(0, options.offset)
+          : (page - 1) * limit;
+      query = query.limit(limit).offset(offset) as any;
     }
 
     const [data, totalResult] = await Promise.all([
       query,
-      db.select({ total: count() }).from(accounts).where(whereClause),
+      db
+        .select({ total: count() })
+        .from(accounts)
+        .leftJoin(accountTypes, eq(accounts.accountTypeId, accountTypes.id))
+        .leftJoin(accountGroups, eq(accounts.accountGroupId, accountGroups.id))
+        .where(whereClause),
     ]);
     const total = Number(totalResult[0]?.total || 0);
 
@@ -75,8 +136,8 @@ export class AccountService {
         page,
         limit: options.fetchAll ? total : limit,
         total,
-        totalPages: options.fetchAll ? 1 : Math.ceil(total / limit),
-        hasNextPage: options.fetchAll ? false : page * limit < total,
+        totalPages: options.fetchAll || limit === -1 ? 1 : Math.ceil(total / limit),
+        hasNextPage: options.fetchAll || limit === -1 ? false : page * limit < total,
       },
     };
   }

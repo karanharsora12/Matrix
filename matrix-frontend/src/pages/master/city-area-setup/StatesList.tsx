@@ -4,12 +4,10 @@ import { ListingHeader } from "@/components/common/ListingHeader";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { useGridActions } from "@/hooks/useGridActions";
 import { MenuList, getListingColumns } from "@/lib/defaults";
-import { useQueryClient } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import { ListingCard } from "@/components/common/ListingCard";
 
 const StatesList: React.FC = () => {
-  const queryClient = useQueryClient();
   const { gridRef, onExportExcel, onExportPdf, onPrint } = useGridActions();
 
   const columnDefs = useMemo<ColDef[]>(
@@ -23,9 +21,7 @@ const StatesList: React.FC = () => {
         <ListingHeader
           title="States"
           subtitle="Manage states for city & area setup"
-          onRefresh={() =>
-            queryClient.invalidateQueries({ queryKey: ["geo-states"] })
-          }
+          onRefresh={() => gridRef.current?.api.refreshInfiniteCache()}
           onExportExcel={() => onExportExcel("States")}
           onExportPdf={() => onExportPdf("States List", "States")}
           onPrint={() => onPrint("States List")}
@@ -35,7 +31,6 @@ const StatesList: React.FC = () => {
           ref={gridRef}
           columnDefs={columnDefs}
           apiName={API_ENDPOINTS.GEO.STATES}
-          gridOptions={{ pagination: false }}
         />
       </ListingCard>
     </div>

@@ -9,7 +9,6 @@ export interface CustomerInfoCardProps {
   className?: string;
   readOnly?: boolean;
   title?: string;
-  headerRight?: React.ReactNode;
 
   accountId?: number;
   accountName?: string;
@@ -43,7 +42,6 @@ export const CustomerInfoCard: React.FC<CustomerInfoCardProps> = ({
   className,
   readOnly = false,
   title = "Customer Information",
-  headerRight,
   accountName = "",
   onSelectAccount,
   onClearAccount,
@@ -81,7 +79,6 @@ export const CustomerInfoCard: React.FC<CustomerInfoCardProps> = ({
               {title}
             </h2>
           </div>
-          {headerRight}
         </div>
 
         {/* ── Card Body ── */}
