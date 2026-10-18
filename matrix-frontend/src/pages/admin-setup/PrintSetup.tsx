@@ -44,6 +44,21 @@ const TRANSACTION_TYPES = [
   { value: "purchase", label: "Purchase Tax Invoice" },
 ];
 
+const InvoicePaperShadowHost: React.FC<{ html: string }> = ({ html }) => {
+  const hostRef = React.useRef<HTMLDivElement>(null);
+  const shadowRootRef = React.useRef<ShadowRoot | null>(null);
+
+  React.useEffect(() => {
+    if (!hostRef.current) return;
+    if (!shadowRootRef.current) {
+      shadowRootRef.current = hostRef.current.attachShadow({ mode: "open" });
+    }
+    shadowRootRef.current.innerHTML = html;
+  }, [html]);
+
+  return <div ref={hostRef} className="w-full overflow-hidden" />;
+};
+
 export const PrintSetup: React.FC = () => {
   const [selectedTxType, setSelectedTxType] =
     useState<string>("repairing-bill");
@@ -61,8 +76,6 @@ export const PrintSetup: React.FC = () => {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [sampleHtml, setSampleHtml] = useState<string | null>(null);
   const [sampleZoom, setSampleZoom] = useState<number>(100);
-  const [sampleHeight, setSampleHeight] = useState<string>("850px");
-  const sampleIframeRef = React.useRef<HTMLIFrameElement>(null);
 
   // Fetch config whenever transaction type changes
   useEffect(() => {
@@ -149,25 +162,6 @@ export const PrintSetup: React.FC = () => {
       setError("Failed to generate sample preview");
     } finally {
       setPreviewLoading(false);
-    }
-  };
-
-  const handleSampleIframeLoad = () => {
-    try {
-      const doc = sampleIframeRef.current?.contentDocument;
-      if (doc?.body) {
-        doc.body.style.margin = "0";
-        doc.body.style.padding = "0";
-        doc.body.style.background = "transparent";
-        const scrollH = Math.max(
-          doc.body.scrollHeight,
-          doc.documentElement.scrollHeight,
-          650,
-        );
-        setSampleHeight(`${scrollH + 20}px`);
-      }
-    } catch {
-      setSampleHeight("900px");
     }
   };
 
@@ -665,6 +659,8 @@ export const PrintSetup: React.FC = () => {
                   {[
                     { id: "showItemDescription", label: "Item Description" },
                     { id: "showItemCode", label: "Item Code / Tag" },
+                    { id: "showGrossWeight", label: "Gross Weight (g)" },
+                    { id: "showNetWeight", label: "Net Weight (g)" },
                     { id: "showQuantity", label: "Quantity (Qty)" },
                     { id: "showLabour", label: "Labour Amount (₹)" },
                     { id: "showRate", label: "Rate (₹)" },
@@ -1019,18 +1015,7 @@ export const PrintSetup: React.FC = () => {
                   <span>Paper: {config.paperSize} ({config.orientation})</span>
                 </div>
 
-                <iframe
-                  ref={sampleIframeRef}
-                  srcDoc={sampleHtml}
-                  title="Sample Invoice Preview"
-                  scrolling="no"
-                  onLoad={handleSampleIframeLoad}
-                  className="w-full border-none overflow-hidden"
-                  style={{
-                    height: sampleHeight,
-                    background: "transparent",
-                  }}
-                />
+                <InvoicePaperShadowHost html={sampleHtml} />
               </div>
             </div>
           )}

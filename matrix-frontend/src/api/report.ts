@@ -30,6 +30,8 @@ export interface PrintConfigData {
   showVoucherDetails?: boolean;
   showItemCode?: boolean;
   showItemDescription?: boolean;
+  showGrossWeight?: boolean;
+  showNetWeight?: boolean;
   showLabour?: boolean;
   showRate?: boolean;
   showQuantity?: boolean;

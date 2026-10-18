@@ -137,6 +137,10 @@ export const defaultInvoiceTemplate = `<!DOCTYPE html>
   <meta charset="utf-8">
   <title>{{config.headerTitle}}</title>
   <style>
+    @page {
+      size: {{config.paperSize}} {{config.orientation}};
+      margin: {{config.marginTop}} {{config.marginRight}} {{config.marginBottom}} {{config.marginLeft}};
+    }
     * {
       box-sizing: border-box;
       margin: 0;
@@ -151,7 +155,10 @@ export const defaultInvoiceTemplate = `<!DOCTYPE html>
     }
     .invoice-container {
       width: 100%;
-      padding: 2px;
+      border: 1.5px solid #222;
+      border-radius: 4px;
+      padding: 12px 14px;
+      background: #fff;
     }
     .header-table {
       width: 100%;
@@ -469,8 +476,12 @@ export const defaultInvoiceTemplate = `<!DOCTYPE html>
           {{#if config.showItemCode}}
           <th style="width: 70px;">Code / Tag</th>
           {{/if}}
+          {{#if config.showGrossWeight}}
           <th style="width: 55px;" class="text-right">Gross Wt</th>
+          {{/if}}
+          {{#if config.showNetWeight}}
           <th style="width: 55px;" class="text-right">Net Wt</th>
+          {{/if}}
           {{#if config.showQuantity}}
           <th style="width: 35px;" class="text-center">Qty</th>
           {{/if}}
@@ -504,8 +515,12 @@ export const defaultInvoiceTemplate = `<!DOCTYPE html>
           {{#if ../config.showItemCode}}
           <td>{{code}}</td>
           {{/if}}
+          {{#if ../config.showGrossWeight}}
           <td class="text-right">{{grossWt}}</td>
+          {{/if}}
+          {{#if ../config.showNetWeight}}
           <td class="text-right">{{netWt}}</td>
+          {{/if}}
           {{#if ../config.showQuantity}}
           <td class="text-center">{{qty}}</td>
           {{/if}}
@@ -530,8 +545,12 @@ export const defaultInvoiceTemplate = `<!DOCTYPE html>
       <tfoot>
         <tr style="background: #f2f2f2; font-weight: 700;">
           <td colspan="{{summaryColspan}}" class="text-right">Total</td>
+          {{#if config.showGrossWeight}}
           <td class="text-right">{{totals.grossWt}}</td>
+          {{/if}}
+          {{#if config.showNetWeight}}
           <td class="text-right">{{totals.netWt}}</td>
+          {{/if}}
           {{#if config.showQuantity}}
           <td class="text-center">{{totals.qty}}</td>
           {{/if}}
@@ -708,14 +727,17 @@ export class ReportService {
       const qty = Number(item.qty || 1);
       const labour = Number(item.labourAmount || 0);
       const disc = Number(item.discountAmount || 0);
-      const amt = Number(item.amount || item.totalAmount || 0);
+      const rawAmt = Number(item.amount || 0);
+      const lineTotal = Number(
+        item.totalAmount || (rawAmt + labour > 0 ? rawAmt + labour : rawAmt)
+      );
 
       totalGrossWt += gWt;
       totalNetWt += nWt;
       totalQty += qty;
       totalLabour += labour;
       totalLineDiscounts += disc;
-      totalLineAmounts += amt;
+      totalLineAmounts += lineTotal;
 
       return {
         idx: i + 1,
@@ -728,7 +750,7 @@ export class ReportService {
         rate: formatCurrency(item.rate || 0),
         discountAmount: formatCurrency(disc),
         taxRate: Number(item.taxRate || sale.taxRate || 3),
-        amount: formatCurrency(amt),
+        amount: formatCurrency(lineTotal),
         remarks: item.remarks || "",
       };
     });
