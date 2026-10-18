@@ -13,7 +13,9 @@ import {
 } from "@/api/sales";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { FormFooter } from "@/components/common/FormFooter";
+import { InvoicePreviewModal } from "@/components/common/InvoicePreviewModal";
 import { QuickAccountCreateDialog } from "@/components/common/QuickAccountCreateDialog";
+import { fetchPrintConfig, printTransactionInvoice } from "@/api/report";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import { decodeURL } from "@/lib/utils";
 import { todayISO, toISODate } from "@/utils/date";
@@ -342,6 +344,23 @@ const RepairingBill: React.FC = () => {
     [labourTotal, taxableTotal],
   );
 
+  // Post-save and printing states
+  const [postSaveAction, setPostSaveAction] = useState<"preview" | "print" | "none">("preview");
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [invoiceTarget, setInvoiceTarget] = useState<{ id: number; voucherNo: string } | null>(null);
+  const [navigateOnModalClose, setNavigateOnModalClose] = useState(false);
+
+  // Load configured default post-save action
+  useEffect(() => {
+    fetchPrintConfig("repairing-bill")
+      .then((cfg) => {
+        if (cfg?.defaultPostSaveAction) {
+          setPostSaveAction(cfg.defaultPostSaveAction as any);
+        }
+      })
+      .catch((err) => console.warn("Could not load print config:", err));
+  }, []);
+
   // Validation
   const canSave =
     !readOnly &&
@@ -354,10 +373,12 @@ const RepairingBill: React.FC = () => {
     navigate(WEB_ROUTES.TRANSACTION.REPAIRING_BILL_LIST);
   }, [navigate]);
 
-  // Save handler
-  const save = () => {
+  // Save handler with configurable post-save action
+  const save = (actionOverride?: "preview" | "print" | "none") => {
     if (!canSave) return;
     setError("");
+
+    const action = actionOverride || postSaveAction;
 
     const payload = {
       ...form,
@@ -371,7 +392,22 @@ const RepairingBill: React.FC = () => {
     };
 
     const callbacks = {
-      onSuccess: back,
+      onSuccess: (savedData: any) => {
+        const resultId = isEditing ? saleId : savedData?.id;
+        const resultVoucherNo = isEditing ? form.voucherNo : (savedData?.voucherNo || form.voucherNo);
+
+        if (action === "preview" && resultId) {
+          setInvoiceTarget({ id: resultId, voucherNo: resultVoucherNo });
+          setNavigateOnModalClose(true);
+          setInvoiceModalOpen(true);
+        } else if (action === "print" && resultId) {
+          printTransactionInvoice(resultId)
+            .catch((e) => console.warn("Direct print error:", e))
+            .finally(() => back());
+        } else {
+          back();
+        }
+      },
       onError: (reason: any) =>
         setError(
           reason?.response?.data?.error ||
@@ -406,9 +442,15 @@ const RepairingBill: React.FC = () => {
     }
   };
 
-  // Print handler
+  // Print handler - opens authoritative invoice preview
   const printInvoice = () => {
-    window.print();
+    if (isEditing && saleId) {
+      setInvoiceTarget({ id: saleId, voucherNo: form.voucherNo });
+      setNavigateOnModalClose(false);
+      setInvoiceModalOpen(true);
+    } else {
+      setError("Please save the bill before printing invoice.");
+    }
   };
 
   if (isEditing && isLoading) {
@@ -478,12 +520,50 @@ const RepairingBill: React.FC = () => {
         onBack={back}
         onDelete={isEditing && !readOnly ? remove : undefined}
         isDeleting={deleteSale.isPending}
-        onSave={readOnly ? undefined : save}
-        saveText="Save Bill"
+        onSave={readOnly ? undefined : () => save()}
+        saveText={
+          isEditing
+            ? "Update Bill"
+            : postSaveAction === "print"
+            ? "Save & Print"
+            : postSaveAction === "preview"
+            ? "Save & Preview"
+            : "Save Only"
+        }
         isSaving={isSaving}
         isSaveDisabled={!canSave || isSaving}
-        onPrint={printInvoice}
-        printText="Print Bill"
+        onPrint={isEditing ? printInvoice : undefined}
+        printText="Print Invoice"
+        extraActions={
+          !readOnly && !isEditing ? (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mr-1">
+              <span className="text-[11px]">Post-Save:</span>
+              <select
+                value={postSaveAction}
+                onChange={(e) => setPostSaveAction(e.target.value as any)}
+                className="h-8 rounded-lg border border-input bg-background px-2 py-1 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="preview">Save & Preview</option>
+                <option value="print">Save & Print</option>
+                <option value="none">Save Only</option>
+              </select>
+            </div>
+          ) : undefined
+        }
+      />
+
+      {/* Invoice Preview & Print Modal */}
+      <InvoicePreviewModal
+        open={invoiceModalOpen}
+        onOpenChange={setInvoiceModalOpen}
+        transactionId={invoiceTarget?.id}
+        transactionType="repairing-bill"
+        voucherNo={invoiceTarget?.voucherNo}
+        onClose={() => {
+          if (navigateOnModalClose) {
+            back();
+          }
+        }}
       />
     </div>
   );

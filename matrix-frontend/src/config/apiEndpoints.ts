@@ -59,4 +59,13 @@ export const API_ENDPOINTS = {
     PINCODES: "/geo/pincodes",
     PINCODE_BY_ID: (id: string | number) => `/geo/pincodes/${id}`,
   },
+  REPORTS: {
+    TRANSACTION_PDF: (id: string | number) => `/reports/transactions/${id}/pdf`,
+    TRANSACTION_HTML: (id: string | number) => `/reports/transactions/${id}/html`,
+    SAMPLE_PDF: "/reports/sample/pdf",
+    SAMPLE_HTML: "/reports/sample/html",
+    CONFIG: "/reports/config",
+    CONFIG_BY_TYPE: (type: string) => `/reports/config/${type}`,
+    RESET_CONFIG: (type: string) => `/reports/config/${type}/reset`,
+  },
 };

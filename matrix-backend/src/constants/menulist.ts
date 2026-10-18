@@ -26,5 +26,6 @@ export enum MenuList {
 
   // Admin Setup
   MENU_SETUP = "MenuSetup",
+  PRINT_SETUP = "PrintSetup",
   USERS = "Users",
 }

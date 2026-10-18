@@ -32,6 +32,7 @@ export const MenuList = {
 
   // Admin Setup
   MENU_SETUP: "MenuSetup",
+  PRINT_SETUP: "PrintSetup",
   USERS: "Users",
 
   // City / Area Setup

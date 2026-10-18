@@ -99,6 +99,26 @@ async function main() {
         set: { menuCaption: "Menu Setup", menuPath: "/menu-setup" },
       });
 
+    await db
+      .insert(menus)
+      .values({
+        menuName: "print_setup",
+        menuCaption: "Print Setup",
+        parentMenuId: adminSetupMenu?.id || null,
+        menuIcon: "Printer",
+        menuPath: "/print-setup",
+        listRight: true,
+        viewRight: true,
+        addRight: true,
+        editRight: true,
+        showListingTotalRight: true,
+        printRight: true,
+      })
+      .onConflictDoUpdate({
+        target: menus.menuName,
+        set: { menuCaption: "Print Setup", menuPath: "/print-setup" },
+      });
+
     // 3. Metals
     console.log("Seeding metals...");
     await db

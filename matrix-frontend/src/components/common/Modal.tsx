@@ -16,7 +16,8 @@ export interface ModalProps {
   description?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  width?: "sm" | "default" | "lg" | "xl" | "full";
+  width?: "sm" | "default" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "full";
+  className?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -27,19 +28,23 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   footer,
   width = "default",
+  className,
 }) => {
   const widthClasses = {
     sm: "sm:max-w-sm",
     default: "sm:max-w-md",
     lg: "sm:max-w-lg",
     xl: "sm:max-w-xl",
+    "2xl": "sm:max-w-2xl",
+    "3xl": "sm:max-w-3xl",
+    "4xl": "sm:max-w-4xl",
     full: "sm:max-w-[95vw]",
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`${widthClasses[width]} max-h-[85vh] sm:max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden`}
+        className={`${widthClasses[width]} max-h-[85vh] sm:max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden ${className || ""}`}
       >
         <DialogHeader className="px-6 py-4 shrink-0 sticky top-0 z-10 bg-background">
           <DialogTitle>{title}</DialogTitle>

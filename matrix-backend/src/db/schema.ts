@@ -6,6 +6,7 @@ import {
   integer,
   boolean,
   numeric,
+  text,
 } from "drizzle-orm/pg-core";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
@@ -463,6 +464,60 @@ export const pincodes = pgTable("pincodes", {
   areaId: integer("area_id").references((): AnyPgColumn => areas.id),
   pincode: varchar("pincode", { length: 20 }).notNull(),
   officeName: varchar("office_name", { length: 256 }), // post office / locality name
+  isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const printConfigurations = pgTable("print_configurations", {
+  id: serial("id").primaryKey(),
+  transactionType: varchar("transaction_type", { length: 50 }).notNull(), // 'repairing-bill', 'sales', 'purchase', etc.
+  templateKey: varchar("template_key", { length: 100 }).default("default").notNull(),
+  templateName: varchar("template_name", { length: 256 }).default("Standard Invoice").notNull(),
+  isDefault: boolean("is_default").default(true).notNull(),
+  paperSize: varchar("paper_size", { length: 20 }).default("A4").notNull(), // 'A4', 'A5', 'Letter'
+  orientation: varchar("orientation", { length: 20 }).default("portrait").notNull(), // 'portrait', 'landscape'
+  marginTop: varchar("margin_top", { length: 20 }).default("10mm").notNull(),
+  marginBottom: varchar("margin_bottom", { length: 20 }).default("10mm").notNull(),
+  marginLeft: varchar("margin_left", { length: 20 }).default("10mm").notNull(),
+  marginRight: varchar("margin_right", { length: 20 }).default("10mm").notNull(),
+  companyName: varchar("company_name", { length: 256 }),
+  companyAddress: text("company_address"),
+  companyPhone: varchar("company_phone", { length: 100 }),
+  companyEmail: varchar("company_email", { length: 256 }),
+  companyGstin: varchar("company_gstin", { length: 50 }),
+  companyPan: varchar("company_pan", { length: 50 }),
+  logoUrl: text("logo_url"),
+  showHeader: boolean("show_header").default(true).notNull(),
+  showFooter: boolean("show_footer").default(true).notNull(),
+  showLogo: boolean("show_logo").default(true).notNull(),
+  headerTitle: varchar("header_title", { length: 256 }),
+  headerSubtitle: varchar("header_subtitle", { length: 256 }),
+  footerText: text("footer_text"),
+  showCustomerDetails: boolean("show_customer_details").default(true).notNull(),
+  showVoucherDetails: boolean("show_voucher_details").default(true).notNull(),
+  showItemCode: boolean("show_item_code").default(true).notNull(),
+  showItemDescription: boolean("show_item_description").default(true).notNull(),
+  showLabour: boolean("show_labour").default(true).notNull(),
+  showRate: boolean("show_rate").default(true).notNull(),
+  showQuantity: boolean("show_quantity").default(true).notNull(),
+  showDiscount: boolean("show_discount").default(true).notNull(),
+  showTax: boolean("show_tax").default(true).notNull(),
+  showAmount: boolean("show_amount").default(true).notNull(),
+  showTaxSummary: boolean("show_tax_summary").default(true).notNull(),
+  showPaymentSummary: boolean("show_payment_summary").default(true).notNull(),
+  showAdvancePaid: boolean("show_advance_paid").default(true).notNull(),
+  showBalanceDue: boolean("show_balance_due").default(true).notNull(),
+  termsAndConditions: text("terms_and_conditions"),
+  showAuthorizedSignature: boolean("show_authorized_signature").default(true).notNull(),
+  showCustomerSignature: boolean("show_customer_signature").default(true).notNull(),
+  signatureLabel: varchar("signature_label", { length: 100 }).default("Authorized Signatory"),
+  defaultPostSaveAction: varchar("default_post_save_action", { length: 20 }).default("preview").notNull(), // 'preview', 'print', 'none'
+  copies: integer("copies").default(1).notNull(),
+  customTemplateHtml: text("custom_template_html"),
+  customTemplateCss: text("custom_template_css"),
   isActive: boolean("is_active").default(true).notNull(),
   addBy: integer("add_by").references((): AnyPgColumn => users.id),
   editBy: integer("edit_by").references((): AnyPgColumn => users.id),
