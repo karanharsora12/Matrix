@@ -1,8 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm install --package-lock=false",
-  "buildCommand": "tsc -b && vite build",
+  "buildCommand": "node ./check-native.cjs && tsc -b && vite build",
   "outputDirectory": "dist",
   "rewrites": [
     {
