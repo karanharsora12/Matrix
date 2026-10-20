@@ -177,17 +177,13 @@ export const PrintSetup: React.FC = () => {
   return (
     <div className="flex h-full flex-col p-4 space-y-4">
       {/* Top Header */}
-      <ListingCard className="p-4">
+      <ListingCard className="p-4 flex-none">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
               <Printer className="h-5 w-5 text-primary" />
               Invoice & Report Print Setup
             </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Configure paper size, company branding, table columns, terms, and
-              automatic post-save behavior.
-            </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -994,7 +990,9 @@ export const PrintSetup: React.FC = () => {
           {previewLoading && (
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/80 backdrop-blur-xs gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-xs text-muted-foreground">Rendering sample preview...</p>
+              <p className="text-xs text-muted-foreground">
+                Rendering sample preview...
+              </p>
             </div>
           )}
 
@@ -1002,7 +1000,8 @@ export const PrintSetup: React.FC = () => {
             <div
               className="flex flex-col items-center w-full transition-transform duration-150 ease-out"
               style={{
-                transform: sampleZoom !== 100 ? `scale(${sampleZoom / 100})` : undefined,
+                transform:
+                  sampleZoom !== 100 ? `scale(${sampleZoom / 100})` : undefined,
                 transformOrigin: "top center",
               }}
             >
@@ -1012,7 +1011,9 @@ export const PrintSetup: React.FC = () => {
                     <FileCheck className="h-3 w-3 text-emerald-600" />
                     Live Print Setup Sample Sheet
                   </span>
-                  <span>Paper: {config.paperSize} ({config.orientation})</span>
+                  <span>
+                    Paper: {config.paperSize} ({config.orientation})
+                  </span>
                 </div>
 
                 <InvoicePaperShadowHost html={sampleHtml} />
