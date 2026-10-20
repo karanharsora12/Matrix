@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Printer,
   Download,
+  Mail,
   Loader2,
   RefreshCw,
   AlertCircle,
@@ -19,6 +20,7 @@ import {
   fetchAllPrintConfigs,
 } from "@/api/report";
 import type { PrintConfigData } from "@/api/report";
+import { SendEmailModal } from "./SendEmailModal";
 
 export interface InvoicePreviewModalProps {
   open: boolean;
@@ -65,6 +67,7 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
   const [zoom, setZoom] = useState<number>(100);
   const [isPrinting, setIsPrinting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
 
   // Load available templates for this transaction type
   useEffect(() => {
@@ -169,9 +172,10 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
   };
 
   return (
-    <Modal
-      open={open}
-      onOpenChange={handleModalClose}
+    <>
+      <Modal
+        open={open}
+        onOpenChange={handleModalClose}
       title={voucherNo ? `Invoice Preview — ${voucherNo}` : "Invoice Preview"}
       description="Document layout preview. Check items, valuation, and print."
       width="3xl"
@@ -184,6 +188,19 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Send Email Button */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setEmailModalOpen(true)}
+              disabled={!transactionId || loading}
+              className="h-8 justify-center gap-1.5 text-xs font-medium rounded-lg border-primary/40 text-primary hover:bg-primary/10 active:scale-[0.98] transition-all"
+            >
+              <Mail className="h-3.5 w-3.5 shrink-0" />
+              <span>Send Email</span>
+            </Button>
+
             {/* Stable Download Button with fixed width */}
             <Button
               type="button"
@@ -367,5 +384,17 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         )}
       </div>
     </Modal>
-  );
+
+    {transactionId && (
+      <SendEmailModal
+        open={emailModalOpen}
+        onOpenChange={setEmailModalOpen}
+        transactionId={transactionId}
+        transactionType={transactionType}
+        templateKey={selectedTemplateKey || transactionType}
+        voucherNo={voucherNo}
+      />
+    )}
+  </>
+);
 };

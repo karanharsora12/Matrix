@@ -524,3 +524,39 @@ export const printConfigurations = pgTable("print_configurations", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const emailTemplates = pgTable("email_templates", {
+  id: serial("id").primaryKey(),
+  templateKey: varchar("template_key", { length: 100 }).notNull().unique(), // e.g. 'repairing-bill', 'sales', 'repairing-receipt'
+  templateName: varchar("template_name", { length: 256 }).notNull(),
+  subject: varchar("subject", { length: 500 }).notNull(),
+  bodyHtml: text("body_html").notNull(),
+  bodyText: text("body_text"),
+  senderName: varchar("sender_name", { length: 256 }),
+  replyTo: varchar("reply_to", { length: 256 }),
+  cc: varchar("cc", { length: 500 }),
+  bcc: varchar("bcc", { length: 500 }),
+  attachPdf: boolean("attach_pdf").default(true).notNull(),
+  pdfTemplateKey: varchar("pdf_template_key", { length: 100 }).default("default"),
+  availablePlaceholders: text("available_placeholders"),
+  isActive: boolean("is_active").default(true).notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+  editBy: integer("edit_by").references((): AnyPgColumn => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const emailLogs = pgTable("email_logs", {
+  id: serial("id").primaryKey(),
+  templateKey: varchar("template_key", { length: 100 }).notNull(),
+  transactionId: integer("transaction_id"),
+  transactionType: varchar("transaction_type", { length: 50 }).notNull(),
+  recipientEmail: varchar("recipient_email", { length: 256 }).notNull(),
+  subject: varchar("subject", { length: 500 }).notNull(),
+  bodyHtml: text("body_html"),
+  status: varchar("status", { length: 50 }).default("sent").notNull(),
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  addBy: integer("add_by").references((): AnyPgColumn => users.id),
+});
+

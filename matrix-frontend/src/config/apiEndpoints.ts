@@ -68,4 +68,13 @@ export const API_ENDPOINTS = {
     CONFIG_BY_TYPE: (type: string) => `/reports/config/${type}`,
     RESET_CONFIG: (type: string) => `/reports/config/${type}/reset`,
   },
+  EMAIL_TEMPLATES: {
+    BASE: "/email-templates/templates",
+    BY_KEY: (key: string) => `/email-templates/templates/${key}`,
+    RESET: (key: string) => `/email-templates/templates/${key}/reset`,
+    PREVIEW: (key: string, transactionId: number | string) => `/email-templates/preview/${key}/${transactionId}`,
+    SEND: "/email-templates/send",
+    LOGS: (transactionId: number | string) => `/email-templates/logs/${transactionId}`,
+  },
 };
+

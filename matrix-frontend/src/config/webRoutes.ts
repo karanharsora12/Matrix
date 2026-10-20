@@ -6,6 +6,7 @@ export const WEB_ROUTES = {
     ADMIN_SETUP: "/master/admin-setup",
     MENU_SETUP: "/master/admin-setup/menu-setup",
     PRINT_SETUP: "/master/admin-setup/print-setup",
+    EMAIL_TEMPLATE: "/master/admin-setup/email-template",
     COMMON_LISTS: "/master/common-lists",
     RATE_TYPES: "/master/rate-types",
     METALS: "/master/metals",

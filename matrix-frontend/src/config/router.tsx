@@ -16,6 +16,7 @@ import { PublicRoute } from "../components/common/PublicRoute";
 import ERPLaoyut from "../layouts/ERPLaoyut";
 import MenuSetup from "../pages/admin-setup/MenuSetup";
 import PrintSetup from "../pages/admin-setup/PrintSetup";
+import EmailTemplateMaster from "../pages/admin-setup/EmailTemplateMaster";
 import Dashboard from "../pages/Dashboard";
 import Login from "../pages/Login";
 import AccountForm from "../pages/master/accounts/AccountForm";
@@ -64,6 +65,10 @@ export const router = createBrowserRouter([
           {
             path: WEB_ROUTES.MASTER.PRINT_SETUP,
             element: <PrintSetup />,
+          },
+          {
+            path: WEB_ROUTES.MASTER.EMAIL_TEMPLATE,
+            element: <EmailTemplateMaster />,
           },
           {
             path: WEB_ROUTES.MASTER.INVENTORY.ITEM_GROUPS,
