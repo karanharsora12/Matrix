@@ -75,6 +75,7 @@ export const API_ENDPOINTS = {
     PREVIEW: (key: string, transactionId: number | string) => `/email-templates/preview/${key}/${transactionId}`,
     SEND: "/email-templates/send",
     LOGS: (transactionId: number | string) => `/email-templates/logs/${transactionId}`,
+    SMTP_TEST: "/email-templates/smtp/test",
   },
 };
 

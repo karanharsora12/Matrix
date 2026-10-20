@@ -1,4 +1,5 @@
 import { eq, desc } from "drizzle-orm";
+import nodemailer, { type Transporter, type SendMailOptions } from "nodemailer";
 import { db } from "../db";
 import { emailTemplates, emailLogs } from "../db/schema";
 import { reportService } from "./report.service";
@@ -423,92 +424,217 @@ export class EmailService {
     };
   }
 
+  getTransporter(): Transporter | null {
+    const host = process.env.SMTP_HOST?.trim();
+    const port = Number(process.env.SMTP_PORT || 587);
+    const secure = process.env.SMTP_SECURE === "true" || port === 465;
+    const user = process.env.SMTP_USER?.trim();
+    const pass = process.env.SMTP_PASS?.trim();
+
+    if (!host || !user) {
+      return null;
+    }
+
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: {
+        user,
+        pass,
+      },
+      tls: {
+        rejectUnauthorized: false, // Prevents certificate chain issues on internal/cloud relays
+      },
+    });
+  }
+
+  async testSmtpConnection() {
+    const host = process.env.SMTP_HOST?.trim();
+    const user = process.env.SMTP_USER?.trim();
+
+    if (!host || !user) {
+      return {
+        configured: false,
+        success: false,
+        message: "SMTP is not configured. Set SMTP_HOST and SMTP_USER in .env to enable real email transmission.",
+      };
+    }
+
+    const transporter = this.getTransporter();
+    if (!transporter) {
+      return {
+        configured: false,
+        success: false,
+        message: "Failed to initialize SMTP transporter. Please check your .env credentials.",
+      };
+    }
+
+    try {
+      await transporter.verify();
+      return {
+        configured: true,
+        success: true,
+        message: `SMTP connection verified successfully to ${host}:${process.env.SMTP_PORT || 587}`,
+      };
+    } catch (err: any) {
+      return {
+        configured: true,
+        success: false,
+        message: `SMTP connection failed: ${err?.message || "Unknown error"}`,
+      };
+    }
+  }
+
   /**
-   * Send transaction email and record in email_logs
+   * Send transaction email via SMTP and record audit logs
    */
   async sendTransactionEmail(payload: SendEmailPayload) {
-    const { transactionId, transactionType = "repairing-bill", templateKey = "repairing-bill", recipientEmail } = payload;
+    const {
+      transactionId,
+      transactionType = "repairing-bill",
+      templateKey = "repairing-bill",
+      recipientEmail,
+    } = payload;
 
     if (!recipientEmail || !recipientEmail.includes("@")) {
       throw new Error("A valid recipient email address is required.");
     }
 
-    // Resolve or use payload overrides
+    const template = await this.getTemplate(templateKey);
     const preview = await this.previewTransactionEmail(transactionId, templateKey);
     const finalSubject = payload.subject?.trim() || preview.subject;
     const finalBodyHtml = payload.bodyHtml?.trim() || preview.bodyHtml;
-    const shouldAttachPdf = payload.attachPdf !== undefined ? payload.attachPdf : preview.attachPdf;
+    const shouldAttachPdf =
+      payload.attachPdf !== undefined ? payload.attachPdf : preview.attachPdf;
 
     let pdfAttachmentName = "";
+    let pdfBuffer: Buffer | null = null;
+
     if (shouldAttachPdf) {
       try {
         const { buffer, voucherNo } = await reportService.renderTransactionPdf(transactionId);
+        pdfBuffer = buffer;
         pdfAttachmentName = `Invoice-${voucherNo || transactionId}.pdf`;
-        // PDF generated successfully
       } catch (pdfErr) {
-        console.warn("Failed generating PDF attachment:", pdfErr);
+        console.warn("[EmailService] Failed generating PDF attachment:", pdfErr);
       }
     }
 
-    // SMTP Dispatch or High-fidelity Delivery Simulation
-    // In dev / production without external SMTP configured, records delivery accurately into email_logs
-    let status = "sent";
-    let errorMessage: string | null = null;
+    // Prepare attachments
+    const attachments: Array<{ filename: string; content: Buffer; contentType: string }> = [];
+    if (shouldAttachPdf && pdfBuffer) {
+      attachments.push({
+        filename: pdfAttachmentName || `Invoice-${transactionId}.pdf`,
+        content: pdfBuffer,
+        contentType: "application/pdf",
+      });
+    }
 
-    try {
-      console.log(`[EmailService] Sending email to: ${recipientEmail} | Subject: "${finalSubject}" | AttachPDF: ${shouldAttachPdf}`);
-      // Record in email_logs
-      const [log] = await db
-        .insert(emailLogs)
-        .values({
-          templateKey,
-          transactionId,
-          transactionType,
-          recipientEmail,
+    // Sender details
+    const fromName = template.senderName || process.env.SMTP_FROM_NAME || "Matrix ERP";
+    const fromEmail =
+      process.env.SMTP_FROM_EMAIL ||
+      process.env.SMTP_USER ||
+      template.replyTo ||
+      "noreply@matrixerp.com";
+    const fromAddress = `"${fromName}" <${fromEmail}>`;
+
+    const transporter = this.getTransporter();
+    let messageId: string | null = null;
+    let deliveryMessage = "";
+
+    if (transporter) {
+      try {
+        console.log(
+          `[EmailService] Dispatching SMTP email to: ${recipientEmail} | Subject: "${finalSubject}" | Attachments: ${attachments.length}`
+        );
+
+        const mailOptions: SendMailOptions = {
+          from: fromAddress,
+          to: recipientEmail,
           subject: finalSubject,
-          bodyHtml: finalBodyHtml,
-          status: "sent",
-          errorMessage: null,
-          addBy: payload.userId || null,
-        })
-        .returning();
+          html: finalBodyHtml,
+          text: template.bodyText || undefined,
+          replyTo: template.replyTo || undefined,
+          cc: template.cc
+            ? template.cc.split(",").map((e) => e.trim()).filter(Boolean)
+            : undefined,
+          bcc: template.bcc
+            ? template.bcc.split(",").map((e) => e.trim()).filter(Boolean)
+            : undefined,
+          attachments,
+        };
 
-      return {
-        success: true,
-        message: `Email successfully dispatched to ${recipientEmail}`,
-        logId: log?.id,
+        const info = await transporter.sendMail(mailOptions);
+        messageId = info.messageId;
+        deliveryMessage = `Email successfully dispatched via SMTP to ${recipientEmail}`;
+        console.log(`[EmailService] SMTP delivery successful. MessageId: ${messageId}`);
+      } catch (smtpErr: any) {
+        console.error("[EmailService] SMTP transmission failed:", smtpErr);
+        const errorMsg = smtpErr?.message || "SMTP transmission failure";
+
+        // Log failed attempt
+        await db
+          .insert(emailLogs)
+          .values({
+            templateKey,
+            transactionId,
+            transactionType,
+            recipientEmail,
+            subject: finalSubject,
+            bodyHtml: finalBodyHtml,
+            pdfAttached: shouldAttachPdf,
+            status: "failed",
+            errorMessage: errorMsg,
+            addBy: payload.userId || null,
+          })
+          .catch(() => {});
+
+        throw new Error(`SMTP Mail sending failed: ${errorMsg}`);
+      }
+    } else {
+      console.warn(
+        "[EmailService] SMTP credentials not set in .env (SMTP_HOST & SMTP_USER). Simulating successful transmission."
+      );
+      deliveryMessage = `Email successfully processed (Simulated delivery: Set SMTP_HOST and SMTP_USER in .env for live transmission)`;
+    }
+
+    // Record successful dispatch in email_logs
+    const [log] = await db
+      .insert(emailLogs)
+      .values({
+        templateKey,
+        transactionId,
+        transactionType,
         recipientEmail,
         subject: finalSubject,
-        attachedPdf: shouldAttachPdf ? pdfAttachmentName || true : false,
-      };
-    } catch (err: any) {
-      console.error("[EmailService] Failed to record/send email:", err);
-      status = "failed";
-      errorMessage = err?.message || "Delivery failed";
+        bodyHtml: finalBodyHtml,
+        pdfAttached: shouldAttachPdf,
+        status: "sent",
+        errorMessage: null,
+        addBy: payload.userId || null,
+      })
+      .returning();
 
-      await db
-        .insert(emailLogs)
-        .values({
-          templateKey,
-          transactionId,
-          transactionType,
-          recipientEmail,
-          subject: finalSubject,
-          bodyHtml: finalBodyHtml,
-          status: "failed",
-          errorMessage,
-          addBy: payload.userId || null,
-        })
-        .catch(() => {});
-
-      throw new Error(`Email sending failed: ${errorMessage}`);
-    }
+    return {
+      success: true,
+      message: deliveryMessage,
+      logId: log?.id,
+      messageId,
+      recipientEmail,
+      subject: finalSubject,
+      attachedPdf: shouldAttachPdf ? pdfAttachmentName || true : false,
+    };
   }
 
   /**
    * Fetch sent email logs for a transaction
    */
-  async getEmailLogsForTransaction(transactionId: number, transactionType: string = "repairing-bill") {
+  async getEmailLogsForTransaction(
+    transactionId: number,
+    _transactionType: string = "repairing-bill"
+  ) {
     return await db
       .select()
       .from(emailLogs)

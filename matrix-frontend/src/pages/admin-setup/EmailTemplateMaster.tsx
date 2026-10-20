@@ -27,13 +27,16 @@ import {
   Paperclip,
   Info,
   Check,
+  Server,
+  RefreshCw,
 } from "lucide-react";
 import {
   fetchEmailTemplate,
   saveEmailTemplate,
   resetEmailTemplate,
+  checkSmtpStatus,
 } from "@/api/email";
-import type { EmailTemplateData, PlaceholderInfo } from "@/api/email";
+import type { EmailTemplateData, PlaceholderInfo, SmtpStatusResponse } from "@/api/email";
 import { Modal } from "@/components/common/Modal";
 
 const TRANSACTION_TYPES = [
@@ -152,8 +155,26 @@ export const EmailTemplateMaster: React.FC = () => {
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [smtpStatus, setSmtpStatus] = useState<SmtpStatusResponse | null>(null);
+  const [testingSmtp, setTestingSmtp] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleTestSmtp = async () => {
+    setTestingSmtp(true);
+    try {
+      const res = await checkSmtpStatus();
+      setSmtpStatus(res);
+    } catch (err: any) {
+      setSmtpStatus({
+        configured: false,
+        success: false,
+        message: err?.response?.data?.error || err.message || "Failed to connect to backend",
+      });
+    } finally {
+      setTestingSmtp(false);
+    }
+  };
 
   // Fetch email template configuration on key change
   useEffect(() => {
@@ -535,6 +556,57 @@ export const EmailTemplateMaster: React.FC = () => {
               {/* TAB 2: Routing & Sender Settings */}
               {activeTab === "routing" && (
                 <div className="mt-5 max-w-2xl space-y-5">
+                  {/* SMTP Server Live Status Banner */}
+                  <div className="rounded-lg border bg-muted/20 p-4 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Server className="h-4 w-4 text-primary" />
+                        <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                          SMTP Mail Server Connection
+                        </h4>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTestSmtp}
+                        disabled={testingSmtp}
+                        className="h-7 gap-1.5 text-[11px]"
+                      >
+                        <RefreshCw className={`h-3 w-3 ${testingSmtp ? "animate-spin" : ""}`} />
+                        {testingSmtp ? "Testing..." : "Test Connection"}
+                      </Button>
+                    </div>
+
+                    {smtpStatus ? (
+                      <div
+                        className={`flex items-start gap-2 rounded-md p-2.5 text-xs ${
+                          smtpStatus.success
+                            ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                            : "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                        }`}
+                      >
+                        {smtpStatus.success ? (
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                        )}
+                        <div className="text-[11px] leading-relaxed">
+                          <p className="font-semibold">{smtpStatus.message}</p>
+                          {!smtpStatus.success && (
+                            <p className="mt-1 opacity-90">
+                              To send real customer emails, add <code>SMTP_HOST</code>, <code>SMTP_USER</code>, and <code>SMTP_PASS</code> in your backend <code>.env</code> file.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Emails are dispatched through the organization's SMTP server configured in the backend environment (e.g. Gmail, Office 365, Mailgun, or custom host). Click <strong>Test Connection</strong> to verify live status.
+                      </p>
+                    )}
+                  </div>
+
                   <div className="space-y-1.5">
                     <Label htmlFor="templateName" className="text-xs font-semibold">
                       Template Title / Reference Name

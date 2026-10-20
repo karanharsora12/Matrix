@@ -130,3 +130,15 @@ export const fetchTransactionEmailLogs = async (
   );
   return res.data.data;
 };
+
+export interface SmtpStatusResponse {
+  configured: boolean;
+  success?: boolean;
+  message: string;
+}
+
+export const checkSmtpStatus = async (): Promise<SmtpStatusResponse> => {
+  const res = await apiClient.get(API_ENDPOINTS.EMAIL_TEMPLATES.SMTP_TEST);
+  return res.data.data;
+};
+

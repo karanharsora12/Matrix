@@ -13,5 +13,6 @@ router.post("/templates/:templateKey/reset", emailController.resetTemplate);
 router.get("/preview/:templateKey/:transactionId", emailController.previewTransactionEmail);
 router.post("/send", emailController.sendTransactionEmail);
 router.get("/logs/:transactionId", emailController.getTransactionLogs);
+router.get("/smtp/test", emailController.testSmtp);
 
 export default router;

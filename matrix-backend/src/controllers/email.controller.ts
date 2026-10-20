@@ -84,6 +84,16 @@ export class EmailController {
       res.status(500).json({ success: false, error: error.message || "Failed to fetch email logs" });
     }
   }
+
+  async testSmtp(_req: Request, res: Response) {
+    try {
+      const result = await emailService.testSmtpConnection();
+      res.json({ success: result.success ?? false, data: result });
+    } catch (error: any) {
+      console.error("Error testing SMTP connection:", error);
+      res.status(500).json({ success: false, error: error.message || "Failed to test SMTP connection" });
+    }
+  }
 }
 
 export const emailController = new EmailController();

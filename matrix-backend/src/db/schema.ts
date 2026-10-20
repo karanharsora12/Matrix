@@ -554,6 +554,7 @@ export const emailLogs = pgTable("email_logs", {
   recipientEmail: varchar("recipient_email", { length: 256 }).notNull(),
   subject: varchar("subject", { length: 500 }).notNull(),
   bodyHtml: text("body_html"),
+  pdfAttached: boolean("pdf_attached").default(false),
   status: varchar("status", { length: 50 }).default("sent").notNull(),
   errorMessage: text("error_message"),
   sentAt: timestamp("sent_at").defaultNow().notNull(),
