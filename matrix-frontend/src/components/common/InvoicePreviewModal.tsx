@@ -181,7 +181,6 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
             <span className="font-medium text-foreground">A4 Tax Invoice Sheet</span>
             <span className="text-zinc-400">·</span>
-            <span>Original for Recipient</span>
           </div>
 
           <div className="flex items-center gap-2">

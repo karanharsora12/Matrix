@@ -48,7 +48,7 @@ export const useRepairingBillColumns = ({
           },
         },
         valueFormatter: (params) =>
-          params.node?.rowPinned ? "TOTAL" : params.value || "",
+          params.node?.rowPinned ? (params.value ?? "TOTAL") : params.value || "",
         sortable: false,
         filter: false,
       },

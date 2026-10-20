@@ -16,6 +16,7 @@ import { QuickAccountCreateDialog } from "@/components/common/QuickAccountCreate
 import { WEB_ROUTES } from "@/config/webRoutes";
 import { decodeURL } from "@/lib/utils";
 import { todayISO, toISODate } from "@/utils/date";
+import { calculateLabourAmount } from "@/utils/transactionCalculations";
 
 import { CustomerOrderDetailsCard } from "./components/CustomerOrderDetailsCard";
 import { ReceiptCollectionSummary } from "./components/ReceiptCollectionSummary";
@@ -165,7 +166,7 @@ const RepairingReceipt: React.FC = () => {
             amount: n(line.amount),
             labourRate: n(line.labourRate),
             labourAmount: n(
-              line.labourAmount || n(line.pcs) * n(line.labourRate),
+              line.labourAmount || calculateLabourAmount(line),
             ),
             deliveryDate: toISODate(line.deliveryDate) || todayISO(),
           }))
@@ -189,10 +190,19 @@ const RepairingReceipt: React.FC = () => {
         prev.map((line, idx) => {
           if (idx !== rowIndex) return line;
           const updated = { ...line, ...patch };
-          if ("pcs" in patch || "labourRate" in patch) {
+          if (
+            "pcs" in patch ||
+            "labourRate" in patch ||
+            "rateType" in patch ||
+            "rateTypeId" in patch ||
+            "grossWt" in patch ||
+            "netWt" in patch
+          ) {
             updated.pcs = n(updated.pcs);
             updated.labourRate = n(updated.labourRate);
-            updated.labourAmount = updated.pcs * updated.labourRate;
+            updated.grossWt = n(updated.grossWt);
+            updated.netWt = n(updated.netWt);
+            updated.labourAmount = calculateLabourAmount(updated);
           }
           return updated;
         }),
@@ -205,6 +215,7 @@ const RepairingReceipt: React.FC = () => {
     (e: CellValueChangedEvent<RepairLine>) => {
       const field = e.colDef?.field as keyof RepairLine | undefined;
       if (!field || !e.data || e.node?.rowIndex == null) return;
+      if (field === "rateType") return;
       const rowIndex = e.node.rowIndex;
 
       setLines((prev) =>
@@ -214,16 +225,19 @@ const RepairingReceipt: React.FC = () => {
             ...line,
             [field]: e.newValue,
           };
-          if (field === "pcs" || field === "labourRate") {
+          if (
+            field === "pcs" ||
+            field === "labourRate" ||
+            field === "grossWt" ||
+            field === "netWt"
+          ) {
             updated.pcs = n(updated.pcs);
             updated.labourRate = n(updated.labourRate);
-            updated.labourAmount = updated.pcs * updated.labourRate;
-          } else if (
-            field === "grossWt" ||
-            field === "netWt" ||
-            field === "amount"
-          ) {
-            updated[field] = n(updated[field]);
+            updated.grossWt = n(updated.grossWt);
+            updated.netWt = n(updated.netWt);
+            updated.labourAmount = calculateLabourAmount(updated);
+          } else if (field === "amount") {
+            updated.amount = n(updated.amount);
           }
           return updated;
         }),
@@ -246,12 +260,22 @@ const RepairingReceipt: React.FC = () => {
   const gridTotals = useMemo(
     () => [
       {
-        itemGroupName: "TOTAL",
+        itemGroupName: `Total: ${lines.length}`,
+        pcs: totals.totalPcs,
+        grossWt: totals.totalGrossWt,
+        netWt: totals.totalNetWt,
         amount: taxableTotal,
         labourAmount: labourTotal,
       },
     ],
-    [labourTotal, taxableTotal],
+    [
+      lines.length,
+      totals.totalPcs,
+      totals.totalGrossWt,
+      totals.totalNetWt,
+      labourTotal,
+      taxableTotal,
+    ],
   );
 
   // Validation & Navigation

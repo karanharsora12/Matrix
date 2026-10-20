@@ -15,8 +15,6 @@ import apiClient from "@/api/client";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { MobileSidebarTrigger } from "@/components/Sidebar";
 import {
-  Bell,
-  HelpCircle,
   LogOut,
   Palette,
   Search,
@@ -153,22 +151,6 @@ export function Header() {
 
       <div className="flex items-center gap-1">
         <ThemeToggle />
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative h-9 w-9 rounded-lg text-zinc-500 hover:bg-primary-action/10 hover:text-primary-action dark:text-zinc-400 dark:hover:bg-primary-action/15 dark:hover:text-primary-action"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-active ring-2 ring-white dark:ring-zinc-900" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hidden h-9 w-9 rounded-lg text-zinc-500 hover:bg-primary-action/10 hover:text-primary-action dark:text-zinc-400 dark:hover:bg-primary-action/15 dark:hover:text-primary-action sm:inline-flex"
-        >
-          <HelpCircle className="h-4 w-4" />
-        </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

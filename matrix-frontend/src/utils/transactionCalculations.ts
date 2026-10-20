@@ -46,6 +46,28 @@ export const calculateLineItemAmount = <T extends LineItemCalculationInput>(
   return current;
 };
 
+export const calculateLabourAmount = (line: {
+  pcs?: number | string;
+  labourRate?: number | string;
+  grossWt?: number | string;
+  netWt?: number | string;
+  rateType?: string | null;
+}): number => {
+  const rate = Number(line.labourRate || 0);
+  const rt = (line.rateType || "").toLowerCase();
+  let qty = Number(line.pcs || 0);
+
+  if (rt.includes("gross")) {
+    qty = Number(line.grossWt || 0);
+  } else if (rt.includes("net")) {
+    qty = Number(line.netWt || 0);
+  } else if (rt.includes("flat") || rt.includes("fix")) {
+    return Number(rate.toFixed(2));
+  }
+
+  return Number((qty * rate).toFixed(2));
+};
+
 export const calculateTransactionTotals = <T extends LineItemCalculationInput>(
   lines: T[],
   taxRate: number = 0,

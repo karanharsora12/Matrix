@@ -60,6 +60,8 @@ export const emptyLine = (): RepairLine => ({
   netWt: 0,
   rate: 0,
   labourRate: 0,
+  rateTypeId: null,
+  rateType: "",
   labourAmount: 0,
   amount: 0,
   deliveryDate: todayISO(),

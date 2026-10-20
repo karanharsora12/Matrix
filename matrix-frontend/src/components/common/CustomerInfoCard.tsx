@@ -1,5 +1,5 @@
 import React from "react";
-import { FileSpreadsheet, User, UserCheck } from "lucide-react";
+import { FileSpreadsheet, UserCheck } from "lucide-react";
 import { AccountHelp } from "@/components/common/AccountHelp";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,9 +72,6 @@ export const CustomerInfoCard: React.FC<CustomerInfoCardProps> = ({
         {/* ── Card Header ── */}
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
-              <User className="h-4 w-4" />
-            </span>
             <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
               {title}
             </h2>

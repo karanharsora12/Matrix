@@ -54,7 +54,6 @@ import {
   Banknote,
   Building2,
   ClipboardList,
-  FileText,
   Landmark,
   MessageSquareText,
   Plus,
@@ -599,7 +598,6 @@ export const CashVoucherForm: React.FC<CashVoucherFormProps> = ({ mode }) => {
           {/* ── CARD: Voucher Details ── */}
           <div className="rounded-xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 overflow-hidden">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-zinc-800 px-4 py-2.5">
-              <FileText className="h-4 w-4 text-primary-action" />
               <h2 className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
                 Voucher Details
               </h2>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Link2, Link2Off, Receipt } from "lucide-react";
+import { Link2, Link2Off, Receipt } from "lucide-react";
 import { DaybookSelect } from "@/components/common/DaybookSelect";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -78,9 +78,6 @@ export const VoucherDetailsCard: React.FC<VoucherDetailsCardProps> = ({
         {/* ── Card Header ── */}
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-              <Calendar className="h-4 w-4" />
-            </span>
             <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
               {title}
             </h2>

@@ -88,7 +88,7 @@ export class PrintConfigService {
       showFooter: true,
       showLogo: true,
       headerTitle: isRepair ? "REPAIRING BILL / TAX INVOICE" : "TAX INVOICE",
-      headerSubtitle: "Original for Recipient",
+      headerSubtitle: "",
       footerText: "Thank you for trusting Matrix Jewellers.",
       showCustomerDetails: true,
       showVoucherDetails: true,

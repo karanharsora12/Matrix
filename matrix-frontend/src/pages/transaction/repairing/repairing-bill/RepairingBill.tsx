@@ -24,7 +24,6 @@ import { RepairingBillHeaderCard } from "./components/RepairingBillHeaderCard";
 import { RepairingBillItemsTable } from "./components/RepairingBillItemsTable";
 import { RepairingBillSummary } from "./components/RepairingBillSummary";
 import {
-  emptyBillLine,
   n,
   type RepairingBillFormData,
   type RepairingBillLine,
@@ -72,7 +71,7 @@ const RepairingBill: React.FC = () => {
     bankReference: "",
   });
 
-  const [lines, setLines] = useState<RepairingBillLine[]>([emptyBillLine()]);
+  const [lines, setLines] = useState<RepairingBillLine[]>([]);
 
   // Financial and Quantity Computations
   const taxableTotal = useMemo(
@@ -207,7 +206,7 @@ const RepairingBill: React.FC = () => {
     }
   }, []);
 
-  // Handler: Unlinking receipt (switching to manual bill)
+  // Handler: Unlinking receipt
   const handleClearReceipt = useCallback(() => {
     setForm((current) => ({
       ...current,
@@ -215,6 +214,7 @@ const RepairingBill: React.FC = () => {
       receiptVoucherNo: "",
       advanceAdjusted: 0,
     }));
+    setLines([]);
   }, []);
 
   // Load existing bill details for editing or viewing
@@ -259,18 +259,14 @@ const RepairingBill: React.FC = () => {
             ),
             deliveryDate: toISODate(line.deliveryDate) || todayISO(),
           }))
-        : [emptyBillLine()],
+        : [],
     );
   }, [sale]);
 
   // Table Line Handlers
   const handleDeleteLine = useCallback((rowIndex: number | undefined) => {
     if (rowIndex == null) return;
-    setLines((current) =>
-      current.length <= 1
-        ? [emptyBillLine()]
-        : current.filter((_, idx) => idx !== rowIndex),
-    );
+    setLines((current) => current.filter((_, idx) => idx !== rowIndex));
   }, []);
 
   const handleUpdateLine = useCallback(
@@ -323,10 +319,6 @@ const RepairingBill: React.FC = () => {
     [],
   );
 
-  const handleAddLine = useCallback(() => {
-    setLines((current) => [...current, emptyBillLine()]);
-  }, []);
-
   const lineColumns = useRepairingBillColumns({
     readOnly,
     onDeleteLine: handleDeleteLine,
@@ -336,12 +328,22 @@ const RepairingBill: React.FC = () => {
   const gridTotals = useMemo(
     () => [
       {
-        itemGroupName: "TOTAL",
-        amount: taxableTotal,
+        itemGroupName: `Total: ${lines.length}`,
+        pcs: totals.totalPcs,
+        grossWt: totals.totalGrossWt,
+        netWt: totals.totalNetWt,
         labourAmount: labourTotal,
+        amount: taxableTotal,
       },
     ],
-    [labourTotal, taxableTotal],
+    [
+      lines.length,
+      totals.totalPcs,
+      totals.totalGrossWt,
+      totals.totalNetWt,
+      labourTotal,
+      taxableTotal,
+    ],
   );
 
   // Post-save and printing states
@@ -366,6 +368,8 @@ const RepairingBill: React.FC = () => {
     !readOnly &&
     form.daybookId > 0 &&
     form.accountId > 0 &&
+    (Boolean(form.receiptId) || isEditing) &&
+    lines.length > 0 &&
     validLines.length > 0 &&
     balance >= 0;
 
@@ -490,7 +494,6 @@ const RepairingBill: React.FC = () => {
           lines={lines}
           lineColumns={lineColumns}
           gridTotals={gridTotals}
-          onAddLine={handleAddLine}
           onCellValueChanged={handleCellValueChanged}
         />
 
@@ -534,22 +537,6 @@ const RepairingBill: React.FC = () => {
         isSaveDisabled={!canSave || isSaving}
         onPrint={isEditing ? printInvoice : undefined}
         printText="Print Invoice"
-        extraActions={
-          !readOnly && !isEditing ? (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mr-1">
-              <span className="text-[11px]">Post-Save:</span>
-              <select
-                value={postSaveAction}
-                onChange={(e) => setPostSaveAction(e.target.value as any)}
-                className="h-8 rounded-lg border border-input bg-background px-2 py-1 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="preview">Save & Preview</option>
-                <option value="print">Save & Print</option>
-                <option value="none">Save Only</option>
-              </select>
-            </div>
-          ) : undefined
-        }
       />
 
       {/* Invoice Preview & Print Modal */}

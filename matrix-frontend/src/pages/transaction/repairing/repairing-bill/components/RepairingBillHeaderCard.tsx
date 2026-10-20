@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatDate } from "@/utils/date";
-import { MessageSquareText, Receipt, Search } from "lucide-react";
+import { Receipt, Search } from "lucide-react";
 import React, { useState } from "react";
 import type { RepairingBillFormData } from "../types";
 import { money } from "../types";
@@ -114,16 +114,13 @@ export const RepairingBillHeaderCard: React.FC<
           buttonText: "Select Repairing Receipt",
           onSelect: () => setReceiptModalOpen(true),
           onUnlink: onClearReceipt,
-          unlinkTooltip: "Unlink receipt and convert to manual bill",
+          unlinkTooltip: "Unlink receipt",
         }}
       />
 
       {/* ── CARD 3: Repair Instructions & Remarks (4 cols) ── */}
       <section className="rounded-xl border border-slate-200/90 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-4 flex flex-col">
         <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
-            <MessageSquareText className="h-4 w-4" />
-          </span>
           <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
             Billing Remarks & Delivery Notes
           </h2>

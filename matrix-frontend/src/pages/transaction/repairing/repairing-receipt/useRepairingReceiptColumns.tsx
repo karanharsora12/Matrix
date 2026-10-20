@@ -6,6 +6,7 @@ import {
   parseNumericalValue,
 } from "@/components/common/NumericalCell";
 import { Button } from "@/components/ui/button";
+import { useAppSelector } from "@/hooks/useRedux";
 import { formatDate } from "@/utils/date";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { Trash2 } from "lucide-react";
@@ -23,6 +24,8 @@ export const useRepairingReceiptColumns = ({
   onDeleteLine,
   onUpdateLine,
 }: UseRepairingReceiptColumnsProps) => {
+  const rateTypes = useAppSelector((state) => state.inventory.rateTypes);
+
   return useMemo<ColDef<RepairLine>[]>(() => {
     return [
       {
@@ -41,14 +44,20 @@ export const useRepairingReceiptColumns = ({
           valueKey: "itemGroupName",
           searchPlaceholder: "Search Item Group...",
           onItemSelect: (item: any, rowIndex: number) => {
+            const rateType = rateTypes.find(
+              (rt) => rt.id === Number(item?.salesRateTypeId),
+            );
             onUpdateLine(rowIndex, {
               itemGroupId: item?.id ? Number(item.id) : null,
               itemGroupName: item?.itemGroupName || "",
+              ...(rateType
+                ? { rateTypeId: rateType.id, rateType: rateType.name }
+                : {}),
             });
           },
         },
         valueFormatter: (params) =>
-          params.node?.rowPinned ? "TOTAL" : params.value || "",
+          params.node?.rowPinned ? (params.value ?? "TOTAL") : params.value || "",
         sortable: false,
         filter: false,
       },
@@ -209,6 +218,30 @@ export const useRepairingReceiptColumns = ({
         filter: false,
       },
       {
+        field: "rateType",
+        headerName: "Labour Rate Type",
+        width: 170,
+        editable: (p) => !readOnly && !p.node?.rowPinned,
+        cellEditor: PopupCellEditor,
+        cellEditorParams: {
+          tableData: rateTypes,
+          columns: [{ field: "name", headerName: "Rate Type", width: 220 }],
+          displayKey: "rateType",
+          valueKey: "name",
+          searchPlaceholder: "Search Labour Rate Type...",
+          width: 360,
+          height: 280,
+          onItemSelect: (item: any, rowIndex: number) => {
+            onUpdateLine(rowIndex, {
+              rateTypeId: item?.id ? Number(item.id) : null,
+              rateType: item?.name || "",
+            });
+          },
+        },
+        sortable: false,
+        filter: false,
+      },
+      {
         field: "labourRate",
         headerName: "Labour Rate",
         width: 110,
@@ -276,5 +309,5 @@ export const useRepairingReceiptColumns = ({
         resizable: false,
       },
     ];
-  }, [onDeleteLine, onUpdateLine, readOnly]);
+  }, [onDeleteLine, onUpdateLine, rateTypes, readOnly]);
 };

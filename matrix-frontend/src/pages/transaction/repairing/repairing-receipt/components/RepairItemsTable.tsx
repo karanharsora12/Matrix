@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus, Wrench } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataGrid } from "@/components/common/DataGrid";
 import type { CellValueChangedEvent, ColDef } from "ag-grid-community";
@@ -26,9 +26,6 @@ export const RepairItemsTable: React.FC<RepairItemsTableProps> = ({
       {/* ── Table Header Bar ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
-            <Wrench className="h-4 w-4" />
-          </span>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-slate-800 dark:text-zinc-200">
