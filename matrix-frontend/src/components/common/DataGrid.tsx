@@ -187,10 +187,7 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
     const isInitialMount = useRef(true);
 
     const buildSummaryRow = useCallback(
-      (
-        totalRecords: number | undefined,
-        backendSummary: any[] | undefined,
-      ) => {
+      (totalRecords: number | undefined, backendSummary: any[] | undefined) => {
         if (!backendSummary && totalRecords === undefined) return undefined;
 
         const firstVisibleCol = columnDefs.find(
@@ -212,7 +209,8 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
 
         // At end of first column, display total records if not already set
         if (totalRecords !== undefined && !summaryObj[firstColField]) {
-          summaryObj[firstColField] = `Total: ${Number(totalRecords).toLocaleString()}`;
+          summaryObj[firstColField] =
+            `Total: ${Number(totalRecords).toLocaleString()}`;
         }
 
         return Object.keys(summaryObj).length > 0 ? [summaryObj] : undefined;
@@ -296,7 +294,8 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
           const fetchedRows = result.data || [];
           setApiRowData(fetchedRows);
           const summaryRows = buildSummaryRow(
-            result.pagination?.total ?? (result.summary ? undefined : fetchedRows.length),
+            result.pagination?.total ??
+              (result.summary ? undefined : fetchedRows.length),
             result.summary,
           );
           setApiSummary(summaryRows);
@@ -379,7 +378,6 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
             isPaginationEnabled ? [20, 50, 100, 200] : undefined
           }
           cacheBlockSize={pageSize}
-          infiniteInitialRowCount={pageSize}
           cacheOverflowSize={2}
           maxConcurrentDatasourceRequests={1}
           maxBlocksInCache={50}
