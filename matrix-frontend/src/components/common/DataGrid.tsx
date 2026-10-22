@@ -65,11 +65,12 @@ const getGridResponse = <TData,>(payload: unknown): GridApiResponse<TData> => {
 
 const createGridTheme = (isDark: boolean, accentHex: string) => {
   if (isDark) {
+    const headerBg = `color-mix(in srgb, ${accentHex} 14%, hsl(240 10% 8%))`;
     return themeQuartz.withPart(colorSchemeDark).withParams({
       backgroundColor: "hsl(240 10% 5.5%)",
       foregroundColor: "hsl(0 0% 98%)",
-      headerBackgroundColor: accentHex,
-      headerTextColor: "#ffffff",
+      headerBackgroundColor: headerBg,
+      headerTextColor: "hsl(0 0% 98%)",
       headerFontWeight: 600,
       headerFontSize: 13,
       fontSize: 13,
@@ -77,15 +78,15 @@ const createGridTheme = (isDark: boolean, accentHex: string) => {
       accentColor: accentHex,
       rowBorder: true,
       columnBorder: true,
-      rowHoverColor: `color-mix(in srgb, ${accentHex} 12%, black)`,
-      selectedRowBackgroundColor: `color-mix(in srgb, ${accentHex} 28%, black)`,
-      rangeSelectionBackgroundColor: `color-mix(in srgb, ${accentHex} 22%, black)`,
+      rowHoverColor: `color-mix(in srgb, ${accentHex} 10%, black)`,
+      selectedRowBackgroundColor: `color-mix(in srgb, ${accentHex} 22%, black)`,
+      rangeSelectionBackgroundColor: `color-mix(in srgb, ${accentHex} 18%, black)`,
       rangeSelectionBorderColor: accentHex,
       oddRowBackgroundColor: "hsl(240 7% 9%)",
       borderRadius: 6,
       wrapperBorderRadius: 8,
       cellHorizontalPadding: 12,
-      headerCellHoverBackgroundColor: `color-mix(in srgb, ${accentHex} 85%, black)`,
+      headerCellHoverBackgroundColor: `color-mix(in srgb, ${accentHex} 22%, hsl(240 10% 8%))`,
       filterToolPanelGroupIndent: 12,
       iconSize: 16,
       spacing: 4,
@@ -95,11 +96,12 @@ const createGridTheme = (isDark: boolean, accentHex: string) => {
     });
   }
 
+  const headerBg = `color-mix(in srgb, ${accentHex} 9%, #ffffff)`;
   return themeQuartz.withParams({
     backgroundColor: "hsl(0 0% 100%)",
     foregroundColor: "hsl(240 10% 3.9%)",
-    headerBackgroundColor: accentHex,
-    headerTextColor: "#ffffff",
+    headerBackgroundColor: headerBg,
+    headerTextColor: "hsl(240 10% 3.9%)",
     headerFontWeight: 600,
     headerFontSize: 13,
     fontSize: 13,
@@ -115,7 +117,7 @@ const createGridTheme = (isDark: boolean, accentHex: string) => {
     borderRadius: 6,
     wrapperBorderRadius: 6,
     cellHorizontalPadding: 12,
-    headerCellHoverBackgroundColor: `color-mix(in srgb, ${accentHex} 88%, black)`,
+    headerCellHoverBackgroundColor: `color-mix(in srgb, ${accentHex} 15%, white)`,
     filterToolPanelGroupIndent: 12,
     iconSize: 16,
     spacing: 4,
