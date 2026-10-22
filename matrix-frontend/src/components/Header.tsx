@@ -16,7 +16,6 @@ import { MobileSidebarTrigger } from "@/components/Sidebar";
 import {
   LogOut,
   Palette,
-  Search,
   Settings,
   User,
 } from "lucide-react";
@@ -36,7 +35,6 @@ export function Header() {
   const { isSettingsOpen, setIsSettingsOpen, openSettings } = useTheme();
 
   const [menus, setMenus] = useState<any[]>([]);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     const fetchMenus = async () => {
@@ -50,58 +48,12 @@ export function Header() {
     fetchMenus();
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setIsSearchOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-zinc-200/80 bg-white/95 px-4 backdrop-blur-sm dark:border-zinc-800/80 dark:bg-zinc-900/95 sm:px-6">
       <div className="flex items-center gap-2">
         <MobileSidebarTrigger />
-
-        {/* Desktop Interactive Search Trigger */}
-        <div className="hidden sm:block">
-          <button
-            type="button"
-            onClick={() => setIsSearchOpen(true)}
-            className="group flex h-9 w-64 md:w-80 items-center justify-between rounded-xl border border-zinc-200/90 bg-zinc-50/80 px-3 text-sm text-zinc-400 transition-all hover:border-primary-action/40 hover:bg-white hover:text-zinc-600 hover:shadow-xs dark:border-zinc-800 dark:bg-zinc-800/50 dark:hover:border-primary-action/40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-          >
-            <div className="flex items-center gap-2.5 truncate">
-              <Search className="h-4 w-4 text-zinc-400 transition-colors group-hover:text-primary-action shrink-0" />
-              <span className="truncate text-xs font-medium text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
-                Search menus &amp; navigation...
-              </span>
-            </div>
-            <kbd className="pointer-events-none inline-flex items-center gap-0.5 rounded border border-zinc-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-zinc-500 shadow-2xs group-hover:border-primary-action/30 group-hover:text-primary-action dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
-              <span className="text-[9px]">⌘</span>K
-            </kbd>
-          </button>
-        </div>
-
-        {/* Mobile Search Button */}
-        <button
-          type="button"
-          onClick={() => setIsSearchOpen(true)}
-          className="flex sm:hidden h-9 w-9 items-center justify-center rounded-xl border border-zinc-200/80 bg-zinc-50 text-zinc-500 hover:text-primary-action hover:border-primary-action/40 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-400 transition-colors"
-          title="Search menus (Ctrl+K)"
-        >
-          <Search className="h-4 w-4" />
-        </button>
+        <GlobalMenuSearch menus={menus} />
       </div>
-
-      {/* Global Interactive Command Palette Modal */}
-      <GlobalMenuSearch
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        menus={menus}
-      />
 
       <div className="flex items-center gap-1">
         <ThemeToggle />

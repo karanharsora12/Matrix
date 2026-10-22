@@ -20,7 +20,6 @@ const StatesList: React.FC = () => {
       <ListingCard>
         <ListingHeader
           title="States"
-          subtitle="Manage states for city & area setup"
           onRefresh={() => gridRef.current?.api.refreshInfiniteCache()}
           onExportExcel={() => onExportExcel("States")}
           onExportPdf={() => onExportPdf("States List", "States")}
