@@ -58,7 +58,7 @@ export const useRepairingReceiptColumns = ({
                 : {}),
               ...(isGroupChanged
                 ? {
-                    itemId: null,
+                    itemId: undefined,
                     itemName: "",
                     tagNo: "",
                   }

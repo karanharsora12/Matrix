@@ -49,7 +49,7 @@ export const useRepairingBillColumns = ({
               itemGroupName: item?.itemGroupName || "",
               ...(isGroupChanged
                 ? {
-                    itemId: null,
+                    itemId: undefined,
                     itemName: "",
                     tagNo: "",
                   }

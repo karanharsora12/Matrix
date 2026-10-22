@@ -8,7 +8,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import type { RootState } from "@/store";
 import { logout } from "@/store/authSlice";
 import apiClient from "@/api/client";
@@ -21,12 +20,14 @@ import {
   Settings,
   User,
 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { ThemeSettingsModal } from "@/components/theme/ThemeSettingsModal";
+
+import { GlobalMenuSearch } from "@/components/common/GlobalMenuSearch";
 
 export function Header() {
   const dispatch = useDispatch();
@@ -35,10 +36,7 @@ export function Header() {
   const { isSettingsOpen, setIsSettingsOpen, openSettings } = useTheme();
 
   const [menus, setMenus] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchMenus = async () => {
@@ -52,102 +50,58 @@ export function Header() {
     fetchMenus();
   }, []);
 
-  const flattenMenus = (menuList: any[]): any[] => {
-    let result: any[] = [];
-    for (const menu of menuList) {
-      if (menu.children && menu.children.length > 0) {
-        result = [...result, ...flattenMenus(menu.children)];
-      } else {
-        result.push(menu);
-      }
-    }
-    return result;
-  };
-
-  const searchableMenus = flattenMenus(menus);
-  const filteredMenus = searchableMenus.filter((menu) =>
-    menu.menuCaption.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        inputRef.current?.focus();
-        setIsSearchOpen(true);
-      }
-      if (e.key === "Escape") {
-        setIsSearchOpen(false);
-        inputRef.current?.blur();
+        setIsSearchOpen((prev) => !prev);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
-        setIsSearchOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-zinc-200/80 bg-white/95 px-4 backdrop-blur-sm dark:border-zinc-800/80 dark:bg-zinc-900/95 sm:px-6">
       <div className="flex items-center gap-2">
         <MobileSidebarTrigger />
-        <div className="hidden sm:block">
-          <div className="group relative" ref={searchRef}>
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 transition-colors group-focus-within:text-primary-action" />
-            <Input
-              ref={inputRef}
-              placeholder="Search menus..."
-              className="h-9 w-64 border-zinc-200 bg-white pl-9 text-sm dark:border-zinc-700/60 dark:bg-zinc-800/60 focus-visible:border-primary-action/50 focus-visible:ring-primary-action/30"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setIsSearchOpen(true);
-              }}
-              onFocus={() => setIsSearchOpen(true)}
-            />
-            <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800">
-              ⌘K
-            </kbd>
 
-            {isSearchOpen && searchQuery && (
-              <div className="absolute top-full left-0 mt-2 w-64 rounded-xl border border-zinc-200 bg-white/95 shadow-xl backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/95 max-h-64 overflow-y-auto p-1.5">
-                {filteredMenus.length > 0 ? (
-                  <div className="py-1">
-                    {filteredMenus.map((menu) => (
-                      <button
-                        key={menu.id}
-                        className="w-full rounded-lg text-left px-3 py-2 text-[13px] font-medium text-zinc-600 transition-colors hover:bg-primary-action/10 hover:text-primary-action dark:text-zinc-400 dark:hover:bg-primary-action/15 dark:hover:text-primary-action"
-                        onClick={() => {
-                          navigate(menu.fullPath);
-                          setIsSearchOpen(false);
-                          setSearchQuery("");
-                        }}
-                      >
-                        {menu.menuCaption}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="px-4 py-3 text-sm text-zinc-500 text-center">
-                    No results found.
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+        {/* Desktop Interactive Search Trigger */}
+        <div className="hidden sm:block">
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen(true)}
+            className="group flex h-9 w-64 md:w-80 items-center justify-between rounded-xl border border-zinc-200/90 bg-zinc-50/80 px-3 text-sm text-zinc-400 transition-all hover:border-primary-action/40 hover:bg-white hover:text-zinc-600 hover:shadow-xs dark:border-zinc-800 dark:bg-zinc-800/50 dark:hover:border-primary-action/40 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+          >
+            <div className="flex items-center gap-2.5 truncate">
+              <Search className="h-4 w-4 text-zinc-400 transition-colors group-hover:text-primary-action shrink-0" />
+              <span className="truncate text-xs font-medium text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
+                Search menus &amp; navigation...
+              </span>
+            </div>
+            <kbd className="pointer-events-none inline-flex items-center gap-0.5 rounded border border-zinc-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-zinc-500 shadow-2xs group-hover:border-primary-action/30 group-hover:text-primary-action dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
+              <span className="text-[9px]">⌘</span>K
+            </kbd>
+          </button>
         </div>
+
+        {/* Mobile Search Button */}
+        <button
+          type="button"
+          onClick={() => setIsSearchOpen(true)}
+          className="flex sm:hidden h-9 w-9 items-center justify-center rounded-xl border border-zinc-200/80 bg-zinc-50 text-zinc-500 hover:text-primary-action hover:border-primary-action/40 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-400 transition-colors"
+          title="Search menus (Ctrl+K)"
+        >
+          <Search className="h-4 w-4" />
+        </button>
       </div>
+
+      {/* Global Interactive Command Palette Modal */}
+      <GlobalMenuSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        menus={menus}
+      />
 
       <div className="flex items-center gap-1">
         <ThemeToggle />
