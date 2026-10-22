@@ -5,6 +5,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import { buildRoute, encodeURL } from "@/lib/utils";
 import { formatDate } from "@/utils/date";
+import { ADD_EDIT_COLUMNS } from "@/lib/defaults";
 import type { ColDef } from "ag-grid-community";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -90,6 +91,7 @@ const RepairingBillList: React.FC = () => {
             : "font-semibold text-emerald-600 dark:text-emerald-400",
       },
       { field: "salesmanName", headerName: "Salesman", width: 130 },
+      ...ADD_EDIT_COLUMNS,
     ],
     [],
   );

@@ -5,6 +5,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { WEB_ROUTES } from "@/config/webRoutes";
 import { buildRoute, encodeURL } from "@/lib/utils";
 import { formatDate } from "@/utils/date";
+import { ADD_EDIT_COLUMNS } from "@/lib/defaults";
 import type { ColDef } from "ag-grid-community";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -70,8 +71,9 @@ const RepairingReceiptList: React.FC = () => {
         valueFormatter: (p) => currency(p.value),
       },
       { field: "salesmanName", headerName: "Salesman", width: 140 },
+      ...ADD_EDIT_COLUMNS,
     ],
-    [openReceipt],
+    [],
   );
 
   const apiInput = useMemo(
