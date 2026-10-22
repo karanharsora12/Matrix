@@ -87,7 +87,10 @@ export class InventoryController {
 
   async getItems(req: Request, res: Response) {
     try {
-      const items = await inventoryService.getItems();
+      const itemGroupId = req.body?.itemGroupId ?? req.query?.itemGroupId;
+      const items = await inventoryService.getItems(
+        itemGroupId ? Number(itemGroupId) : undefined,
+      );
       res.json(buildListResponse(req, "items", items));
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -160,7 +163,12 @@ export class InventoryController {
   // --- Item Codes ---
   async getItemCodes(req: Request, res: Response) {
     try {
-      const itemCodes = await inventoryService.getItemCodes();
+      const itemId = req.body?.itemId ?? req.query?.itemId;
+      const itemGroupId = req.body?.itemGroupId ?? req.query?.itemGroupId;
+      const itemCodes = await inventoryService.getItemCodes({
+        itemId: itemId ? Number(itemId) : undefined,
+        itemGroupId: itemGroupId ? Number(itemGroupId) : undefined,
+      });
       res.json(buildListResponse(req, "itemCodes", itemCodes));
     } catch (error) {
       console.error("Error fetching item codes:", error);

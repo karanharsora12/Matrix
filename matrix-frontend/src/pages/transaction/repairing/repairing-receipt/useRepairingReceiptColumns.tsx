@@ -34,7 +34,7 @@ export const useRepairingReceiptColumns = ({
         width: 170,
         editable: (p) => !readOnly && !p.node?.rowPinned,
         cellEditor: PopupCellEditor,
-        cellEditorParams: {
+        cellEditorParams: (params: any) => ({
           apiEndpoint: API_ENDPOINTS.INVENTORY.ITEM_GROUPS,
           columns: [
             { field: "itemGroupName", headerName: "Item Group", width: 180 },
@@ -44,20 +44,32 @@ export const useRepairingReceiptColumns = ({
           valueKey: "itemGroupName",
           searchPlaceholder: "Search Item Group...",
           onItemSelect: (item: any, rowIndex: number) => {
+            const newGroupId = item?.id ? Number(item.id) : null;
+            const currentGroupId = params.data?.itemGroupId;
+            const isGroupChanged = newGroupId !== currentGroupId;
             const rateType = rateTypes.find(
               (rt) => rt.id === Number(item?.salesRateTypeId),
             );
             onUpdateLine(rowIndex, {
-              itemGroupId: item?.id ? Number(item.id) : null,
+              itemGroupId: newGroupId,
               itemGroupName: item?.itemGroupName || "",
               ...(rateType
                 ? { rateTypeId: rateType.id, rateType: rateType.name }
                 : {}),
+              ...(isGroupChanged
+                ? {
+                    itemId: null,
+                    itemName: "",
+                    tagNo: "",
+                  }
+                : {}),
             });
           },
-        },
+        }),
         valueFormatter: (params) =>
-          params.node?.rowPinned ? (params.value ?? "TOTAL") : params.value || "",
+          params.node?.rowPinned
+            ? (params.value ?? "TOTAL")
+            : params.value || "",
         sortable: false,
         filter: false,
       },
@@ -67,8 +79,11 @@ export const useRepairingReceiptColumns = ({
         width: 180,
         editable: (p) => !readOnly && !p.node?.rowPinned,
         cellEditor: PopupCellEditor,
-        cellEditorParams: {
+        cellEditorParams: (params: any) => ({
           apiEndpoint: API_ENDPOINTS.INVENTORY.ITEMS,
+          apiPayload: params.data?.itemGroupId
+            ? { itemGroupId: params.data.itemGroupId }
+            : undefined,
           columns: [
             { field: "itemName", headerName: "Item Name", width: 200 },
             { field: "shortName", headerName: "Code", width: 100 },
@@ -78,8 +93,12 @@ export const useRepairingReceiptColumns = ({
           valueKey: "itemName",
           searchPlaceholder: "Search Item...",
           onItemSelect: (item: any, rowIndex: number) => {
+            const newItemId = Number(item?.id || 0);
+            const currentItemId = params.data?.itemId;
+            const isItemChanged = newItemId !== currentItemId;
+
             onUpdateLine(rowIndex, {
-              itemId: Number(item?.id || 0),
+              itemId: newItemId,
               itemName: item?.itemName || "",
               ...(item?.itemGroupId
                 ? {
@@ -88,9 +107,10 @@ export const useRepairingReceiptColumns = ({
                   }
                 : {}),
               ...(item?.shortName ? { tagNo: item.shortName } : {}),
+              ...(isItemChanged && !item?.shortName ? { tagNo: "" } : {}),
             });
           },
-        },
+        }),
         sortable: false,
         filter: false,
       },
@@ -100,27 +120,39 @@ export const useRepairingReceiptColumns = ({
         width: 140,
         editable: (p) => !readOnly && !p.node?.rowPinned,
         cellEditor: PopupCellEditor,
-        cellEditorParams: {
+        cellEditorParams: (params: any) => ({
           apiEndpoint: API_ENDPOINTS.INVENTORY.ITEM_CODES,
+          apiPayload: params.data?.itemId
+            ? { itemId: params.data.itemId }
+            : params.data?.itemGroupId
+              ? { itemGroupId: params.data.itemGroupId }
+              : undefined,
           columns: [
             { field: "itemCodeName", headerName: "Item Code", width: 160 },
             { field: "itemName", headerName: "Item Name", width: 180 },
+            { field: "itemGroupName", headerName: "Item Group", width: 140 },
           ],
           displayKey: "itemCodeName",
           valueKey: "itemCodeName",
           searchPlaceholder: "Search Item Code...",
-          onItemSelect: (item: any, rowIndex: number) => {
+          onItemSelect: (codeItem: any, rowIndex: number) => {
             onUpdateLine(rowIndex, {
-              tagNo: item?.itemCodeName || "",
-              ...(item?.itemId
+              tagNo: codeItem?.itemCodeName || "",
+              ...(codeItem?.itemId
                 ? {
-                    itemId: Number(item.itemId),
-                    itemName: item?.itemName || "",
+                    itemId: Number(codeItem.itemId),
+                    itemName: codeItem?.itemName || "",
+                  }
+                : {}),
+              ...(codeItem?.itemGroupId
+                ? {
+                    itemGroupId: Number(codeItem.itemGroupId),
+                    itemGroupName: codeItem?.itemGroupName || "",
                   }
                 : {}),
             });
           },
-        },
+        }),
         sortable: false,
         filter: false,
       },

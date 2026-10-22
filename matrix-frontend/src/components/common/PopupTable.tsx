@@ -27,6 +27,7 @@ export interface PopupTableProps<T = any> {
   trigger?: React.ReactNode;
   title?: string;
   apiEndpoint?: string;
+  apiPayload?: Record<string, any>;
   tableData?: T[];
   columns?: ColDef[];
   onSelect: (item: T) => void;
@@ -45,6 +46,7 @@ export function PopupTable<T extends Record<string, any>>({
   onOpenChange,
   trigger,
   apiEndpoint,
+  apiPayload,
   tableData,
   columns,
   onSelect,
@@ -84,10 +86,10 @@ export function PopupTable<T extends Record<string, any>>({
   } | null>(null);
 
   const { data: fetchedData, isLoading } = useQuery({
-    queryKey: ["popupTable", apiEndpoint],
+    queryKey: ["popupTable", apiEndpoint, apiPayload],
     queryFn: async () => {
       if (!apiEndpoint) return [];
-      const res = await apiClient.post(apiEndpoint);
+      const res = await apiClient.post(apiEndpoint, apiPayload || {});
       if (Array.isArray(res.data?.data)) return res.data.data;
       if (Array.isArray(res.data)) return res.data;
       return [];

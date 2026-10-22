@@ -104,6 +104,7 @@ export const BASE_LISTING_COLUMNS_MAP: Record<string, ColDef[]> = {
 
   [MenuList.ITEMS]: [
     { field: "id", headerName: "ID", width: 60, type: "numericColumn" },
+    { field: "itemGroupName", headerName: "Item Group", width: 160 },
     { field: "itemName", headerName: "Item Name", width: 200 },
     { field: "shortName", headerName: "Short Name", width: 120 },
     { field: "isActive", headerName: "Active", width: 80 },
@@ -379,6 +380,14 @@ export function getListingColumns(
   let columns = matchedKey ? matchedKey.map((col) => ({ ...col })) : [];
 
   columns = columns.map((col) => {
+    if (col.field === "id") {
+      return {
+        ...col,
+        width: Math.max(col.width || 60, 75),
+        minWidth: 70,
+        valueFormatter: (p) => (p.value != null ? String(p.value) : ""),
+      };
+    }
     if (
       col.field === "voucherDate" &&
       !col.valueFormatter &&

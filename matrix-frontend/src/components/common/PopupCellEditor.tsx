@@ -5,6 +5,7 @@ import { PopupTable } from "./PopupTable";
 export interface PopupCellEditorParams extends ICellEditorParams {
   tableData?: any[];
   apiEndpoint?: string;
+  apiPayload?: Record<string, any>;
   columns?: any[];
   columnDefs?: any[];
   onItemSelect?: (item: any, rowIndex: number) => void;
@@ -100,6 +101,7 @@ export const PopupCellEditor = forwardRef<any, PopupCellEditorParams>(
         height={props.height}
         value={selectedValue}
         displayValue={formattedDisplay}
+        apiPayload={props.apiPayload}
       />
     );
   },

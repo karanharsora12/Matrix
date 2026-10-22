@@ -112,6 +112,9 @@ export const items = pgTable("items", {
   id: serial("id").primaryKey(),
   itemName: varchar("item_name", { length: 256 }).notNull(),
   shortName: varchar("short_name", { length: 256 }).notNull().unique(),
+  itemGroupId: integer("item_group_id").references(
+    (): AnyPgColumn => itemGroups.id,
+  ),
   isActive: boolean("is_active").default(true).notNull(),
   attributes: integer("attributes").array().default([]).notNull(),
   addBy: integer("add_by").references((): AnyPgColumn => users.id),

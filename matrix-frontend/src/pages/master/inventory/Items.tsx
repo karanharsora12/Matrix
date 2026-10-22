@@ -1,5 +1,10 @@
 import type { Item } from "@/api/inventory";
-import { useCreateItem, useDeleteItem, useUpdateItem } from "@/api/inventory";
+import {
+  useCreateItem,
+  useDeleteItem,
+  useUpdateItem,
+  useItemGroups,
+} from "@/api/inventory";
 import { ActiveCellRenderer } from "@/components/common/ActiveCellRenderer";
 import { confirmAlert } from "@/components/common/AlertModal";
 import { DataGrid } from "@/components/common/DataGrid";
@@ -11,6 +16,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { API_ENDPOINTS } from "@/config/apiEndpoints";
 import { CommonListType } from "@/constants/enums";
 import { useGridActions } from "@/hooks/useGridActions";
@@ -29,10 +41,14 @@ const Items: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
 
+  const { data: itemGroupsRes } = useItemGroups();
+  const itemGroups = itemGroupsRes?.data || [];
+
   // Form State
   const [formData, setFormData] = useState<Partial<Item>>({
     itemName: "",
     shortName: "",
+    itemGroupId: null,
     isActive: true,
     attributes: [],
   });
@@ -76,6 +92,7 @@ const Items: React.FC = () => {
     setFormData({
       itemName: "",
       shortName: "",
+      itemGroupId: null,
       isActive: true,
       attributes: [],
     });
@@ -217,6 +234,30 @@ const Items: React.FC = () => {
           }
         >
           <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="itemGroupId">Item Group</Label>
+              <Select
+                value={formData.itemGroupId ? String(formData.itemGroupId) : ""}
+                onValueChange={(val) =>
+                  setFormData({
+                    ...formData,
+                    itemGroupId: val ? Number(val) : null,
+                  })
+                }
+              >
+                <SelectTrigger id="itemGroupId">
+                  <SelectValue placeholder="Select Item Group..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {itemGroups.map((group) => (
+                    <SelectItem key={group.id} value={String(group.id)}>
+                      {group.itemGroupName} ({group.shortName})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="itemName">Item Name</Label>
               <Input

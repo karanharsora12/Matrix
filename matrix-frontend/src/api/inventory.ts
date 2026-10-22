@@ -151,6 +151,8 @@ export interface Item {
   id: number;
   itemName: string;
   shortName: string;
+  itemGroupId?: number | null;
+  itemGroupName?: string;
   isActive: boolean;
   attributes: number[];
 }
@@ -227,6 +229,10 @@ export const useDeleteItem = () => {
 export interface ItemCode {
   id: number;
   itemId: number;
+  itemName?: string;
+  itemShortName?: string;
+  itemGroupId?: number | null;
+  itemGroupName?: string;
   itemCodeName: string;
   attributeValues: number[];
   isActive: boolean;

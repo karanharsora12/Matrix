@@ -162,6 +162,7 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
 
     const defaultColDef = useMemo<ColDef>(() => {
       return {
+        cellDataType: false,
         filter: true,
         floatingFilter: true,
         sortable: true,
@@ -175,6 +176,37 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
         tooltipValueGetter: (p) => p.value,
       };
     }, []);
+
+    const dataTypeDefinitions = useMemo(
+      () => ({
+        number: {
+          baseDataType: "number" as const,
+          extendsDataType: "number" as const,
+          valueFormatter: (params: any) => {
+            if (params.value == null) return "";
+            if (typeof params.value !== "number" || isNaN(params.value)) {
+              return String(params.value);
+            }
+            return String(params.value);
+          },
+        },
+        date: {
+          baseDataType: "date" as const,
+          extendsDataType: "date" as const,
+          valueFormatter: (params: any) => {
+            if (params.value == null) return "";
+            if (
+              !(params.value instanceof Date) ||
+              isNaN(params.value.getTime())
+            ) {
+              return String(params.value);
+            }
+            return params.value.toLocaleDateString();
+          },
+        },
+      }),
+      [],
+    );
 
     const { resolvedMode, activeHex } = useTheme();
     const theme = useMemo(() => {
@@ -371,6 +403,7 @@ export const DataGrid = React.forwardRef<AgGridReact, DataGridProps>(
           rowData={resolvedRowData}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          dataTypeDefinitions={dataTypeDefinitions}
           rowModelType={usesInfiniteScroll ? "infinite" : "clientSide"}
           datasource={usesInfiniteScroll ? datasource : undefined}
           pagination={isPaginationEnabled}
